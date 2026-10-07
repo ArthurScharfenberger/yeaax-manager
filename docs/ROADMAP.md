@@ -1,0 +1,67 @@
+# Roadmap
+
+Marque `[x]` ao concluir (com a versão entre parênteses quando fizer sentido). Itens novos entram na fase adequada.
+
+## MVP — fundação e fluxos locais (v0.x)
+
+### Fundação
+
+- [x] Tauri 2 + React 19 + TypeScript strict + Vite 8 (v0.1.0)
+- [x] Tailwind CSS 4 com tokens próprios e design system em `components/ui` (v0.1.0)
+- [x] ESLint (strict, type-aware) + Prettier + Vitest (v0.1.0)
+- [x] SQLite local, migrations, repositórios, dados de demonstração (v0.1.0)
+- [x] Tratamento de erros (`AppError`) e logger com redação de dados sensíveis (v0.1.0)
+- [x] Modo preview no navegador com SQLite WASM (v0.1.0)
+- [x] Documentação completa + AGENTS.md (v0.1.0)
+
+### Produto
+
+- [x] Layout principal + sidebar (v0.1.0)
+- [x] Dashboard: busca global, métricas, fila, contas, agenda da semana, sugestões, biblioteca (v0.1.0)
+- [x] Canais com provider mock (conectar, desconectar, sincronizar, adicionar, remover) (v0.1.0)
+- [x] Biblioteca: importação local por caminho, validação, grid/lista, busca, filtros, tags, preview (v0.1.0)
+- [x] Posts: rascunho, revisão, agendamento, histórico, anti-duplicidade, limites por plataforma (v0.1.0)
+- [x] Calendário semanal com detalhes e arrastar para reagendar (v0.1.0)
+- [x] Automação: configuração do Auto Schedule + prévia de horários (sem execução) (v0.1.0)
+- [x] Legendas IA com gerador local simulado (v0.1.0)
+- [x] Analytics: placeholder honesto (v0.1.0)
+- [x] Configurações: Geral, Armazenamento, Integrações, IA, FFmpeg, Aparência, Sobre (v0.1.0)
+- [ ] Validação manual completa no app desktop (importar vídeos reais, preview, reabrir o app)
+- [ ] Logs persistidos em arquivo (tauri-plugin-log) com rotação
+- [ ] Backup e restauração do banco (exportar/importar arquivo)
+- [ ] Duplicar post para outro canal (mesmo vídeo, legenda adaptada)
+- [ ] Visão de lista/filtro de todos os posts (inclusive rascunhos sem data)
+- [ ] Instalador NSIS revisado (ícone, nome, atalhos)
+
+## Fase 2 — preparação de conteúdo e automação local
+
+- [ ] FFmpeg: leitura de metadados com ffprobe (substitui DEC-017)
+- [ ] Miniaturas geradas localmente em pasta do app
+- [ ] Jobs de processamento assíncronos (`media_processing_jobs`) com progresso na UI
+- [ ] Adaptação de formato (9:16, Reels/TikTok), compressão
+- [ ] Logo/watermark próprio por canal
+- [ ] Classificação automática por regras (nome de arquivo, pastas, duração)
+- [ ] Detecção de vídeo duplicado na importação (hash do arquivo)
+- [ ] Motor do Auto Schedule (gera agendamentos a partir da fila e das regras)
+- [ ] Filas de postagem por canal
+- [ ] Agendador local: dispara publicações enquanto o app está aberto (bandeja do sistema)
+- [ ] Notificações do sistema (falhas, publicações concluídas)
+
+## Fase 3 — integrações oficiais
+
+- [ ] Armazenamento de tokens no Credential Manager do Windows (crate `keyring`) — pré-requisito
+- [ ] TikTok: Login Kit (OAuth) + Content Posting API
+- [ ] Instagram: Instagram Graph API para contas profissionais
+- [ ] Publicação real + acompanhamento de status (`publication_attempts`)
+- [ ] OpenAI: legendas, hashtags e traduções (`ai_executions`)
+- [ ] Analytics: snapshots periódicos por post/canal (`analytics_snapshots`)
+- [ ] Tratamento de expiração/renovação de tokens
+
+## Longo prazo
+
+- [ ] Serviço remoto opcional para agendamentos com o computador desligado
+- [ ] Sugestão de melhor conteúdo e horário por canal (dados próprios de analytics)
+- [ ] Importação de conteúdo via URL quando tecnicamente e legalmente permitido
+- [ ] Tema escuro
+- [ ] Novas plataformas (ex.: YouTube Shorts)
+- [ ] Content Automation Engine: pipeline completo biblioteca → preparo → agenda → publicação → análise

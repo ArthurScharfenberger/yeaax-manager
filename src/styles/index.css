@@ -1,0 +1,128 @@
+@import 'tailwindcss';
+
+/*
+ * Tokens visuais do Social Manager — ver docs/DESIGN.md.
+ * Paleta: branco + cinzas, azul para ação, verde/amarelo/vermelho somente para status.
+ * Sem gradientes, sem glassmorphism, sombras apenas em camadas flutuantes (menus, modais).
+ */
+@theme {
+  --font-sans:
+    'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont,
+    'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'Cascadia Mono', Consolas, ui-monospace, monospace;
+
+  /* Escala tipográfica densa para desktop (13px como corpo). */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.125rem;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 0.875rem;
+  --text-base--line-height: 1.375rem;
+  --text-lg: 1rem;
+  --text-lg--line-height: 1.5rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 2rem;
+
+  /* Superfícies */
+  --color-canvas: #ffffff;
+  --color-sunken: #f7f7f8;
+  --color-hover: #f0f0f2;
+  --color-pressed: #e8e8eb;
+
+  /* Linhas */
+  --color-line: #e5e5e8;
+  --color-line-strong: #d4d4d8;
+
+  /* Texto (contraste ≥ 4.5:1 sobre branco, exceto ink-4 — só para placeholder/decorativo) */
+  --color-ink: #18181b;
+  --color-ink-2: #3f3f46;
+  --color-ink-3: #6b6b74;
+  --color-ink-4: #a1a1aa;
+
+  /* Ação */
+  --color-accent: #2563eb;
+  --color-accent-hover: #1d4ed8;
+  --color-accent-subtle: #eff4ff;
+  --color-accent-line: #cddcfb;
+  --color-accent-ink: #1d4ed8;
+
+  /* Status */
+  --color-success: #15803d;
+  --color-success-subtle: #effbf3;
+  --color-success-line: #c4ebd2;
+  --color-warning: #a16207;
+  --color-warning-subtle: #fef9e8;
+  --color-warning-line: #f1dfa4;
+  --color-danger: #b91c1c;
+  --color-danger-subtle: #fef3f2;
+  --color-danger-line: #f5cdcb;
+
+  --shadow-overlay: 0 1px 2px rgb(0 0 0 / 0.06), 0 8px 24px rgb(0 0 0 / 0.1);
+
+  --animate-fade-in: fade-in 120ms ease-out;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(2px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
+  }
+
+  ::selection {
+    background-color: #cfe0ff;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line-strong) transparent;
+  }
+
+  dialog::backdrop {
+    background-color: rgb(24 24 27 / 0.32);
+  }
+
+  [popover] {
+    margin: 0;
+    inset: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    overflow: visible;
+  }
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}

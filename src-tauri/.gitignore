@@ -1,0 +1,5 @@
+# Artefatos de build do Rust/Tauri
+/target/
+
+# Schemas gerados automaticamente pelo tauri-build
+/gen/schemas

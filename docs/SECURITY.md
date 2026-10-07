@@ -1,0 +1,76 @@
+# Segurança
+
+Mesmo sendo um app pessoal, ele vai lidar com contas reais, tokens de acesso e arquivos do usuário.
+Estas políticas valem desde já; a arquitetura foi desenhada para cumpri-las quando as integrações forem reais.
+
+## Segredos e credenciais
+
+- **Segredos nunca entram no repositório.** `.env`, `*.pem`, `*.key`, `credentials*.json`, `tokens*.json`
+  estão no `.gitignore`. Use `.env.example` (valores vazios) como referência.
+- **Nunca use o prefixo `VITE_` em segredos.** Variáveis `VITE_*` são embutidas no bundle do frontend e ficam
+  visíveis para qualquer um. O Vite só expõe `VITE_*` e `TAURI_ENV_*` (`vite.config.ts → envPrefix`).
+- Client secrets (TikTok, Instagram) e a chave da OpenAI serão lidos **apenas pelo lado Rust**.
+- Em uso real, chaves configuradas pelo usuário (ex.: API key da OpenAI) vão para o **Credential Manager do
+  Windows** (crate `keyring`), nunca para o SQLite ou arquivos de configuração em texto plano.
+
+## Tokens e OAuth (Fase 3)
+
+- Fluxo OAuth executado no Rust: abre o navegador padrão do sistema, recebe o callback em loopback local
+  (`127.0.0.1`), troca o `code` por tokens com PKCE quando suportado, valida `state`.
+- Access/refresh tokens armazenados no Credential Manager, indexados pelo id do canal. O banco guarda apenas
+  status do canal e metadados públicos (usuário, nome, avatar).
+- O frontend **nunca recebe tokens**: `SocialProvider.connect()` devolve só o perfil (`ConnectResult` não tem
+  campo de token por design).
+- Token expirado → canal `expired`; nunca re-tentar autenticação de forma automática e silenciosa em loop.
+- Proibido: scraping, automação de navegador, captura de cookies, endpoints não oficiais, burla de autenticação.
+
+## Logs
+
+- Use sempre `logger` (`src/lib/logger.ts`); `console.*` é bloqueado pelo lint.
+- O logger **redige automaticamente** chaves com `token`, `secret`, `password`, `authorization`, `api_key`,
+  `cookie`, `credential` e valores `Bearer …`. Ainda assim: não passe payloads de autenticação ao logger.
+- Erros do Rust (`CommandError`) não incluem conteúdo de arquivos nem segredos.
+- Logs atuais ficam só em memória; quando persistidos em arquivo (TODO), manter a redação e rotação.
+
+## Armazenamento local
+
+- Banco em `%APPDATA%\com.socialmanager.desktop\` — protegido pelas permissões do usuário do Windows.
+  Contém dados pessoais (legendas, agendas, caminhos): nunca versionar (`*.db` no `.gitignore`).
+- Vídeos não são copiados (DEC-006). Remover da biblioteca **nunca** apaga o arquivo original.
+- Arquivos gerados pelo app (miniaturas, versões processadas) ficarão em subpastas do diretório do app.
+
+## Arquivos e caminhos
+
+- Caminhos chegam do diálogo nativo, mas são **revalidados no Rust** (`inspect_media_file`): absoluto,
+  arquivo regular existente, extensão permitida (`mp4`, `mov`, `webm`), tamanho > 0.
+- Asset protocol com **escopo vazio**; apenas arquivos validados são autorizados, um a um, na sessão (DEC-016).
+- Processos externos (FFmpeg) recebem argumentos montados no Rust a partir de valores fixos/validados,
+  nunca de texto livre; executados sem shell e sem janela de console.
+
+## Superfície do Tauri
+
+- Permissões mínimas em `src-tauri/capabilities/default.json`: `core:default`, `dialog:allow-open`,
+  `sql:allow-load|select|execute|close`. **Toda nova permissão deve ser justificada aqui.**
+- CSP restritiva em `tauri.conf.json` (`default-src 'self'`; IPC, `asset:` para imagens/vídeos locais;
+  `style-src 'unsafe-inline'` por causa de estilos inline do React).
+- Comandos customizados validam toda entrada vinda do webview.
+
+## Dados externos
+
+- Toda resposta de API (e do lado Rust) é **não confiável**: validar com Zod antes de usar (exemplo:
+  `tauriDesktopBridge.ts`). URLs externas (avatar) só são exibidas como imagem.
+- Conteúdo de legendas é tratado como texto (React escapa por padrão); nunca usar `dangerouslySetInnerHTML`.
+
+## Dependências
+
+- Adicionar dependência só com necessidade real, preferindo pacotes mantidos e populares; registrar em DECISIONS.md.
+- `npm audit` e `cargo audit` (quando instalado) antes de cada versão.
+
+## Justificativas de permissões e exceções
+
+| Item                     | Motivo                                                  |
+| ------------------------ | ------------------------------------------------------- |
+| `dialog:allow-open`      | seletor de vídeos na importação                         |
+| `sql:allow-execute`      | escrita no banco local                                  |
+| `assetProtocol.enable`   | preview/metadados de vídeos autorizados individualmente |
+| `dragDropEnabled: false` | permite drag-and-drop HTML5 no calendário (DEC-010)     |

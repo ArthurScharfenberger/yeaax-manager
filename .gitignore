@@ -1,0 +1,61 @@
+# --- Dependências ---
+node_modules/
+
+# --- Builds ---
+dist/
+dist-ssr/
+coverage/
+src-tauri/target/
+src-tauri/gen/schemas/
+*.tsbuildinfo
+
+# --- Segredos e ambiente (nunca versionar) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+credentials*.json
+tokens*.json
+
+# --- Bancos locais (dados pessoais reais) ---
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# --- Mídia (vídeos e imagens do usuário nunca entram no repositório) ---
+*.mp4
+*.mov
+*.webm
+*.mkv
+*.avi
+*.m4v
+# Ancorados na raiz para não ignorar src/features/media/.
+/media/
+/thumbnails/
+
+# --- Temporários e logs ---
+logs/
+*.log
+npm-debug.log*
+*.tmp
+*.temp
+.cache/
+tmp/
+
+# --- Editor / sistema ---
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Configurações locais do Claude Code (o launch.json é compartilhado)
+.claude/settings.local.json
