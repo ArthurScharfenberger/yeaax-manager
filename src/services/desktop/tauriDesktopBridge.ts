@@ -1,5 +1,5 @@
 import { convertFileSrc, invoke, type InvokeArgs, type InvokeOptions } from '@tauri-apps/api/core';
-import { appConfigDir } from '@tauri-apps/api/path';
+import { appConfigDir, appLogDir } from '@tauri-apps/api/path';
 import { open } from '@tauri-apps/plugin-dialog';
 import { z } from 'zod';
 
@@ -67,6 +67,8 @@ export function createTauriDesktopBridge(): DesktopBridge {
     },
 
     getDataDirectory: () => appConfigDir(),
+
+    getLogDirectory: () => appLogDir(),
 
     toAssetUrl: (path) => convertFileSrc(path),
   };

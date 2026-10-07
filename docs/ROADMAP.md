@@ -28,10 +28,10 @@ Marque `[x]` ao concluir (com a versão entre parênteses quando fizer sentido).
 - [x] Configurações: Geral, Armazenamento, Integrações, IA, FFmpeg, Aparência, Sobre (v0.1.0)
 - [x] Validação manual no app desktop: importação `.mp4`, preview e persistência (v0.1.0)
 - [x] Miniaturas automáticas capturadas pelo WebView2 na importação + preenchimento das pendentes (não lançado)
-- [ ] Logs persistidos em arquivo (tauri-plugin-log) com rotação
+- [x] Logs persistidos em arquivo (tauri-plugin-log) com rotação (não lançado)
 - [ ] Backup e restauração do banco (exportar/importar arquivo)
-- [ ] Duplicar post para outro canal (mesmo vídeo, legenda adaptada)
-- [ ] Visão de lista/filtro de todos os posts (inclusive rascunhos sem data)
+- [x] Duplicar post para outro canal como rascunho (não lançado)
+- [x] Página Posts com todos os posts e filtros, inclusive rascunhos sem data (não lançado)
 - [ ] Instalador NSIS revisado (ícone, nome, atalhos)
 
 ## Fase 2 — preparação de conteúdo e automação local

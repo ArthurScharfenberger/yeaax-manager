@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import { AppError, getErrorMessage, isExpectedError, toAppError } from './errors';
-import { redact } from './logger';
+import { logger, redact } from './logger';
 
 describe('toAppError', () => {
   it('preserva AppError', () => {
@@ -54,5 +54,18 @@ describe('redact', () => {
       },
       header: 'Bearer [redacted]',
     });
+  });
+});
+
+describe('logger sinks', () => {
+  it('entrega a entrada já redigida e permite remover o destino', () => {
+    const received: unknown[] = [];
+    const remove = logger.addSink((entry) => received.push(entry.context));
+
+    logger.info('Conectado', { channel: 'yeaxx', accessToken: 'abc' });
+    remove();
+    logger.info('Depois de remover');
+
+    expect(received).toEqual([{ channel: 'yeaxx', accessToken: '[redacted]' }]);
   });
 });

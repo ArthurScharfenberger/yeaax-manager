@@ -19,6 +19,8 @@ export interface DesktopBridge {
   deleteThumbnail(mediaId: string): Promise<void>;
   /** Pasta onde o banco local é salvo (`null` no modo preview). */
   getDataDirectory(): Promise<string | null>;
+  /** Pasta dos arquivos de log (`null` no modo preview). */
+  getLogDirectory(): Promise<string | null>;
   /**
    * URL para exibir um arquivo local no webview. Funciona para a pasta de miniaturas do app
    * e para arquivos autorizados na sessão atual via `inspectMediaFile` (DEC-016).

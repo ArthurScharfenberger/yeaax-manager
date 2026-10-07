@@ -18,6 +18,52 @@ Formato:
 
 ---
 
+## Sessão 2026-10-07 (3) — Pesquisa das APIs, página Posts, duplicar e logs em arquivo
+
+### Objetivo
+
+Verificar a viabilidade das APIs oficiais do TikTok e do Instagram e preparar o app para uso diário.
+
+### Alterações realizadas
+
+- `docs/API_NOTES.md` reescrito com notas verificadas na documentação oficial; DEC-019 (consentimento por post,
+  Auto Schedule só sugere) e DEC-020 (credenciais do próprio usuário). Limite de 20 menções do Instagram no código.
+- Página **Posts** (`/posts`, `PostsPage` + `PostsTable`), filtro `hasSchedule` no repositório, hook compartilhado
+  `useUrlParams` (também usado pela Biblioteca).
+- **Duplicar para outro canal**: `postService.duplicateToChannels` (cópias como rascunho, histórico com a origem,
+  falhas por canal) + `DuplicatePostDialog` com pré-seleção da mesma marca.
+- **Logs em arquivo**: `tauri-plugin-log` (Rust + npm 2.10.0), `logger.addSink`, `fileLogSink.ts`, pasta exibida em
+  Configurações → Sobre. DEC-021.
+
+### Arquivos importantes
+
+`docs/API_NOTES.md`, `src/features/posts/PostsPage.tsx`, `src/features/posts/components/DuplicatePostDialog.tsx`,
+`src/features/posts/postService.ts`, `src/hooks/useUrlParams.ts`, `src/lib/logger.ts`,
+`src/services/desktop/fileLogSink.ts`, `src-tauri/src/lib.rs`.
+
+### Problemas encontrados
+
+- No primeiro teste do duplicar, um clique por coordenada caiu fora do botão e fechou o diálogo pelo fundo —
+  falha da automação, não do app (repetido via referência do botão: funcionou).
+
+### Validação
+
+`npm run check` (80 testes), `cargo test` (8) e clippy sem avisos. No preview: filtro "Sem data" (2 rascunhos) e
+duplicar Gol GTI (TikTok YEAXX → Instagram YEAXX) criando o rascunho. Logs em arquivo **ainda não verificados no
+desktop**.
+
+### Pendências
+
+- Validar no desktop (reiniciar o `app:dev`): página Posts, duplicar, criação do arquivo de log.
+- Decisões do usuário: contas do Instagram profissionais? Auditoria do app no TikTok ou modo rascunho?
+
+### Próximo passo
+
+Com as decisões do usuário, iniciar a Fase 3 pelo Instagram (credenciais no Credential Manager + publicação de
+Reels por upload resumável), ou o backup do banco se preferir segurança antes.
+
+---
+
 ## Sessão 2026-10-07 (2) — Miniaturas sem FFmpeg
 
 ### Objetivo

@@ -8,8 +8,36 @@ mod commands;
 mod error;
 mod migrations;
 
+use tauri_plugin_log::{log::LevelFilter, RotationStrategy, Target, TargetKind};
+
+/// Tamanho máximo de cada arquivo de log antes de rotacionar (5 MB).
+const MAX_LOG_FILE_BYTES: u128 = 5 * 1024 * 1024;
+/// Arquivos antigos mantidos após a rotação.
+const KEPT_LOG_FILES: usize = 5;
+
+/// Logs em `%LOCALAPPDATA%\com.socialmanager.desktop\logs\social-manager.log` (pasta de log do app).
+/// O frontend já envia as mensagens com dados sensíveis redigidos (src/lib/logger.ts).
+fn log_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
+    let level = if cfg!(debug_assertions) {
+        LevelFilter::Debug
+    } else {
+        LevelFilter::Info
+    };
+    tauri_plugin_log::Builder::new()
+        .clear_targets()
+        .target(Target::new(TargetKind::LogDir {
+            file_name: Some("social-manager".into()),
+        }))
+        .target(Target::new(TargetKind::Stdout))
+        .level(level)
+        .max_file_size(MAX_LOG_FILE_BYTES)
+        .rotation_strategy(RotationStrategy::KeepSome(KEPT_LOG_FILES))
+        .build()
+}
+
 pub fn run() {
     tauri::Builder::default()
+        .plugin(log_plugin())
         .plugin(tauri_plugin_dialog::init())
         .plugin(
             tauri_plugin_sql::Builder::default()

@@ -1,9 +1,11 @@
+import { useQuery } from '@tanstack/react-query';
 import { useSyncExternalStore } from 'react';
 
 import { useServices } from '@/app/ServicesContext';
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { SettingRow } from '@/components/ui/SettingRow';
 import { type LogLevel, logger } from '@/lib/logger';
+import { queryKeys } from '@/lib/queryKeys';
 import { APP_NAME, APP_VERSION } from '@/lib/runtime';
 import { formatTime } from '@/utils/format';
 
@@ -26,8 +28,12 @@ function useLogEntries() {
 }
 
 export function AboutSection() {
-  const { mode } = useServices();
+  const { mode, desktop } = useServices();
   const entries = useLogEntries();
+  const logDirectory = useQuery({
+    queryKey: queryKeys.system.logDirectory,
+    queryFn: () => desktop.getLogDirectory(),
+  });
   const recent = entries.slice(-VISIBLE_LOGS).reverse();
 
   return (
@@ -52,11 +58,19 @@ export function AboutSection() {
       >
         <span className="font-mono text-xs text-ink-2">docs/</span>
       </SettingRow>
+      <SettingRow
+        label="Arquivos de log"
+        description="Até 5 MB por arquivo; os 5 mais recentes são mantidos. Dados sensíveis são ocultados."
+      >
+        <span className="max-w-80 text-right font-mono text-2xs break-all text-ink-2">
+          {mode === 'preview' ? 'Indisponível no modo preview' : (logDirectory.data ?? '…')}
+        </span>
+      </SettingRow>
 
       <section className="pt-4">
         <h3 className="mb-2 text-sm font-medium text-ink">Logs recentes</h3>
         <p className="mb-2 text-xs text-ink-3">
-          Mantidos apenas em memória nesta sessão. Dados sensíveis são ocultados automaticamente.
+          Últimos registros desta sessão. No app desktop, também são gravados nos arquivos de log.
         </p>
         <ol className="max-h-80 overflow-y-auto rounded-md border border-line bg-sunken font-mono text-2xs">
           {recent.length === 0 && <li className="px-3 py-2 text-ink-3">Nenhum registro.</li>}

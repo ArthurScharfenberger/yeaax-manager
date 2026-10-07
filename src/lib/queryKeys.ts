@@ -38,6 +38,7 @@ export const queryKeys = {
   system: {
     ffmpeg: ['system', 'ffmpeg'] as const,
     dataDirectory: ['system', 'dataDirectory'] as const,
+    logDirectory: ['system', 'logDirectory'] as const,
     demoData: ['system', 'demoData'] as const,
   },
 } as const;

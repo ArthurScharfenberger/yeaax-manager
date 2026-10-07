@@ -25,6 +25,10 @@ async function createDbClient(mode: RuntimeMode): Promise<DbClient> {
 
 async function bootstrap(): Promise<AppServices> {
   const mode = detectRuntimeMode();
+  if (mode === 'desktop') {
+    const { createFileLogSink } = await import('@/services/desktop/fileLogSink');
+    logger.addSink(createFileLogSink());
+  }
   const db = withErrorMapping(await createDbClient(mode));
   const desktop = mode === 'desktop' ? createTauriDesktopBridge() : createPreviewDesktopBridge();
   const services = createAppServices({ db, desktop, mode });

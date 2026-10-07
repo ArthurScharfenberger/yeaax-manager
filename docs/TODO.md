@@ -4,6 +4,8 @@ Lista operacional. Itens concluídos saem daqui (o histórico fica no CHANGELOG 
 
 ## Agora
 
+- [ ] Validar no app desktop: página Posts, duplicar e o arquivo de log sendo criado (reiniciar o `app:dev`,
+      pois o Rust mudou).
 - [ ] Confirmar no desktop a miniatura automática ao importar um vídeo novo e que as miniaturas continuam
       visíveis após reabrir o app (a captura em si já foi validada com o `white.mp4`).
 - [ ] Importar `.mov` e `.webm` reais (`.mp4`, preview e persistência já validados).
@@ -13,12 +15,9 @@ Lista operacional. Itens concluídos saem daqui (o histórico fica no CHANGELOG 
 
 ## Próximo
 
-- [ ] `tauri-plugin-log`: persistir logs em arquivo com rotação, mantendo a redação de dados sensíveis.
 - [ ] Backup/restauração do banco (exportar e importar o arquivo `.db`).
 - [ ] FFmpeg: comando Rust `probe_media` (ffprobe) e `generate_thumbnail`; preencher `thumbnail_path`.
 - [ ] Comandos Rust transacionais para operações compostas críticas (ver DEC-008).
-- [ ] Página/visão "Todos os posts" com filtros (status, canal, sem data).
-- [ ] Ação "Duplicar para outro canal" no menu do post.
 - [ ] Testes de componentes para fluxos críticos (compositor de post) com Testing Library — avaliar custo/benefício.
 
 ## Depois

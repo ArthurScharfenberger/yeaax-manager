@@ -160,7 +160,8 @@ O registro (`createSocialProviders`, `createAIProvider`) é o único ponto que c
   `{ code, message }` e são convertidos por `toAppError`. Erros do driver SQLite viram `CONFLICT`/`DATABASE`.
 - Mensagens ao usuário: `getErrorMessage(error)`; formulários mostram erros inline, ações avulsas usam toast.
 - `logger` (`lib/logger.ts`): níveis, redação automática de campos sensíveis, buffer em memória exibido em
-  _Configurações → Sobre_. Regras de negócio violadas são `warn`; falhas reais são `error`.
+  _Configurações → Sobre_. Regras de negócio violadas são `warn`; falhas reais são `error`. No desktop, um
+  destino (`logger.addSink`) grava as entradas redigidas em arquivo via `tauri-plugin-log` (DEC-021).
 - Erros de renderização: `AppErrorBoundary` (global) e `RouteError` (por página). Erros não tratados de
   `window` também vão para o logger.
 

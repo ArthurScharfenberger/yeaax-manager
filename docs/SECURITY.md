@@ -30,7 +30,9 @@ Estas políticas valem desde já; a arquitetura foi desenhada para cumpri-las qu
 - O logger **redige automaticamente** chaves com `token`, `secret`, `password`, `authorization`, `api_key`,
   `cookie`, `credential` e valores `Bearer …`. Ainda assim: não passe payloads de autenticação ao logger.
 - Erros do Rust (`CommandError`) não incluem conteúdo de arquivos nem segredos.
-- Logs atuais ficam só em memória; quando persistidos em arquivo (TODO), manter a redação e rotação.
+- Logs vão para a memória (Configurações → Sobre) e, no desktop, para arquivos em
+  `%LOCALAPPDATA%\com.socialmanager.desktop\logs\` (5 MB por arquivo, 5 mantidos). A redação acontece
+  antes de qualquer destino (`logger.addSink`). Nunca versione nem compartilhe logs sem revisar.
 
 ## Armazenamento local
 
@@ -53,7 +55,7 @@ Estas políticas valem desde já; a arquitetura foi desenhada para cumpri-las qu
 ## Superfície do Tauri
 
 - Permissões mínimas em `src-tauri/capabilities/default.json`: `core:default`, `dialog:allow-open`,
-  `sql:allow-load|select|execute|close`. **Toda nova permissão deve ser justificada aqui.**
+  `log:allow-log`, `sql:allow-load|select|execute|close`. **Toda nova permissão deve ser justificada aqui.**
 - CSP restritiva em `tauri.conf.json` (`default-src 'self'`; IPC, `asset:` para imagens/vídeos locais;
   `style-src 'unsafe-inline'` por causa de estilos inline do React).
 - Comandos customizados validam toda entrada vinda do webview.
@@ -71,11 +73,12 @@ Estas políticas valem desde já; a arquitetura foi desenhada para cumpri-las qu
 
 ## Justificativas de permissões e exceções
 
-| Item                                           | Motivo                                                  |
-| ---------------------------------------------- | ------------------------------------------------------- |
-| `dialog:allow-open`                            | seletor de vídeos na importação                         |
-| `sql:allow-execute`                            | escrita no banco local                                  |
-| `assetProtocol.enable`                         | preview/metadados de vídeos autorizados individualmente |
-| `assetProtocol.scope: $APPDATA/thumbnails/*`   | exibir miniaturas geradas pelo app (DEC-018)            |
-| comandos `save_thumbnail` / `delete_thumbnail` | gravar/remover miniaturas na pasta do app               |
-| `dragDropEnabled: false`                       | permite drag-and-drop HTML5 no calendário (DEC-010)     |
+| Item                                           | Motivo                                                                    |
+| ---------------------------------------------- | ------------------------------------------------------------------------- |
+| `dialog:allow-open`                            | seletor de vídeos na importação                                           |
+| `log:allow-log`                                | gravar no arquivo de log as entradas do logger do frontend (já redigidas) |
+| `sql:allow-execute`                            | escrita no banco local                                                    |
+| `assetProtocol.enable`                         | preview/metadados de vídeos autorizados individualmente                   |
+| `assetProtocol.scope: $APPDATA/thumbnails/*`   | exibir miniaturas geradas pelo app (DEC-018)                              |
+| comandos `save_thumbnail` / `delete_thumbnail` | gravar/remover miniaturas na pasta do app                                 |
+| `dragDropEnabled: false`                       | permite drag-and-drop HTML5 no calendário (DEC-010)                       |

@@ -26,6 +26,7 @@ marque como _Substituída por DEC-XXX_.
 | DEC-018 | Miniaturas capturadas pelo WebView2 e gravadas pelo Rust               | Provisória |
 | DEC-019 | Publicação sempre com consentimento por post; Auto Schedule só sugere  | Ativa      |
 | DEC-020 | Credenciais do próprio usuário ("traga seu app") no Credential Manager | Ativa      |
+| DEC-021 | Logs em arquivo com tauri-plugin-log                                   | Ativa      |
 
 ---
 
@@ -247,3 +248,17 @@ marque como _Substituída por DEC-XXX_.
   para OAuth (contraria "sem servidor"); OAuth do Instagram com certificado HTTPS local (aviso de certificado no navegador).
 - **Impactos:** Configurações → Integrações ganha campos de credenciais; renovação de tokens vira tarefa do
   agendador local; o crate `keyring` entra como dependência na Fase 3.
+
+## DEC-021 — Logs em arquivo com tauri-plugin-log
+
+- **Data:** 2026-10-07
+- **Decisão:** o `logger` do frontend ganhou destinos (`addSink`); no desktop, um destino envia cada entrada
+  (já redigida) ao `tauri-plugin-log`, que grava em `app_log_dir`
+  (`%LOCALAPPDATA%\com.socialmanager.desktop\logs\social-manager.log`), rotacionando a cada 5 MB e mantendo os
+  5 arquivos mais recentes. Nível mínimo: debug em dev, info em release.
+- **Motivo:** diagnosticar problemas depois que o app fecha (ex.: falhas de publicação na Fase 3); plugin oficial
+  do Tauri, mesma versão no npm e no crate (2.10.0).
+- **Alternativas:** comando Rust próprio gravando arquivos (reimplementaria rotação); `tauri-plugin-fs`
+  (permissões amplas de sistema de arquivos).
+- **Impactos:** nova permissão `log:allow-log`; logs do Rust vão para o mesmo arquivo; o modo preview continua
+  só em memória.

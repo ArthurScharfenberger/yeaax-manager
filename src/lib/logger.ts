@@ -21,6 +21,9 @@ export interface LogEntry {
 
 type LogListener = (entries: readonly LogEntry[]) => void;
 
+/** Destino extra para cada entrada já redigida (ex.: arquivo de log no app desktop). */
+export type LogSink = (entry: LogEntry) => void;
+
 const MAX_ENTRIES = 200;
 const MAX_DEPTH = 4;
 const REDACTED = '[redacted]';
@@ -54,6 +57,7 @@ export function redact(value: unknown, depth = 0): unknown {
 class Logger {
   private entries: LogEntry[] = [];
   private listeners = new Set<LogListener>();
+  private sinks = new Set<LogSink>();
   private nextId = 1;
 
   debug(message: string, context?: Record<string, unknown>): void {
@@ -76,6 +80,11 @@ class Logger {
     return this.entries;
   }
 
+  addSink(sink: LogSink): () => void {
+    this.sinks.add(sink);
+    return () => this.sinks.delete(sink);
+  }
+
   subscribe(listener: LogListener): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
@@ -95,6 +104,9 @@ class Logger {
       listener(this.entries);
     });
     this.writeToConsole(entry);
+    this.sinks.forEach((sink) => {
+      sink(entry);
+    });
   }
 
   private writeToConsole(entry: LogEntry): void {

@@ -15,6 +15,7 @@ export function createPreviewDesktopBridge(): DesktopBridge {
     saveThumbnail: () => Promise.reject(new AppError('NOT_AVAILABLE', DESKTOP_ONLY_MESSAGE)),
     deleteThumbnail: () => Promise.resolve(),
     getDataDirectory: () => Promise.resolve(null),
+    getLogDirectory: () => Promise.resolve(null),
     toAssetUrl: () => null,
   };
 }

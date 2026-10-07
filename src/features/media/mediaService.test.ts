@@ -41,6 +41,7 @@ function createFakeDesktop(files: Record<string, number>) {
     },
     detectFfmpeg: () => Promise.resolve({ available: false, version: null }),
     getDataDirectory: () => Promise.resolve(null),
+    getLogDirectory: () => Promise.resolve(null),
     toAssetUrl: (path) => path,
   };
 
