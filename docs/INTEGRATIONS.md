@@ -28,22 +28,36 @@ O mesmo status aparece na UI (Configurações → Integrações), definido em `s
 
 - **Contrato:** `SocialProvider` (connect, disconnect, getProfile, publish, getPublicationStatus, getAnalytics).
 - **Hoje:** `TikTokProvider extends MockSocialProvider` — latência simulada, nenhuma rede.
+- **Viabilidade (pesquisa de 2026-10-07, ver API_NOTES.md):** envio do arquivo local é suportado
+  (`FILE_UPLOAD` em chunks); login desktop com PKCE e redirect em `localhost` é suportado. **Bloqueio:** sem
+  auditoria do app, só posts privados (`SELF_ONLY`) e a conta precisa estar privada.
 - **Plano (Fase 3):**
-  1. Registrar app no TikTok for Developers; obter Client Key/Secret (guardar fora do repositório).
-  2. OAuth (Login Kit) no Rust: abrir navegador do sistema, receber callback em loopback local, trocar code por token.
-  3. Tokens no Credential Manager; o banco guarda só o estado do canal.
-  4. Publicação via Content Posting API (upload do arquivo local); acompanhar status por polling.
+  1. Usuário registra o próprio app no TikTok for Developers (DEC-020); client key/secret no Credential Manager.
+  2. OAuth (Login Kit desktop) no Rust: navegador do sistema → callback em `http://127.0.0.1:<porta>` → troca do
+     code com PKCE. Access token 24 h, refresh 365 dias (renovação automática).
+  3. Compositor com a UX obrigatória do TikTok (privacidade sem padrão, interações, divulgação comercial,
+     confirmação de música, prévia) e consulta a `creator_info` antes de postar (DEC-019).
+  4. Publicação: _Direct Post_ (app auditado) ou _Upload_ para rascunhos (sem auditoria, se o sandbox confirmar);
+     upload sequencial em chunks de 5–64 MB; respeitar 6 req/min e as cotas diárias.
   5. Analytics a partir dos endpoints oficiais disponíveis para o escopo concedido.
-- **Pontos de atenção:** ver API_NOTES.md (auditoria do app, visibilidade de posts, escopos).
+- **Decisão do usuário pendente:** solicitar a auditoria do app (necessária para posts públicos) ou usar o modo rascunho.
 
 ## Instagram — `MOCK`
 
 - **Contrato:** `SocialProvider`.
 - **Hoje:** `InstagramProvider extends MockSocialProvider`.
-- **Plano (Fase 3):** app na Meta for Developers; OAuth no Rust; Instagram Graph API para contas
-  profissionais (Business/Creator); publicação de Reels por container + publish; insights para analytics.
-- **Pontos de atenção:** exigência de conta profissional; forma de envio do vídeo (URL pública vs. upload
-  resumável) impacta o modelo local-first — ver API_NOTES.md.
+- **Viabilidade (pesquisa de 2026-10-07):** **boa para uso pessoal** — upload resumável do arquivo local (sem
+  hospedar o vídeo), Standard Access sem App Review para contas próprias, 100 posts/24 h. Exige conta
+  **profissional** (Business ou Creator).
+- **Plano (Fase 3):**
+  1. Usuário cria o app na Meta (caso de uso Instagram API com Instagram Login) e adiciona as próprias contas.
+  2. Token gerado no painel colado em Configurações (Credential Manager); renovação automática antes de 60 dias
+     via `refresh_access_token` (sem app secret) — DEC-020.
+  3. Publicação de Reels: container `REELS` + `upload_type=resumable` → upload para `rupload.facebook.com` →
+     polling de `status_code` → `media_publish`. Validar especificações antes (3 s–15 min, ≤ 300 MB, MP4/MOV com
+     faststart, H.264/HEVC, 9:16).
+  4. Insights para analytics.
+- **Decisão do usuário pendente:** confirmar que as contas são profissionais.
 
 ## OpenAI — `MOCK`
 

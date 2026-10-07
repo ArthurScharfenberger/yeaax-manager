@@ -6,6 +6,7 @@ import {
   canTransition,
   checkCaption,
   countHashtags,
+  countMentions,
   isEditable,
   isOverdue,
 } from './postRules';
@@ -78,6 +79,13 @@ describe('checkCaption', () => {
     const caption = Array.from({ length: 31 }, (_, i) => `#tag${i}`).join(' ');
     expect(checkCaption(caption, 'instagram').tooManyHashtags).toBe(true);
     expect(checkCaption(caption, 'tiktok').tooManyHashtags).toBe(false);
+  });
+
+  it('aplica o limite de 20 menções do Instagram e ignora e-mails', () => {
+    expect(countMentions('Valeu @yeaxx e @techfix.rs! Contato: oi@exemplo.com')).toBe(2);
+    const caption = Array.from({ length: 21 }, (_, i) => `@conta${i}`).join(' ');
+    expect(checkCaption(caption, 'instagram').tooManyMentions).toBe(true);
+    expect(checkCaption(caption, 'tiktok').tooManyMentions).toBe(false);
   });
 
   it('detecta legendas acima do limite', () => {

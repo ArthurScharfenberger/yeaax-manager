@@ -7,8 +7,8 @@ Lista operacional. Itens concluídos saem daqui (o histórico fica no CHANGELOG 
 - [ ] Confirmar no desktop a miniatura automática ao importar um vídeo novo e que as miniaturas continuam
       visíveis após reabrir o app (a captura em si já foi validada com o `white.mp4`).
 - [ ] Importar `.mov` e `.webm` reais (`.mp4`, preview e persistência já validados).
-- [ ] Confirmar os limites de legenda/hashtags em `src/lib/platforms.ts` contra a documentação oficial
-      (ver `docs/API_NOTES.md`).
+- [ ] **Decisões do usuário (pesquisa de APIs):** (1) as contas do Instagram são profissionais (Business/Creator)?
+      (2) solicitar auditoria do app no TikTok (necessária para posts públicos) ou usar o modo rascunho?
 - [ ] Decidir a pasta das versões processadas pelo FFmpeg (miniaturas já ficam em `%APPDATA%\com.socialmanager.desktop\thumbnails\`).
 
 ## Próximo

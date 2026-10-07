@@ -290,13 +290,17 @@ function ComposerForm({ title, editingId, initialState, onClose }: ComposerFormP
               <span
                 className={cn(
                   'text-2xs tabular',
-                  caption.tooLong || caption.tooManyHashtags ? 'text-danger' : 'text-ink-3',
+                  caption.tooLong || caption.tooManyHashtags || caption.tooManyMentions
+                    ? 'text-danger'
+                    : 'text-ink-3',
                 )}
               >
                 {caption.length}/{caption.maxLength}
                 {' · '}
                 {caption.hashtags}
                 {caption.maxHashtags !== null && `/${caption.maxHashtags}`} hashtags
+                {caption.maxMentions !== null &&
+                  ` · ${caption.mentions}/${caption.maxMentions} menções`}
               </span>
             }
           >

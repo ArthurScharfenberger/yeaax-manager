@@ -43,16 +43,20 @@ Marque `[x]` ao concluir (com a versão entre parênteses quando fizer sentido).
 - [ ] Logo/watermark próprio por canal
 - [ ] Classificação automática por regras (nome de arquivo, pastas, duração)
 - [ ] Detecção de vídeo duplicado na importação (hash do arquivo)
-- [ ] Motor do Auto Schedule (gera agendamentos a partir da fila e das regras)
+- [ ] Motor do Auto Schedule: **sugere** posts em revisão com horários; o usuário confirma cada um (DEC-019)
 - [ ] Filas de postagem por canal
 - [ ] Agendador local: dispara publicações enquanto o app está aberto (bandeja do sistema)
 - [ ] Notificações do sistema (falhas, publicações concluídas)
 
 ## Fase 3 — integrações oficiais
 
-- [ ] Armazenamento de tokens no Credential Manager do Windows (crate `keyring`) — pré-requisito
-- [ ] TikTok: Login Kit (OAuth) + Content Posting API
-- [ ] Instagram: Instagram Graph API para contas profissionais
+- [x] Pesquisa de viabilidade das APIs oficiais (2026-10-07 — ver API_NOTES.md)
+- [ ] Credenciais do próprio usuário + tokens no Credential Manager (crate `keyring`) — pré-requisito (DEC-020)
+- [ ] Compositor com campos por plataforma (UX obrigatória do TikTok, `share_to_feed`/capa no Instagram) + coluna `platform_options`
+- [ ] Validação de especificações por plataforma antes de agendar (duração, tamanho, formato)
+- [ ] Instagram: token do painel + renovação automática + publicação de Reels por upload resumável
+- [ ] TikTok: Login Kit desktop (PKCE) + Content Posting API (Direct Post se auditado; senão rascunhos)
+- [ ] TikTok: auditoria do app (necessária para posts públicos) — decisão do usuário
 - [ ] Publicação real + acompanhamento de status (`publication_attempts`)
 - [ ] OpenAI: legendas, hashtags e traduções (`ai_executions`)
 - [ ] Analytics: snapshots periódicos por post/canal (`analytics_snapshots`)

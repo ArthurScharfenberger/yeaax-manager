@@ -88,6 +88,12 @@ export function createPostService({ repositories, clock }: PostServiceDeps) {
         `O ${platformLabel} aceita no máximo ${caption.maxHashtags ?? 0} hashtags por post.`,
       );
     }
+    if (caption.tooManyMentions) {
+      throw new AppError(
+        'VALIDATION',
+        `O ${platformLabel} aceita no máximo ${caption.maxMentions ?? 0} menções (@) por post.`,
+      );
+    }
 
     if (data.status === 'scheduled') {
       if (!data.scheduledAt) {

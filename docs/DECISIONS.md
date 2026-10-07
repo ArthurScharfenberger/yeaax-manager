@@ -4,26 +4,28 @@ Toda decisão arquitetural relevante entra aqui **antes** ou **junto** do códig
 **Data · Decisão · Motivo · Alternativas consideradas · Impactos.** Decisões substituídas não são apagadas:
 marque como _Substituída por DEC-XXX_.
 
-| Id      | Decisão                                                           | Status     |
-| ------- | ----------------------------------------------------------------- | ---------- |
-| DEC-001 | SQLite local via `tauri-plugin-sql`                               | Ativa      |
-| DEC-002 | Tauri 2 + React + TypeScript + Vite                               | Ativa      |
-| DEC-003 | Regras de negócio em TypeScript; Rust só para sistema             | Ativa      |
-| DEC-004 | Tailwind CSS 4 + componentes próprios + lucide-react              | Ativa      |
-| DEC-005 | TanStack Query; sem Redux; Zustand só com necessidade real        | Ativa      |
-| DEC-006 | Mídia referenciada pelo caminho original, sem cópia               | Ativa      |
-| DEC-007 | Enums validados na aplicação, sem `CHECK` no SQLite               | Ativa      |
-| DEC-008 | Sem transações entre chamadas ao banco (pool do plugin)           | Ativa      |
-| DEC-009 | Modo preview no navegador com SQLite WASM (só em dev)             | Ativa      |
-| DEC-010 | Drag-and-drop HTML5 no calendário (`dragDropEnabled: false`)      | Ativa      |
-| DEC-011 | React Router com HashRouter                                       | Ativa      |
-| DEC-012 | Integrações como interfaces + mocks; só APIs oficiais             | Ativa      |
-| DEC-013 | Dados de demonstração com prefixo `demo-`, seed único e removível | Ativa      |
-| DEC-014 | Testes com Vitest + `node:sqlite` usando as migrations reais      | Ativa      |
-| DEC-015 | Node 24 LTS e TypeScript 6.0 (não 7.x)                            | Ativa      |
-| DEC-016 | Asset protocol com escopo vazio e autorização por arquivo         | Ativa      |
-| DEC-017 | Metadados de vídeo via `<video preload="metadata">` até o ffprobe | Provisória |
-| DEC-018 | Miniaturas capturadas pelo WebView2 e gravadas pelo Rust          | Provisória |
+| Id      | Decisão                                                                | Status     |
+| ------- | ---------------------------------------------------------------------- | ---------- |
+| DEC-001 | SQLite local via `tauri-plugin-sql`                                    | Ativa      |
+| DEC-002 | Tauri 2 + React + TypeScript + Vite                                    | Ativa      |
+| DEC-003 | Regras de negócio em TypeScript; Rust só para sistema                  | Ativa      |
+| DEC-004 | Tailwind CSS 4 + componentes próprios + lucide-react                   | Ativa      |
+| DEC-005 | TanStack Query; sem Redux; Zustand só com necessidade real             | Ativa      |
+| DEC-006 | Mídia referenciada pelo caminho original, sem cópia                    | Ativa      |
+| DEC-007 | Enums validados na aplicação, sem `CHECK` no SQLite                    | Ativa      |
+| DEC-008 | Sem transações entre chamadas ao banco (pool do plugin)                | Ativa      |
+| DEC-009 | Modo preview no navegador com SQLite WASM (só em dev)                  | Ativa      |
+| DEC-010 | Drag-and-drop HTML5 no calendário (`dragDropEnabled: false`)           | Ativa      |
+| DEC-011 | React Router com HashRouter                                            | Ativa      |
+| DEC-012 | Integrações como interfaces + mocks; só APIs oficiais                  | Ativa      |
+| DEC-013 | Dados de demonstração com prefixo `demo-`, seed único e removível      | Ativa      |
+| DEC-014 | Testes com Vitest + `node:sqlite` usando as migrations reais           | Ativa      |
+| DEC-015 | Node 24 LTS e TypeScript 6.0 (não 7.x)                                 | Ativa      |
+| DEC-016 | Asset protocol com escopo vazio e autorização por arquivo              | Ativa      |
+| DEC-017 | Metadados de vídeo via `<video preload="metadata">` até o ffprobe      | Provisória |
+| DEC-018 | Miniaturas capturadas pelo WebView2 e gravadas pelo Rust               | Provisória |
+| DEC-019 | Publicação sempre com consentimento por post; Auto Schedule só sugere  | Ativa      |
+| DEC-020 | Credenciais do próprio usuário ("traga seu app") no Credential Manager | Ativa      |
 
 ---
 
@@ -209,3 +211,39 @@ marque como _Substituída por DEC-XXX_.
 - **Impactos:** codecs que o WebView2 não decodifica ficam sem miniatura (placeholder) até o FFmpeg; falhas de
   miniatura nunca bloqueiam a importação; remover da biblioteca apaga a miniatura. Com o FFmpeg,
   `VideoProcessor.generateThumbnail` pode substituir a captura mantendo o mesmo comando de gravação.
+
+## DEC-019 — Publicação sempre com consentimento por post; Auto Schedule só sugere
+
+- **Data:** 2026-10-07
+- **Decisão:**
+  1. Nenhum conteúdo é enviado a uma plataforma sem que o usuário tenha **confirmado aquele post** no compositor,
+     com os campos exigidos pela plataforma (no TikTok: privacidade sem valor padrão, comentário/dueto/stitch
+     desmarcados por padrão, divulgação comercial, confirmação de uso de música, prévia).
+  2. O motor do **Auto Schedule** (Fase 2) apenas **propõe**: cria posts em `review` com horários sugeridos; o
+     usuário revisa e confirma cada um. Ele nunca publica conteúdo escolhido automaticamente.
+  3. Como nenhuma das APIs tem agendamento nativo, o próprio app publica no horário (agendador local, app aberto).
+  4. Modos: Instagram — publicação direta com upload resumável do arquivo local. TikTok — _Direct Post_ se o app
+     for auditado; sem auditoria, _Upload_ para rascunhos (o usuário finaliza no app do TikTok), sujeito a teste.
+- **Motivo:** as diretrizes do TikTok exigem envio "only … after the user has expressly consent to the upload" e
+  uma UX específica; sem auditoria, só posts privados (ver API_NOTES.md). Também é a postura mais segura para as
+  contas do usuário.
+- **Alternativas:** publicação 100% automática a partir da fila (viola as diretrizes do TikTok e arrisca as
+  contas); usar só o modo rascunho em ambas (desperdiça a publicação direta do Instagram).
+- **Impactos:** o compositor terá uma seção por plataforma; `posts` ganhará uma coluna `platform_options` (JSON)
+  em uma migration futura; o roadmap do Auto Schedule muda de "publica sozinho" para "sugere e o usuário confirma".
+
+## DEC-020 — Credenciais do próprio usuário no Credential Manager
+
+- **Data:** 2026-10-07
+- **Decisão:** o usuário registra **seus próprios apps de desenvolvedor** (TikTok for Developers e Meta). Client
+  key/secret e tokens são informados em Configurações e guardados pelo lado Rust no **Credential Manager do
+  Windows** (crate `keyring`). Instagram: colar o token gerado no painel da Meta para as contas próprias; o app o
+  renova automaticamente antes dos 60 dias (o refresh não exige app secret). TikTok: OAuth desktop com PKCE e
+  servidor de callback em `http://127.0.0.1:<porta>` no Rust.
+- **Motivo:** app pessoal sem servidor; o segredo nunca entra no repositório nem no bundle; o Instagram com
+  Standard Access dispensa App Review para contas próprias; o redirect do Instagram exige HTTPS, o que complica
+  OAuth local — o token do painel evita isso.
+- **Alternativas:** embutir o client secret no binário (extraível — viola SECURITY.md); servidor intermediário
+  para OAuth (contraria "sem servidor"); OAuth do Instagram com certificado HTTPS local (aviso de certificado no navegador).
+- **Impactos:** Configurações → Integrações ganha campos de credenciais; renovação de tokens vira tarefa do
+  agendador local; o crate `keyring` entra como dependência na Fase 3.

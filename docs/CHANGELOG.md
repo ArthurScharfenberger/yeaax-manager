@@ -12,6 +12,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); 
   captura) são processados automaticamente em segundo plano ao abrir o app.
 - Comandos Rust `save_thumbnail` e `delete_thumbnail`; remover um vídeo da biblioteca apaga a miniatura.
 - Testes do serviço de mídia (importação, falhas, miniaturas).
+- Limite de 20 menções (@) por legenda no Instagram, com contador no compositor.
+- Pesquisa de viabilidade das APIs oficiais do TikTok e do Instagram (`docs/API_NOTES.md`), com as
+  decisões DEC-019 (consentimento por post; Auto Schedule só sugere) e DEC-020 (credenciais do próprio usuário).
 
 ### Alterado
 

@@ -69,27 +69,39 @@ export function countHashtags(caption: string): number {
   return caption.match(/#[\p{L}\p{N}_]+/gu)?.length ?? 0;
 }
 
+/** Menções `@usuario` (ignora e-mails como `a@b.com`). */
+export function countMentions(caption: string): number {
+  return caption.match(/(?<![\w.])@[\w.]+/g)?.length ?? 0;
+}
+
 export interface CaptionCheck {
   length: number;
   maxLength: number;
   hashtags: number;
   maxHashtags: number | null;
+  mentions: number;
+  maxMentions: number | null;
   tooLong: boolean;
   tooManyHashtags: boolean;
+  tooManyMentions: boolean;
 }
 
 /** Verifica a legenda contra os limites da plataforma. */
 export function checkCaption(caption: string, platform: Platform): CaptionCheck {
-  const { captionMaxLength, maxHashtags } = PLATFORM_INFO[platform].limits;
-  // Unidades UTF-16: conservador (emojis contam 2), nunca subestima o limite da plataforma.
+  const { captionMaxLength, maxHashtags, maxMentions } = PLATFORM_INFO[platform].limits;
+  // Unidades UTF-16: é como o TikTok conta e é conservador para o Instagram (emojis contam 2).
   const length = caption.length;
   const hashtags = countHashtags(caption);
+  const mentions = countMentions(caption);
   return {
     length,
     maxLength: captionMaxLength,
     hashtags,
     maxHashtags,
+    mentions,
+    maxMentions,
     tooLong: length > captionMaxLength,
     tooManyHashtags: maxHashtags !== null && hashtags > maxHashtags,
+    tooManyMentions: maxMentions !== null && mentions > maxMentions,
   };
 }

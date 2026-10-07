@@ -1,10 +1,12 @@
 import type { Platform } from '@/types';
 
 export interface PlatformLimits {
-  /** Tamanho máximo da legenda em caracteres. */
+  /** Tamanho máximo da legenda (unidades UTF-16, como a API do TikTok conta). */
   captionMaxLength: number;
   /** Máximo de hashtags por post (`null` = sem limite documentado). */
   maxHashtags: number | null;
+  /** Máximo de menções `@` por post (`null` = sem limite documentado). */
+  maxMentions: number | null;
 }
 
 export interface PlatformInfo {
@@ -17,21 +19,22 @@ export interface PlatformInfo {
 
 /**
  * Informações e limites por plataforma.
- * Os limites devem ser revisados contra a documentação oficial ao implementar a
- * integração real — ver docs/API_NOTES.md.
+ * Limites verificados na documentação oficial em 2026-10-07 — fontes em docs/API_NOTES.md.
  */
 export const PLATFORM_INFO: Record<Platform, PlatformInfo> = {
   tiktok: {
     id: 'tiktok',
     label: 'TikTok',
     monogram: 'TT',
-    limits: { captionMaxLength: 2200, maxHashtags: null },
+    // Content Posting API: `title` até 2200 runas UTF-16.
+    limits: { captionMaxLength: 2200, maxHashtags: null, maxMentions: null },
   },
   instagram: {
     id: 'instagram',
     label: 'Instagram',
     monogram: 'IG',
-    limits: { captionMaxLength: 2200, maxHashtags: 30 },
+    // IG User Media: "Maximum 2200 characters, 30 hashtags, and 20 @ tags."
+    limits: { captionMaxLength: 2200, maxHashtags: 30, maxMentions: 20 },
   },
 };
 
