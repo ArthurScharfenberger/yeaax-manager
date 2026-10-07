@@ -23,6 +23,7 @@ marque como _Substituída por DEC-XXX_.
 | DEC-015 | Node 24 LTS e TypeScript 6.0 (não 7.x)                            | Ativa      |
 | DEC-016 | Asset protocol com escopo vazio e autorização por arquivo         | Ativa      |
 | DEC-017 | Metadados de vídeo via `<video preload="metadata">` até o ffprobe | Provisória |
+| DEC-018 | Miniaturas capturadas pelo WebView2 e gravadas pelo Rust          | Provisória |
 
 ---
 
@@ -178,6 +179,8 @@ marque como _Substituída por DEC-XXX_.
 - **Motivo:** permitir preview e leitura de metadados de vídeos escolhidos pelo usuário sem abrir o disco inteiro ao webview.
 - **Alternativas:** escopo amplo (`**`) — expõe qualquer arquivo; copiar vídeos para pasta do app (DEC-006).
 - **Impactos:** autorizações não persistem entre execuções; o painel de detalhes reautoriza ao abrir.
+- **Atualização (DEC-018):** o escopo estático passou a incluir apenas `$APPDATA/thumbnails/*` — arquivos
+  gerados pelo próprio app, nunca vídeos do usuário.
 
 ## DEC-017 — Metadados de vídeo via `<video preload="metadata">` (provisória)
 
@@ -186,3 +189,23 @@ marque como _Substituída por DEC-XXX_.
 - **Motivo:** dados úteis já na Fase 1 sem exigir FFmpeg instalado.
 - **Alternativas:** aguardar ffprobe (biblioteca sem duração até a Fase 2).
 - **Impactos:** formatos/codecs que o WebView2 não lê ficam com duração `—`. Substituir por ffprobe na Fase 2.
+- **Validação (2026-10-07):** importação real de `.mp4` (576×1024, 25,3 s) leu duração e resolução corretamente.
+  `.mov` e `.webm` ainda não foram testados com arquivos reais.
+
+## DEC-018 — Miniaturas capturadas pelo WebView2 e gravadas pelo Rust (provisória)
+
+- **Data:** 2026-10-07
+- **Decisão:** miniaturas são **sempre automáticas** (requisito do usuário — sem ação manual). Na importação, o
+  mesmo `<video>` que lê os metadados busca ~1 s, desenha o quadro num canvas e gera um JPEG de até 360 px. Os
+  bytes vão por IPC binário para o comando `save_thumbnail`, que valida (id só com letras/números/hífen,
+  assinatura JPEG, até 2 MB) e grava em `%APPDATA%\com.socialmanager.desktop\thumbnails\<id>.jpg`;
+  `media.thumbnail_path` guarda o caminho. Ao abrir o app, vídeos ainda sem miniatura (importados antes do
+  recurso ou com falha na captura) são processados em segundo plano, um por vez, uma tentativa por sessão.
+- **Motivo:** miniaturas reais já no MVP sem exigir FFmpeg instalado. O canvas não fica bloqueado porque o
+  protocolo `asset:` do Tauri responde com `Access-Control-Allow-Origin` da janela e o vídeo é carregado com
+  `crossOrigin`.
+- **Alternativas:** FFmpeg agora (exige instalação; previsto para a Fase 2); `<video>` ao vivo em cada card
+  (carregaria vídeos na grade — contraria a regra de desempenho); base64 via JSON (maior e exigiria crate extra).
+- **Impactos:** codecs que o WebView2 não decodifica ficam sem miniatura (placeholder) até o FFmpeg; falhas de
+  miniatura nunca bloqueiam a importação; remover da biblioteca apaga a miniatura. Com o FFmpeg,
+  `VideoProcessor.generateThumbnail` pode substituir a captura mantendo o mesmo comando de gravação.

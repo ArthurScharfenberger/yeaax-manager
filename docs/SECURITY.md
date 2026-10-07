@@ -43,7 +43,10 @@ Estas políticas valem desde já; a arquitetura foi desenhada para cumpri-las qu
 
 - Caminhos chegam do diálogo nativo, mas são **revalidados no Rust** (`inspect_media_file`): absoluto,
   arquivo regular existente, extensão permitida (`mp4`, `mov`, `webm`), tamanho > 0.
-- Asset protocol com **escopo vazio**; apenas arquivos validados são autorizados, um a um, na sessão (DEC-016).
+- Asset protocol com escopo estático **apenas** para `$APPDATA/thumbnails/*` (arquivos gerados pelo app);
+  vídeos do usuário são autorizados um a um, na sessão, depois de validados (DEC-016).
+- `save_thumbnail`/`delete_thumbnail` nunca recebem caminhos do webview: o nome do arquivo deriva do id da
+  mídia (validado: só letras, números e hífen), o conteúdo precisa ser JPEG e ter até 2 MB.
 - Processos externos (FFmpeg) recebem argumentos montados no Rust a partir de valores fixos/validados,
   nunca de texto livre; executados sem shell e sem janela de console.
 
@@ -68,9 +71,11 @@ Estas políticas valem desde já; a arquitetura foi desenhada para cumpri-las qu
 
 ## Justificativas de permissões e exceções
 
-| Item                     | Motivo                                                  |
-| ------------------------ | ------------------------------------------------------- |
-| `dialog:allow-open`      | seletor de vídeos na importação                         |
-| `sql:allow-execute`      | escrita no banco local                                  |
-| `assetProtocol.enable`   | preview/metadados de vídeos autorizados individualmente |
-| `dragDropEnabled: false` | permite drag-and-drop HTML5 no calendário (DEC-010)     |
+| Item                                           | Motivo                                                  |
+| ---------------------------------------------- | ------------------------------------------------------- |
+| `dialog:allow-open`                            | seletor de vídeos na importação                         |
+| `sql:allow-execute`                            | escrita no banco local                                  |
+| `assetProtocol.enable`                         | preview/metadados de vídeos autorizados individualmente |
+| `assetProtocol.scope: $APPDATA/thumbnails/*`   | exibir miniaturas geradas pelo app (DEC-018)            |
+| comandos `save_thumbnail` / `delete_thumbnail` | gravar/remover miniaturas na pasta do app               |
+| `dragDropEnabled: false`                       | permite drag-and-drop HTML5 no calendário (DEC-010)     |

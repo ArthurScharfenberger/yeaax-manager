@@ -4,11 +4,12 @@ Lista operacional. Itens concluídos saem daqui (o histórico fica no CHANGELOG 
 
 ## Agora
 
-- [ ] Rodar `npm run app:dev` e validar manualmente no Windows: importar `.mp4/.mov/.webm` reais, conferir
-      duração/resolução lidas pelo WebView2, preview no painel de detalhes, reabrir o app e conferir persistência.
+- [ ] Confirmar no desktop a miniatura automática ao importar um vídeo novo e que as miniaturas continuam
+      visíveis após reabrir o app (a captura em si já foi validada com o `white.mp4`).
+- [ ] Importar `.mov` e `.webm` reais (`.mp4`, preview e persistência já validados).
 - [ ] Confirmar os limites de legenda/hashtags em `src/lib/platforms.ts` contra a documentação oficial
       (ver `docs/API_NOTES.md`).
-- [ ] Decidir o local da pasta de arquivos gerados pelo app (miniaturas/versões processadas) — provável `%APPDATA%\com.socialmanager.desktop\media\`.
+- [ ] Decidir a pasta das versões processadas pelo FFmpeg (miniaturas já ficam em `%APPDATA%\com.socialmanager.desktop\thumbnails\`).
 
 ## Próximo
 

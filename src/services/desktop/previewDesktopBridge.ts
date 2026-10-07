@@ -12,6 +12,8 @@ export function createPreviewDesktopBridge(): DesktopBridge {
     pickVideoFiles: () => Promise.reject(new AppError('NOT_AVAILABLE', DESKTOP_ONLY_MESSAGE)),
     inspectMediaFile: () => Promise.reject(new AppError('NOT_AVAILABLE', DESKTOP_ONLY_MESSAGE)),
     detectFfmpeg: () => Promise.resolve({ available: false, version: null }),
+    saveThumbnail: () => Promise.reject(new AppError('NOT_AVAILABLE', DESKTOP_ONLY_MESSAGE)),
+    deleteThumbnail: () => Promise.resolve(),
     getDataDirectory: () => Promise.resolve(null),
     toAssetUrl: () => null,
   };

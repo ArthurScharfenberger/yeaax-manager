@@ -11,7 +11,7 @@ import { type Clock, systemClock } from '@/lib/clock';
 import type { RuntimeMode } from '@/lib/runtime';
 import { createAIProvider } from '@/services/ai';
 import type { DesktopBridge } from '@/services/desktop/DesktopBridge';
-import { probeVideoMetadata } from '@/services/media/videoMetadata';
+import { analyzeVideo } from '@/services/media/videoAnalysis';
 import { createVideoProcessor } from '@/services/media/VideoProcessor';
 import { createSocialProviders } from '@/services/social';
 
@@ -30,9 +30,16 @@ export function createAppServices(options: {
   const repositories = createRepositories(db);
   const social = createSocialProviders();
 
-  async function probeMetadata(path: string) {
+  // Adapta a análise do WebView2 (Blob) ao contrato do serviço (bytes).
+  async function analyzeLocalVideo(path: string) {
     const url = desktop.toAssetUrl(path);
-    return url ? probeVideoMetadata(url) : null;
+    const analysis = url ? await analyzeVideo(url) : null;
+    if (!analysis) return null;
+    const { thumbnail, ...metadata } = analysis;
+    return {
+      ...metadata,
+      thumbnail: thumbnail ? new Uint8Array(await thumbnail.arrayBuffer()) : null,
+    };
   }
 
   return {
@@ -43,7 +50,7 @@ export function createAppServices(options: {
     ai: createAIProvider(),
     videoProcessor: createVideoProcessor(desktop),
     channels: createChannelService({ repositories, social, clock }),
-    media: createMediaService({ repositories, desktop, probeMetadata, clock }),
+    media: createMediaService({ repositories, desktop, analyzeVideo: analyzeLocalVideo, clock }),
     posts: createPostService({ repositories, clock }),
     settings: createSettingsService({ repositories, clock }),
     dashboard: createDashboardService({ repositories }),

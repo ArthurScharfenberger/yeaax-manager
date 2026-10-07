@@ -66,7 +66,12 @@ npm run dev        # http://localhost:1420
 npm run app:build
 ```
 
-O banco do app desktop fica em `%APPDATA%\com.socialmanager.desktop\social-manager.db`.
+O banco do app desktop fica em `%APPDATA%\com.socialmanager.desktop\social-manager.db` e as miniaturas em
+`%APPDATA%\com.socialmanager.desktop\thumbnails\`.
+
+> **PowerShell bloqueando o `npm`?** Se aparecer "npm.ps1 não pode ser carregado porque a execução de scripts
+> foi desabilitada", use `npm.cmd run app:dev` (ou rode no Prompt de Comando). Alternativa permanente, a seu
+> critério: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
 
 ## Scripts de qualidade
 

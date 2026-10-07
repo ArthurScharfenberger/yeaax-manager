@@ -26,7 +26,8 @@ Marque `[x]` ao concluir (com a versão entre parênteses quando fizer sentido).
 - [x] Legendas IA com gerador local simulado (v0.1.0)
 - [x] Analytics: placeholder honesto (v0.1.0)
 - [x] Configurações: Geral, Armazenamento, Integrações, IA, FFmpeg, Aparência, Sobre (v0.1.0)
-- [ ] Validação manual completa no app desktop (importar vídeos reais, preview, reabrir o app)
+- [x] Validação manual no app desktop: importação `.mp4`, preview e persistência (v0.1.0)
+- [x] Miniaturas automáticas capturadas pelo WebView2 na importação + preenchimento das pendentes (não lançado)
 - [ ] Logs persistidos em arquivo (tauri-plugin-log) com rotação
 - [ ] Backup e restauração do banco (exportar/importar arquivo)
 - [ ] Duplicar post para outro canal (mesmo vídeo, legenda adaptada)
@@ -36,7 +37,7 @@ Marque `[x]` ao concluir (com a versão entre parênteses quando fizer sentido).
 ## Fase 2 — preparação de conteúdo e automação local
 
 - [ ] FFmpeg: leitura de metadados com ffprobe (substitui DEC-017)
-- [ ] Miniaturas geradas localmente em pasta do app
+- [ ] Miniaturas via FFmpeg para codecs que o WebView2 não decodifica
 - [ ] Jobs de processamento assíncronos (`media_processing_jobs`) com progresso na UI
 - [ ] Adaptação de formato (9:16, Reels/TikTok), compressão
 - [ ] Logo/watermark próprio por canal

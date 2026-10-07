@@ -17,6 +17,8 @@ export const ERROR_CODES = [
   'EMPTY_FILE',
   'INVALID_PATH',
   'SCOPE_ERROR',
+  'INVALID_INPUT',
+  'IO_ERROR',
   'DATABASE',
   'DATA_INTEGRITY',
   'PROVIDER',
@@ -58,6 +60,8 @@ const UNEXPECTED_ERROR_CODES: ReadonlySet<ErrorCode> = new Set([
   'DATA_INTEGRITY',
   'PROVIDER',
   'SCOPE_ERROR',
+  'INVALID_INPUT',
+  'IO_ERROR',
 ]);
 
 /** `true` para erros de validação/regra (ex.: agendar no passado), que não indicam bug. */

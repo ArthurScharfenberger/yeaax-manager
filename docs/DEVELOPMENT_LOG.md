@@ -18,6 +18,60 @@ Formato:
 
 ---
 
+## Sessão 2026-10-07 (2) — Miniaturas sem FFmpeg
+
+### Objetivo
+
+Exibir miniaturas reais na biblioteca (antes só placeholders), sem depender do FFmpeg.
+
+### Alterações realizadas
+
+- `src/services/media/videoAnalysis.ts` (substitui `videoMetadata.ts`): um único `<video>` fora do DOM lê
+  duração/resolução e captura um quadro (~1 s) em JPEG de até 360 px via canvas. Fallback sem CORS para metadados.
+- Rust `commands/thumbnails.rs`: `save_thumbnail` (bytes via IPC binário, id no header `media-id`, valida id e
+  assinatura JPEG, máx. 2 MB) e `delete_thumbnail`. Arquivos em `%APPDATA%\com.socialmanager.desktop\thumbnails\<id>.jpg`.
+- Asset protocol: escopo estático `$APPDATA/thumbnails/*` (miniaturas visíveis após reiniciar o app).
+- `mediaService`: a importação grava a miniatura automaticamente; `generateMissingThumbnails()` gera, em segundo
+  plano e um por vez, as que faltam (vídeos antigos ou falhas), disparado ao abrir o app
+  (`useThumbnailBackfill` no `AppLayout`); cada vídeo é tentado uma vez por sessão. Remover da biblioteca apaga a
+  miniatura. Falhas de miniatura nunca bloqueiam a importação.
+- O botão manual "Gerar miniatura" (primeira versão) foi removido a pedido do usuário: miniaturas são sempre
+  automáticas.
+- Testes: `mediaService.test.ts` (6) e 3 testes Rust de validação.
+
+### Arquivos importantes
+
+`src/services/media/videoAnalysis.ts`, `src/features/media/mediaService.ts`,
+`src-tauri/src/commands/thumbnails.rs`, `src-tauri/tauri.conf.json` (assetProtocol.scope).
+
+### Decisões
+
+DEC-018 (miniaturas via WebView2 + gravação no Rust). DEC-016 atualizada (escopo da pasta de miniaturas).
+
+### Problemas encontrados
+
+- **Sandbox do agente:** os comandos do agente enxergam `%APPDATA%` através de uma camada própria; arquivos
+  criados por processos do agente (inclusive o `.exe` lançado por ele) não aparecem para o app do usuário e
+  vice-versa. Isso gerou um falso alarme de perda de dados. Regra nova no AGENTS.md (seção 4.1).
+- O PowerShell do usuário bloqueia `npm.ps1` (ExecutionPolicy). Documentado no README (`npm.cmd` ou cmd).
+
+### Validação
+
+`npm run check` e `cargo test` (8) + clippy sem avisos. **Validado no app desktop pelo usuário:** miniatura do
+`white.mp4` gerada (JPEG 360×640, quadro correto) — confirma o CORS do protocolo `asset:` (conferido também no
+código-fonte do Tauri 2.12: `Access-Control-Allow-Origin` = origem da janela).
+
+### Pendências
+
+- Confirmar no app: miniatura automática ao importar um vídeo novo.
+- Testar `.mov`/`.webm` (codecs que o WebView2 não decodifica ficam sem miniatura até o FFmpeg).
+
+### Próximo passo
+
+Confirmar a miniatura automática na importação. Depois: backup/restauração do banco ou início do FFmpeg (ffprobe).
+
+---
+
 ## Sessão 2026-10-07 — Fundação do projeto (v0.1.0)
 
 ### Objetivo
@@ -75,14 +129,21 @@ asset protocol com autorização por arquivo (DEC-016), TypeScript 6.0 por compa
 - Teste de fumaça do executável de release: banco criado em `%APPDATA%\com.socialmanager.desktop\`, migration 1
   aplicada, dados de demonstração gravados via IPC (5 canais, 10 vídeos, 15 posts, 36 eventos).
 
+### Validação do usuário (mesma sessão)
+
+- Importação real via `npm run app:dev` **funcionou**: `white.mp4` gravado com tamanho correto, duração 25,3 s e
+  resolução 576×1024 (metadados lidos pelo WebView2 — DEC-017 confirmada para MP4).
+- Preview do vídeo no painel de detalhes **funcionou**; persistência após fechar/reabrir confirmada.
+- **Falso alarme (resolvido):** parecia que o banco tinha sido recriado ao abrir o `app:dev`. Causa real: os
+  comandos do agente rodam em um sandbox com camada própria de arquivos — o banco criado pelo teste de fumaça
+  existia só nessa camada, então o app do usuário criou o seu (correto). As "versões alternando" eram leituras
+  do agente vendo ora a camada, ora o arquivo real. O banco real nunca perdeu dados. Ver aviso em AGENTS.md.
+
 ### Pendências
 
-- Validação manual interativa no app desktop (importar vídeos reais, preview, reabrir o app) — não foi possível
-  operar a janela nativa nesta sessão.
+- Validar `.mov` e `.webm` reais.
 - Ver `docs/TODO.md` (Agora/Próximo).
 
 ### Próximo passo
 
-Rodar `npm run app:dev`, importar alguns vídeos reais e validar o fluxo completo da biblioteca no desktop. Em
-seguida, iniciar a Fase 2 pelo FFmpeg: comando Rust com `ffprobe` (metadados) e geração de miniaturas em pasta
-do app, preenchendo `media.thumbnail_path`.
+Ver a sessão seguinte (miniaturas).

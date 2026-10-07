@@ -5,7 +5,18 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); 
 
 ## [Não lançado]
 
-_Nada ainda._
+### Adicionado
+
+- Miniaturas reais na biblioteca: capturadas pelo WebView2 durante a importação (sem FFmpeg) e gravadas em
+  `%APPDATA%\com.socialmanager.desktop\thumbnails\`. Vídeos sem miniatura (importados antes ou com falha na
+  captura) são processados automaticamente em segundo plano ao abrir o app.
+- Comandos Rust `save_thumbnail` e `delete_thumbnail`; remover um vídeo da biblioteca apaga a miniatura.
+- Testes do serviço de mídia (importação, falhas, miniaturas).
+
+### Alterado
+
+- `videoMetadata.ts` substituído por `videoAnalysis.ts` (metadados + quadro em uma única leitura).
+- Asset protocol: escopo estático restrito à pasta de miniaturas do app.
 
 ## [0.1.0] — 2026-10-07
 

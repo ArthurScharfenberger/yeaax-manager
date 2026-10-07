@@ -1,4 +1,4 @@
-import { convertFileSrc, invoke } from '@tauri-apps/api/core';
+import { convertFileSrc, invoke, type InvokeArgs, type InvokeOptions } from '@tauri-apps/api/core';
 import { appConfigDir } from '@tauri-apps/api/path';
 import { open } from '@tauri-apps/plugin-dialog';
 import { z } from 'zod';
@@ -26,10 +26,11 @@ const ffmpegStatusSchema = z.object({
 async function invokeCommand<T>(
   command: string,
   schema: z.ZodType<T>,
-  args?: Record<string, unknown>,
+  args?: InvokeArgs,
+  options?: InvokeOptions,
 ): Promise<T> {
   try {
-    return schema.parse(await invoke(command, args));
+    return schema.parse(await invoke(command, args, options));
   } catch (error) {
     throw toAppError(error);
   }
@@ -54,6 +55,16 @@ export function createTauriDesktopBridge(): DesktopBridge {
       invokeCommand('inspect_media_file', mediaFileInfoSchema, { path }),
 
     detectFfmpeg: (): Promise<FfmpegStatus> => invokeCommand('detect_ffmpeg', ffmpegStatusSchema),
+
+    // Bytes enviados como corpo binário do IPC (sem JSON/base64); o id vai no header.
+    saveThumbnail: (mediaId, jpeg) =>
+      invokeCommand('save_thumbnail', z.string().min(1), jpeg, {
+        headers: { 'media-id': mediaId },
+      }),
+
+    async deleteThumbnail(mediaId) {
+      await invokeCommand('delete_thumbnail', z.null(), { mediaId });
+    },
 
     getDataDirectory: () => appConfigDir(),
 

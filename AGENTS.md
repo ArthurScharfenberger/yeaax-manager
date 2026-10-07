@@ -50,6 +50,15 @@ Se tocar na interface, leia `docs/DESIGN.md`. Se tocar no banco, leia `docs/DATA
 - Dados vindos de APIs (e do lado Rust) são não confiáveis: valide com Zod.
 - Nova permissão Tauri (`capabilities/`) ou ampliação de CSP/asset scope exige justificativa no SECURITY.md.
 
+## 4.1 Ambiente do agente (importante)
+
+- Ferramentas de agente podem rodar em **sandbox com camada própria de arquivos**: o que um processo do agente
+  grava em `%APPDATA%` (inclusive um `.exe` lançado por ele) pode não ser visto pelo app do usuário, e
+  vice-versa. Isso já causou um falso alarme de "perda de dados" (ver DEVELOPMENT_LOG).
+- **Nunca valide comportamento pelo banco real do usuário** e nunca abra `social-manager.db` com conexão de
+  escrita enquanto o app roda (um checkpoint externo pode sobrescrever dados). Para inspecionar, use `readOnly`
+  com o app fechado; para validar regras, use os testes (`node:sqlite` em memória) ou o modo preview.
+
 ## 5. Definition of Done
 
 Uma tarefa só está concluída quando:

@@ -47,20 +47,20 @@ app_settings (chave/valor, independente)
 
 ### `media` — biblioteca
 
-| Coluna                  | Tipo        | Notas                                                       |
-| ----------------------- | ----------- | ----------------------------------------------------------- |
-| id                      | TEXT PK     |                                                             |
-| filename                | TEXT        | nome exibido                                                |
-| original_filename       | TEXT        | nome no momento da importação                               |
-| file_path               | TEXT UNIQUE | caminho absoluto do original (DEC-006); demo usa `demo://…` |
-| type                    | TEXT        | `video` \| `image` (só vídeo é importável hoje)             |
-| mime_type               | TEXT        | `video/mp4`, `video/quicktime`, `video/webm`                |
-| size                    | INTEGER     | bytes                                                       |
-| duration                | REAL?       | segundos (null se ilegível)                                 |
-| width / height          | INTEGER?    | pixels                                                      |
-| thumbnail_path          | TEXT?       | gerado pelo FFmpeg (Fase 2)                                 |
-| status                  | TEXT        | `imported` \| `processing` \| `ready` \| `used` \| `error`  |
-| created_at / updated_at | TEXT        |                                                             |
+| Coluna                  | Tipo        | Notas                                                                       |
+| ----------------------- | ----------- | --------------------------------------------------------------------------- |
+| id                      | TEXT PK     |                                                                             |
+| filename                | TEXT        | nome exibido                                                                |
+| original_filename       | TEXT        | nome no momento da importação                                               |
+| file_path               | TEXT UNIQUE | caminho absoluto do original (DEC-006); demo usa `demo://…`                 |
+| type                    | TEXT        | `video` \| `image` (só vídeo é importável hoje)                             |
+| mime_type               | TEXT        | `video/mp4`, `video/quicktime`, `video/webm`                                |
+| size                    | INTEGER     | bytes                                                                       |
+| duration                | REAL?       | segundos (null se ilegível)                                                 |
+| width / height          | INTEGER?    | pixels                                                                      |
+| thumbnail_path          | TEXT?       | JPEG em `%APPDATA%\com.socialmanager.desktop\thumbnails\<id>.jpg` (DEC-018) |
+| status                  | TEXT        | `imported` \| `processing` \| `ready` \| `used` \| `error`                  |
+| created_at / updated_at | TEXT        |                                                                             |
 
 Índices: `idx_media_status`, `idx_media_created_at`.
 

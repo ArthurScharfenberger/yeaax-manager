@@ -60,7 +60,8 @@ O mesmo status aparece na UI (Configurações → Integrações), definido em `s
   console); as demais operações retornam `NOT_AVAILABLE`.
 - **Plano (Fase 2):**
   1. `ffprobe` para metadados (substitui a leitura via `<video>` — DEC-017).
-  2. Miniaturas em pasta do app; preencher `media.thumbnail_path`.
+  2. Miniaturas para codecs que o WebView2 não decodifica (hoje a captura é feita pelo WebView2 — DEC-018 —
+     e gravada em `thumbnails/` pelo comando `save_thumbnail`).
   3. Jobs assíncronos no Rust com progresso (`media_processing_jobs`).
   4. Presets: TikTok/Reels 9:16, compressão, watermark por canal.
 - **Regras:** argumentos montados no Rust a partir de presets fixos — nunca de texto livre do usuário;

@@ -19,6 +19,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::media::inspect_media_file,
             commands::system::detect_ffmpeg,
+            commands::thumbnails::save_thumbnail,
+            commands::thumbnails::delete_thumbnail,
         ])
         .run(tauri::generate_context!())
         .expect("falha ao iniciar o Social Manager");

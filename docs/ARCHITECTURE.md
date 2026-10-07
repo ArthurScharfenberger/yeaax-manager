@@ -93,7 +93,7 @@ src/
 ├── services/               Integrações externas (isoladas)
 │   ├── social/             SocialProvider + MockSocialProvider + TikTokProvider + InstagramProvider
 │   ├── ai/                 AIProvider + MockAIProvider + gerador local de hashtags
-│   ├── media/              VideoProcessor (FFmpeg, preparado) + leitura de metadados via <video>
+│   ├── media/              VideoProcessor (FFmpeg, preparado) + videoAnalysis (metadados + miniatura)
 │   └── desktop/            DesktopBridge (Tauri) + implementação de preview
 ├── stores/                 Reservado (Zustand só com necessidade real — DEC-005)
 ├── styles/index.css        Tokens do Tailwind (@theme) e estilos base
@@ -104,7 +104,8 @@ src/
 src-tauri/
 ├── src/lib.rs              Registro de plugins e comandos
 ├── src/migrations.rs       Lista de migrations (include_str!)
-├── src/commands/           media.rs (inspect_media_file), system.rs (detect_ffmpeg)
+├── src/commands/           media.rs (inspect_media_file), system.rs (detect_ffmpeg),
+│                           thumbnails.rs (save_thumbnail, delete_thumbnail)
 ├── src/error.rs            CommandError { code, message }
 ├── migrations/*.sql        Schema (fonte única para Rust, preview e testes)
 ├── capabilities/default.json  Permissões mínimas da janela
@@ -165,8 +166,8 @@ O registro (`createSocialProviders`, `createAIProvider`) é o único ponto que c
 
 ## Desempenho
 
-- Vídeos nunca são carregados por inteiro: miniaturas/placeholder nas listas; `<video preload="metadata">`
-  somente no painel de detalhes e na leitura de metadados.
+- Vídeos nunca são carregados por inteiro: listas mostram miniaturas JPEG (ou placeholder); `<video>` só no
+  painel de detalhes (`preload="metadata"`) e na análise da importação (metadados + um quadro).
 - Comandos Rust são `async` (não bloqueiam a thread da UI); processos externos usam `spawn_blocking`.
 - Processamento pesado (FFmpeg) será feito no Rust como jobs assíncronos (Fase 2).
 
