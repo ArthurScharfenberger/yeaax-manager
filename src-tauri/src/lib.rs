@@ -1,8 +1,9 @@
 //! Núcleo desktop do Social Manager.
 //!
 //! O Rust fica restrito a responsabilidades de sistema: banco SQLite (plugin SQL +
-//! migrations), diálogos nativos, inspeção de arquivos locais e detecção de ferramentas
-//! externas. Regras de negócio vivem no TypeScript — ver docs/ARCHITECTURE.md.
+//! migrations), diálogos nativos, inspeção de arquivos locais, detecção de ferramentas
+//! externas, cofre de credenciais e chamadas autenticadas à OpenAI (a chave nunca vai
+//! ao webview). Regras de negócio vivem no TypeScript — ver docs/ARCHITECTURE.md.
 
 mod commands;
 mod error;
@@ -49,6 +50,10 @@ pub fn run() {
             commands::system::detect_ffmpeg,
             commands::thumbnails::save_thumbnail,
             commands::thumbnails::delete_thumbnail,
+            commands::secrets::secret_set,
+            commands::secrets::secret_has,
+            commands::secrets::secret_delete,
+            commands::ai::ai_chat_completion,
         ])
         .run(tauri::generate_context!())
         .expect("falha ao iniciar o Social Manager");

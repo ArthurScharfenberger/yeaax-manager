@@ -10,8 +10,13 @@ Estas políticas valem desde já; a arquitetura foi desenhada para cumpri-las qu
 - **Nunca use o prefixo `VITE_` em segredos.** Variáveis `VITE_*` são embutidas no bundle do frontend e ficam
   visíveis para qualquer um. O Vite só expõe `VITE_*` e `TAURI_ENV_*` (`vite.config.ts → envPrefix`).
 - Client secrets (TikTok, Instagram) e a chave da OpenAI serão lidos **apenas pelo lado Rust**.
-- Em uso real, chaves configuradas pelo usuário (ex.: API key da OpenAI) vão para o **Credential Manager do
-  Windows** (crate `keyring`), nunca para o SQLite ou arquivos de configuração em texto plano.
+- Chaves configuradas pelo usuário (hoje: API key da OpenAI) vão para o **Gerenciador de Credenciais do
+  Windows** (`keyring-core` + `windows-native-keyring-store`, serviço `com.socialmanager.desktop`), nunca para o
+  SQLite ou arquivos de configuração em texto plano (DEC-022).
+- Comandos de segredo: `secret_set`, `secret_has`, `secret_delete` — só aceitam nomes de uma lista fixa no Rust
+  e **não existe comando que leia o valor**. A chave só é usada dentro do Rust por `ai_chat_completion`, que fala
+  com um endpoint fixo (`api.openai.com/v1/chat/completions`) e nunca ecoa a resposta de erro 401.
+- A interface mostra apenas "configurada / não configurada"; o campo de chave é `password` e é limpo após salvar.
 
 ## Tokens e OAuth (Fase 3)
 

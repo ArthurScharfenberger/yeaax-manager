@@ -167,7 +167,8 @@ export function createPostService({ repositories, clock }: PostServiceDeps) {
 
     getHistory: (id: Id) => postHistory.listByPost(id),
 
-    create: (input: PostInput) => createPost(input),
+    /** `historyMessage` registra a origem do post (ex.: criado pela IA). */
+    create: (input: PostInput, historyMessage?: string) => createPost(input, historyMessage),
 
     /**
      * Copia um post para outros canais como **rascunho** (mesmo vídeo, legenda e horário planejado).

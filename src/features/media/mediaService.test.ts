@@ -40,6 +40,10 @@ function createFakeDesktop(files: Record<string, number>) {
       return Promise.resolve();
     },
     detectFfmpeg: () => Promise.resolve({ available: false, version: null }),
+    setSecret: () => Promise.resolve(),
+    hasSecret: () => Promise.resolve(false),
+    deleteSecret: () => Promise.resolve(),
+    aiChatCompletion: () => Promise.reject(new AppError('NOT_AVAILABLE', 'sem IA')),
     getDataDirectory: () => Promise.resolve(null),
     getLogDirectory: () => Promise.resolve(null),
     toAssetUrl: (path) => path,

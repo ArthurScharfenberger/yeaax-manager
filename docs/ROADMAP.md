@@ -58,7 +58,8 @@ Marque `[x]` ao concluir (com a versão entre parênteses quando fizer sentido).
 - [ ] TikTok: Login Kit desktop (PKCE) + Content Posting API (Direct Post se auditado; senão rascunhos)
 - [ ] TikTok: auditoria do app (necessária para posts públicos) — decisão do usuário
 - [ ] Publicação real + acompanhamento de status (`publication_attempts`)
-- [ ] OpenAI: legendas, hashtags e traduções (`ai_executions`)
+- [x] OpenAI: legendas, hashtags e "Postar com IA" com leitura da miniatura (não lançado)
+- [ ] Registro de execuções de IA e custos (`ai_executions`)
 - [ ] Analytics: snapshots periódicos por post/canal (`analytics_snapshots`)
 - [ ] Tratamento de expiração/renovação de tokens
 

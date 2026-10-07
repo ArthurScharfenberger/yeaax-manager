@@ -4,6 +4,9 @@ Lista operacional. Itens concluídos saem daqui (o histórico fica no CHANGELOG 
 
 ## Agora
 
+- [ ] Usuário: criar a chave em platform.openai.com, colar em Configurações → IA, "Testar conexão" e usar
+      "Postar com IA" num vídeo real (validar qualidade das legendas e leitura da miniatura).
+- [ ] Instagram real (Fase 3): app na Meta, token do painel no cofre, publicação de Reels por upload resumável.
 - [ ] Validar no app desktop: página Posts, duplicar e o arquivo de log sendo criado (reiniciar o `app:dev`,
       pois o Rust mudou).
 - [ ] Confirmar no desktop a miniatura automática ao importar um vídeo novo e que as miniaturas continuam

@@ -66,6 +66,18 @@ export function createTauriDesktopBridge(): DesktopBridge {
       await invokeCommand('delete_thumbnail', z.null(), { mediaId });
     },
 
+    async setSecret(name, value) {
+      await invokeCommand('secret_set', z.null(), { name, value });
+    },
+
+    hasSecret: (name) => invokeCommand('secret_has', z.boolean(), { name }),
+
+    async deleteSecret(name) {
+      await invokeCommand('secret_delete', z.null(), { name });
+    },
+
+    aiChatCompletion: (body) => invokeCommand('ai_chat_completion', z.unknown(), { body }),
+
     getDataDirectory: () => appConfigDir(),
 
     getLogDirectory: () => appLogDir(),

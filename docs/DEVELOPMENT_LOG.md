@@ -18,6 +18,46 @@ Formato:
 
 ---
 
+## Sessão 2026-10-07 (4) — "Postar com IA" com OpenAI
+
+### Objetivo
+
+Automatizar o máximo possível: importar o vídeo, descrever o que se quer ("legenda em inglês com boas hashtags") e a
+IA executar — respeitando a confirmação por post exigida pelo TikTok (DEC-019).
+
+### Alterações realizadas
+
+- Contas do Instagram confirmadas como profissionais pelo usuário. Provedor de IA escolhido: **OpenAI**.
+- Rust: `commands/secrets.rs` (Gerenciador de Credenciais via `keyring-core`), `commands/ai.rs`
+  (`ai_chat_completion` com `reqwest`/rustls). DEC-022.
+- `OpenAIProvider` (Structured Outputs estrito, canais por `enum`, miniatura como imagem), `AIService` (OpenAI com
+  chave; simulador local sem chave), `mockPlanner` (regras: idioma, plataforma, canal, horário).
+- `postPlanner` + `postPlanRules`: contexto (canais, horários do Auto Schedule, miniatura), validação da resposta,
+  canais que já têm o vídeo saem do plano, resolução de horário, confirmação com histórico de origem.
+- UI: `AiPostDialog` + `AiPlanReview` (botão "Postar com IA" no painel do vídeo), Configurações → IA (chave,
+  modelo, testar conexão), Legendas IA com selo dinâmico e erros visíveis; após importar, o vídeo novo abre
+  selecionado.
+- Modal: foco inicial via `data-autofocus` (o `autoFocus` do React é perdido no `showModal`).
+
+### Validação
+
+`npm run check` (96 testes), `cargo test` (13) + clippy, `npm run build`. No preview (simulador): pedido "Poste no
+instagram da yeaxx com uma legenda em inglês e boas hashtags, amanhã às 19h" → plano correto → confirmado → "1
+post agendado · Amanhã 19:00"; com vídeo já agendado no canal, o plano avisa e remove o canal. **A chamada real à
+OpenAI ainda não foi testada** (depende da chave do usuário).
+
+### Pendências
+
+- Usuário: chave da OpenAI → Configurações → IA → "Testar conexão" → "Postar com IA" num vídeo real.
+- Publicação real ainda não existe: os posts ficam agendados (próximo: Instagram real).
+
+### Próximo passo
+
+Instagram real (Fase 3): o usuário cria o app na Meta e cola o token; o app guarda no cofre, renova e publica Reels
+por upload resumável no horário agendado (agendador local).
+
+---
+
 ## Sessão 2026-10-07 (3) — Pesquisa das APIs, página Posts, duplicar e logs em arquivo
 
 ### Objetivo

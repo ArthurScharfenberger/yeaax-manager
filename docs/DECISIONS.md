@@ -262,3 +262,25 @@ marque como _Substituída por DEC-XXX_.
   (permissões amplas de sistema de arquivos).
 - **Impactos:** nova permissão `log:allow-log`; logs do Rust vão para o mesmo arquivo; o modo preview continua
   só em memória.
+
+## DEC-022 — OpenAI via Rust com chave no Credential Manager; "Postar com IA"
+
+- **Data:** 2026-10-07
+- **Decisão:**
+  1. Provedor de IA: **OpenAI** (escolha do usuário), modelo configurável — padrão `gpt-6-luna`, o mais econômico
+     com entrada de imagem no catálogo oficial em 2026-10-07. API Chat Completions com Structured Outputs
+     (`json_schema`, `strict`), formato compatível com outros provedores (Grok, Gemini) para troca futura.
+  2. A chave é informada em Configurações → IA e gravada no **Gerenciador de Credenciais do Windows** via
+     `keyring-core` + `windows-native-keyring-store` (recomendação do próprio crate `keyring` para apps). Não existe
+     comando que devolva a chave ao webview; nomes de segredo vêm de uma lista fixa no Rust.
+  3. A chamada HTTPS é feita pelo Rust (`ai_chat_completion`, `reqwest` com rustls), para um endpoint fixo,
+     anexando a chave; o frontend monta o pedido e valida a resposta com Zod. Erros 401 nunca ecoam a chave.
+  4. **"Postar com IA"**: pedido em linguagem natural + miniatura (a IA "vê" o vídeo) + canais + horários do Auto
+     Schedule → plano estruturado (canais restritos por `enum`, legenda, hashtags, horário) → revisão editável →
+     confirmação cria os posts (DEC-019). Sem chave, um interpretador local por regras mantém o fluxo funcionando.
+- **Motivo:** automação máxima pedida pelo usuário, sem expor a chave e sem servidor.
+- **Alternativas:** chamar a OpenAI do frontend (exporia a chave); `.env` (texto plano, inadequado para produção);
+  crate `keyring` completo (puxa cofres de todas as plataformas); Grok/Gemini (avaliados; custo irrelevante,
+  OpenAI escolhida pela saída estruturada garantida).
+- **Impactos:** novas dependências Rust (`reqwest`, `keyring-core`, `windows-native-keyring-store`); comandos
+  `secret_set/has/delete` e `ai_chat_completion`; custo por post estimado em frações de centavo.

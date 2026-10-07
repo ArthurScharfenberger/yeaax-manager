@@ -19,6 +19,12 @@ export const ERROR_CODES = [
   'SCOPE_ERROR',
   'INVALID_INPUT',
   'IO_ERROR',
+  'SECRET_STORE',
+  'AI_NOT_CONFIGURED',
+  'AI_AUTH',
+  'AI_RATE_LIMIT',
+  'AI_UNAVAILABLE',
+  'AI_ERROR',
   'DATABASE',
   'DATA_INTEGRITY',
   'PROVIDER',
@@ -62,6 +68,8 @@ const UNEXPECTED_ERROR_CODES: ReadonlySet<ErrorCode> = new Set([
   'SCOPE_ERROR',
   'INVALID_INPUT',
   'IO_ERROR',
+  'SECRET_STORE',
+  'AI_ERROR',
 ]);
 
 /** `true` para erros de validação/regra (ex.: agendar no passado), que não indicam bug. */

@@ -1,6 +1,8 @@
 import { type DbClient } from '@/db/client';
 import { createDemoDataService } from '@/db/demoData';
 import { createRepositories } from '@/db/repositories';
+import { AI_MODEL_SETTING } from '@/features/ai/aiSettings';
+import { createPostPlanner } from '@/features/ai/postPlanner';
 import { createChannelService } from '@/features/channels/channelService';
 import { createDashboardService } from '@/features/dashboard/dashboardService';
 import { createMediaService } from '@/features/media/mediaService';
@@ -9,8 +11,9 @@ import { createSearchService } from '@/features/search/searchService';
 import { createSettingsService } from '@/features/settings/settingsService';
 import { type Clock, systemClock } from '@/lib/clock';
 import type { RuntimeMode } from '@/lib/runtime';
-import { createAIProvider } from '@/services/ai';
+import { createAIService } from '@/services/ai';
 import type { DesktopBridge } from '@/services/desktop/DesktopBridge';
+import { loadImageAsDataUrl } from '@/services/media/imageData';
 import { analyzeVideo } from '@/services/media/videoAnalysis';
 import { createVideoProcessor } from '@/services/media/VideoProcessor';
 import { createSocialProviders } from '@/services/social';
@@ -42,17 +45,30 @@ export function createAppServices(options: {
     };
   }
 
+  const settings = createSettingsService({ repositories, clock });
+  const posts = createPostService({ repositories, clock });
+  const ai = createAIService({ desktop, getModel: () => settings.get(AI_MODEL_SETTING) });
+
   return {
     mode,
     clock,
     desktop,
     social,
-    ai: createAIProvider(),
+    ai,
+    postPlanner: createPostPlanner({
+      ai,
+      repositories,
+      settings,
+      posts,
+      desktop,
+      loadImage: loadImageAsDataUrl,
+      clock,
+    }),
     videoProcessor: createVideoProcessor(desktop),
     channels: createChannelService({ repositories, social, clock }),
     media: createMediaService({ repositories, desktop, analyzeVideo: analyzeLocalVideo, clock }),
-    posts: createPostService({ repositories, clock }),
-    settings: createSettingsService({ repositories, clock }),
+    posts,
+    settings,
     dashboard: createDashboardService({ repositories }),
     search: createSearchService({ repositories }),
     demo: createDemoDataService({ db, repositories, clock }),

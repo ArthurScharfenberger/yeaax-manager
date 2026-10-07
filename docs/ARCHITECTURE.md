@@ -136,12 +136,12 @@ O modo preview existe apenas em desenvolvimento: o build de produção não incl
 
 ## Providers (integrações)
 
-| Interface        | Implementação atual                                                         | Futuro                                                        |
-| ---------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| `SocialProvider` | `TikTokProvider` / `InstagramProvider` (ambos `extends MockSocialProvider`) | APIs oficiais via comandos Rust; tokens no Credential Manager |
-| `AIProvider`     | `MockAIProvider` (modelos de texto locais)                                  | `OpenAIProvider` com chamada feita no Rust                    |
-| `VideoProcessor` | `getStatus` real (detecção), demais operações lançam `NOT_AVAILABLE`        | FFmpeg/ffprobe como jobs no Rust                              |
-| `DesktopBridge`  | `tauriDesktopBridge` / `previewDesktopBridge`                               | + credenciais, notificações                                   |
+| Interface        | Implementação atual                                                                                                          | Futuro                                                        |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `SocialProvider` | `TikTokProvider` / `InstagramProvider` (ambos `extends MockSocialProvider`)                                                  | APIs oficiais via comandos Rust; tokens no Credential Manager |
+| `AIProvider`     | `OpenAIProvider` (o Rust faz a chamada com a chave do cofre) e `MockAIProvider` (regras locais), escolhidos pelo `AIService` | outros provedores compatíveis                                 |
+| `VideoProcessor` | `getStatus` real (detecção), demais operações lançam `NOT_AVAILABLE`                                                         | FFmpeg/ffprobe como jobs no Rust                              |
+| `DesktopBridge`  | `tauriDesktopBridge` / `previewDesktopBridge`                                                                                | + credenciais, notificações                                   |
 
 O registro (`createSocialProviders`, `createAIProvider`) é o único ponto que conhece as classes concretas.
 

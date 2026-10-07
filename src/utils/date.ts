@@ -88,6 +88,17 @@ export function parseDateTimeInput(date: string, time: string): Date | null {
   return Number.isNaN(result.getTime()) ? null : result;
 }
 
+/** `YYYY-MM-DDTHH:mm` (horário local) → Date. Retorna `null` se inválido. */
+export function parseLocalDateTime(value: string): Date | null {
+  const [date, time] = value.split('T');
+  return date && time ? parseDateTimeInput(date, time) : null;
+}
+
+/** Date → `YYYY-MM-DDTHH:mm` (horário local). */
+export function toLocalDateTimeValue(date: Date): string {
+  return `${toDateInputValue(date)}T${toTimeInputValue(date)}`;
+}
+
 /** Arredonda para cima até o próximo múltiplo de `stepMinutes`. */
 export function ceilToMinutes(date: Date, stepMinutes: number): Date {
   const stepMs = stepMinutes * 60_000;

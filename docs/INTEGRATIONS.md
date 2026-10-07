@@ -8,7 +8,7 @@ O mesmo status aparece na UI (Configurações → Integrações), definido em `s
 | ---------- | ------------- | -------------------------------------------------------------------------- | --------------------------------------- |
 | TikTok     | `MOCK`        | `src/services/social/TikTokProvider.ts`                                    | Fase 3: Login Kit + Content Posting API |
 | Instagram  | `MOCK`        | `src/services/social/InstagramProvider.ts`                                 | Fase 3: Instagram Graph API             |
-| OpenAI     | `MOCK`        | `src/services/ai/MockAIProvider.ts`                                        | Fase 3: `OpenAIProvider` via Rust       |
+| OpenAI     | `IN_PROGRESS` | `src/services/ai/OpenAIProvider.ts`, `src-tauri/src/commands/ai.rs`        | Validar com a chave real do usuário     |
 | FFmpeg     | `NOT_STARTED` | `src/services/media/VideoProcessor.ts`, `src-tauri/src/commands/system.rs` | Fase 2: ffprobe + miniaturas            |
 
 ## Regras gerais (valem para todas)
@@ -59,13 +59,16 @@ O mesmo status aparece na UI (Configurações → Integrações), definido em `s
   4. Insights para analytics.
 - **Decisão do usuário pendente:** confirmar que as contas são profissionais.
 
-## OpenAI — `MOCK`
+## OpenAI — `IN_PROGRESS`
 
-- **Contrato:** `AIProvider.generateCaptions(request)` → variações de legenda + hashtags.
-- **Hoje:** `MockAIProvider` — modelos de texto locais (3 idiomas × 4 tons) + `extractHashtags` (sem IA).
-- **Plano (Fase 3):** `OpenAIProvider` cuja chamada HTTP é feita por um comando Rust; chave de API no Credential
-  Manager (configurada na tela IA); registrar execuções em `ai_executions` (sem dados sensíveis); limites de custo.
-- **Usos futuros:** tradução de legendas, sugestão de hashtags por canal, classificação de conteúdo.
+- **Contrato:** `AIProvider` (`generateCaptions`, `planPost`); o app usa `AIService` (`src/services/ai/index.ts`),
+  que escolhe a OpenAI quando há chave no cofre e o `MockAIProvider` (regras locais) caso contrário.
+- **Implementado (DEC-022):** `OpenAIProvider` — Chat Completions + Structured Outputs (`json_schema` estrito),
+  imagem da miniatura (`image_url`, `detail: low`); chamada HTTP no Rust (`ai_chat_completion`) com a chave do
+  Gerenciador de Credenciais; modelo configurável (padrão `gpt-6-luna`); "Testar conexão" em Configurações → IA.
+- **Usado em:** "Postar com IA" (plano de publicação) e Legendas IA.
+- **Falta:** validação com a chave real do usuário; registro de execuções/custos (`ai_executions`); limite de
+  gasto mensal.
 
 ## FFmpeg — `NOT_STARTED`
 

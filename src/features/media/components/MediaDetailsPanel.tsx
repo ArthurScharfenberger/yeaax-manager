@@ -1,4 +1,4 @@
-import { CircleCheck, Plus, Trash2, X } from 'lucide-react';
+import { CircleCheck, Plus, Sparkles, Trash2, X } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 
 import { useServices } from '@/app/ServicesContext';
@@ -56,7 +56,7 @@ interface MediaDetailsPanelProps {
 
 export function MediaDetailsPanel({ media, onClose }: MediaDetailsPanelProps) {
   const { mode } = useServices();
-  const { openComposer, openDetails } = usePostDialogs();
+  const { openComposer, openDetails, openAiPost } = usePostDialogs();
   const { updateStatus, remove } = useMediaMutations();
   const posts = usePosts({ mediaId: media.id, order: 'updated_desc' });
   const file = useMediaFile(media.filePath);
@@ -86,15 +86,18 @@ export function MediaDetailsPanel({ media, onClose }: MediaDetailsPanelProps) {
           </Notice>
         )}
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             size="sm"
             variant="primary"
-            icon={Plus}
+            icon={Sparkles}
             className="flex-1"
-            onClick={() => openComposer({ mediaId: media.id })}
+            onClick={() => openAiPost(media.id)}
           >
-            Criar post
+            Postar com IA
+          </Button>
+          <Button size="sm" icon={Plus} onClick={() => openComposer({ mediaId: media.id })}>
+            Manual
           </Button>
           {media.status !== 'ready' && (
             <Button

@@ -17,6 +17,8 @@ export interface PostDialogsApi {
   openDetails: (postId: Id) => void;
   /** Copia o post para outros canais como rascunho. */
   openDuplicate: (postId: Id) => void;
+  /** "Postar com IA": pedido em linguagem natural → plano → confirmação. */
+  openAiPost: (mediaId: Id) => void;
 }
 
 export const PostDialogsContext = createContext<PostDialogsApi | null>(null);

@@ -1,4 +1,3 @@
-import type { IntegrationStatus } from '@/lib/integrations';
 import { PLATFORM_INFO } from '@/lib/platforms';
 
 import type {
@@ -7,8 +6,11 @@ import type {
   CaptionRequest,
   CaptionSuggestion,
   CaptionTone,
+  PostPlanDraft,
+  PostPlanRequest,
 } from './AIProvider';
 import { extractHashtags } from './hashtags';
+import { interpretInstruction } from './mockPlanner';
 
 type CaptionTemplate = (description: string) => string;
 
@@ -95,11 +97,10 @@ function cleanDescription(description: string): string {
     .replace(/[.!?]+$/, '');
 }
 
-/** Gerador simulado de legendas. Não usa rede nem IA. */
+/** IA simulada: legendas por modelos de texto e planos de post por regras. Sem rede. */
 export class MockAIProvider implements AIProvider {
   readonly id = 'mock';
   readonly label = 'Gerador local (simulado)';
-  readonly integrationStatus: IntegrationStatus = 'MOCK';
   readonly simulated = true;
 
   async generateCaptions(request: CaptionRequest): Promise<CaptionSuggestion[]> {
@@ -114,5 +115,10 @@ export class MockAIProvider implements AIProvider {
       const text = hashtags.length > 0 ? `${body}\n\n${hashtags.join(' ')}` : body;
       return { id: `mock-${index}`, text: text.slice(0, maxLength), hashtags };
     });
+  }
+
+  async planPost(request: PostPlanRequest): Promise<PostPlanDraft> {
+    await new Promise((resolve) => setTimeout(resolve, LATENCY_MS));
+    return interpretInstruction(request, new Date());
   }
 }

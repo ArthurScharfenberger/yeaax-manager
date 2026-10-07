@@ -59,6 +59,15 @@ export function LibraryPage() {
   const importMedia = useImportMedia();
   const hasFilters = Boolean(query || status || tagId);
 
+  // Após importar, abre o primeiro vídeo novo no painel (onde fica "Postar com IA").
+  const importAndSelect = () => {
+    importMedia.mutate(undefined, {
+      onSuccess: ({ imported }) => {
+        const [first] = imported;
+        if (first) set('media', first.id);
+      },
+    });
+  };
   const select = (item: Media) => set('media', item.id === selectedId ? null : item.id);
 
   return (
@@ -75,7 +84,7 @@ export function LibraryPage() {
             variant="primary"
             icon={Upload}
             loading={importMedia.isPending}
-            onClick={() => importMedia.mutate()}
+            onClick={() => importAndSelect()}
           >
             Importar vídeo
           </Button>
@@ -166,7 +175,7 @@ export function LibraryPage() {
                 }
                 action={
                   !hasFilters && (
-                    <Button variant="primary" icon={Upload} onClick={() => importMedia.mutate()}>
+                    <Button variant="primary" icon={Upload} onClick={() => importAndSelect()}>
                       Importar vídeo
                     </Button>
                   )

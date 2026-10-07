@@ -33,7 +33,11 @@ export function Modal({ title, description, onClose, size = 'md', footer, childr
 
   useEffect(() => {
     const dialog = dialogRef.current;
-    if (dialog && !dialog.open) dialog.showModal();
+    if (dialog && !dialog.open) {
+      dialog.showModal();
+      // `showModal` move o foco para o primeiro botão; `autoFocus` do React não sobrevive a isso.
+      dialog.querySelector<HTMLElement>('[data-autofocus]')?.focus();
+    }
     return () => dialog?.close();
   }, []);
 

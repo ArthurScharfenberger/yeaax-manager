@@ -35,6 +35,9 @@ export const queryKeys = {
     all: ['search'] as const,
     term: (term: string) => ['search', term] as const,
   },
+  ai: {
+    status: ['ai', 'status'] as const,
+  },
   system: {
     ffmpeg: ['system', 'ffmpeg'] as const,
     dataDirectory: ['system', 'dataDirectory'] as const,

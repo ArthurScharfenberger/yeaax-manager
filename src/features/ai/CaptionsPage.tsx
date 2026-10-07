@@ -16,6 +16,7 @@ import { Panel } from '@/components/ui/Panel';
 import { useToast } from '@/components/ui/toastContext';
 import { checkCaption } from '@/features/posts/postRules';
 import { usePostDialogs } from '@/features/posts/postDialogsContext';
+import { getErrorMessage } from '@/lib/errors';
 import { logger } from '@/lib/logger';
 import { PLATFORM_INFO } from '@/lib/platforms';
 import {
@@ -27,6 +28,8 @@ import {
 } from '@/services/ai';
 import { type Platform, PLATFORMS } from '@/types';
 import { cn } from '@/utils/cn';
+
+import { useAiStatus } from './hooks';
 
 const LANGUAGE_LABELS: Record<CaptionLanguage, string> = {
   'pt-BR': 'Português (Brasil)',
@@ -60,6 +63,7 @@ export function CaptionsPage() {
     tone: 'casual',
     includeHashtags: true,
   });
+  const aiStatus = useAiStatus();
   const generate = useMutation({
     mutationFn: (input: CaptionRequest) => ai.generateCaptions(input),
   });
@@ -89,14 +93,23 @@ export function CaptionsPage() {
       <PageHeader
         title="Legendas IA"
         description="Gere variações de legenda e hashtags a partir de uma descrição do vídeo."
-        actions={<Badge tone="warning">{ai.label}</Badge>}
+        actions={
+          aiStatus.data && (
+            <Badge tone={aiStatus.data.simulated ? 'warning' : 'success'}>
+              {aiStatus.data.label}
+            </Badge>
+          )
+        }
       />
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto flex max-w-[1200px] flex-col gap-5 p-6">
-          <Notice title="Gerador simulado">
-            As sugestões vêm de modelos de texto locais, sem IA real e sem Internet. A integração
-            com a OpenAI está planejada — ver docs/INTEGRATIONS.md.
-          </Notice>
+          {aiStatus.data?.simulated && (
+            <Notice title="Gerador simulado">
+              Sem chave da OpenAI configurada, as sugestões vêm de modelos de texto locais.
+              Configure a chave em Configurações → IA para usar IA real.
+            </Notice>
+          )}
+          {generate.isError && <Notice tone="danger">{getErrorMessage(generate.error)}</Notice>}
 
           <div className="grid gap-5 lg:grid-cols-[380px_minmax(0,1fr)]">
             <Panel title="Briefing">

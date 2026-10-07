@@ -34,7 +34,15 @@ export function DashboardPage() {
           <Button
             icon={Upload}
             loading={importMedia.isPending}
-            onClick={() => importMedia.mutate()}
+            onClick={() =>
+              importMedia.mutate(undefined, {
+                // Leva ao vídeo importado, onde fica "Postar com IA".
+                onSuccess: ({ imported }) => {
+                  const [first] = imported;
+                  if (first) void navigate(`${ROUTES.library}?media=${first.id}`);
+                },
+              })
+            }
           >
             Importar Vídeo
           </Button>

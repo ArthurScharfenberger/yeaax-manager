@@ -1,5 +1,6 @@
 import { type ReactNode, useMemo, useState } from 'react';
 
+import { AiPostDialog } from '@/features/ai/components/AiPostDialog';
 import type { Id } from '@/types';
 
 import { DuplicatePostDialog } from './components/DuplicatePostDialog';
@@ -15,6 +16,7 @@ export function PostDialogsProvider({ children }: { children: ReactNode }) {
   const [composer, setComposer] = useState<ComposerOptions | null>(null);
   const [detailsId, setDetailsId] = useState<Id | null>(null);
   const [duplicateId, setDuplicateId] = useState<Id | null>(null);
+  const [aiMediaId, setAiMediaId] = useState<Id | null>(null);
 
   const api = useMemo<PostDialogsApi>(
     () => ({
@@ -27,6 +29,7 @@ export function PostDialogsProvider({ children }: { children: ReactNode }) {
         setDetailsId(null);
         setDuplicateId(postId);
       },
+      openAiPost: (mediaId) => setAiMediaId(mediaId),
     }),
     [],
   );
@@ -43,6 +46,7 @@ export function PostDialogsProvider({ children }: { children: ReactNode }) {
         />
       )}
       {composer && <PostComposerDialog options={composer} onClose={() => setComposer(null)} />}
+      {aiMediaId && <AiPostDialog mediaId={aiMediaId} onClose={() => setAiMediaId(null)} />}
       {duplicateId && (
         <DuplicatePostDialog postId={duplicateId} onClose={() => setDuplicateId(null)} />
       )}

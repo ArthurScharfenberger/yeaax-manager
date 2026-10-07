@@ -38,8 +38,9 @@ export const INTEGRATIONS: readonly IntegrationInfo[] = [
   {
     id: 'openai',
     name: 'OpenAI',
-    status: 'MOCK',
-    description: 'Geração de legendas e hashtags. Hoje usa um gerador local de modelos de texto.',
+    status: 'IN_PROGRESS',
+    description:
+      'Legendas e "Postar com IA". Ativa quando a chave estiver em Configurações → IA; sem chave, usa o simulador local.',
   },
   {
     id: 'ffmpeg',

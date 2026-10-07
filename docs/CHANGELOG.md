@@ -12,6 +12,13 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); 
   captura) são processados automaticamente em segundo plano ao abrir o app.
 - Comandos Rust `save_thumbnail` e `delete_thumbnail`; remover um vídeo da biblioteca apaga a miniatura.
 - Testes do serviço de mídia (importação, falhas, miniaturas).
+- **Postar com IA**: no painel do vídeo, descreva o que quer (ex.: "legenda em inglês com boas hashtags,
+  amanhã às 19h"); a IA vê a miniatura, escolhe canais, escreve legendas/hashtags e propõe o horário; você revisa,
+  edita e confirma. Canais que já têm o vídeo saem do plano automaticamente.
+- **OpenAI real** (modelo padrão `gpt-6-luna`): chave em Configurações → IA, guardada no Gerenciador de
+  Credenciais do Windows; chamadas feitas pelo Rust. Legendas IA também passam a usar a OpenAI. Sem chave, um
+  simulador local mantém tudo funcionando.
+- Após importar, o vídeo novo abre selecionado na Biblioteca.
 - Página **Posts** (`/posts`): todos os posts, inclusive rascunhos sem data, com filtros na URL (busca, status,
   canal, data, ordenação) e ações por linha.
 - **Duplicar para outro canal**: cópias como rascunho (mesmo vídeo, legenda e horário planejado), com
