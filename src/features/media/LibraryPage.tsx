@@ -1,5 +1,4 @@
 import { Clapperboard, LayoutGrid, List, Search, Upload } from 'lucide-react';
-import { useSearchParams } from 'react-router';
 
 import { MediaThumbnail } from '@/components/MediaThumbnail';
 import { MediaStatusBadge } from '@/components/StatusBadges';
@@ -12,6 +11,7 @@ import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { LoadingBlock } from '@/components/ui/Spinner';
 import { Table, Td, Th, THead, Tr } from '@/components/ui/Table';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { useUrlParams } from '@/hooks/useUrlParams';
 import { getErrorMessage } from '@/lib/errors';
 import { MEDIA_STATUS_LABELS } from '@/lib/labels';
 import { type Media, MEDIA_STATUSES, type MediaStatus, mediaStatusSchema } from '@/types';
@@ -31,25 +31,8 @@ const VIEW_OPTIONS = [
 
 /** Filtros e seleção ficam na URL: sobrevivem à navegação e permitem links internos. */
 function useLibraryParams() {
-  const [params, setParams] = useSearchParams();
+  const { params, set, update } = useUrlParams();
   const status = mediaStatusSchema.safeParse(params.get('status'));
-
-  /** Atualiza vários parâmetros de uma vez (`null`/vazio remove o parâmetro). */
-  function update(changes: Record<string, string | null>) {
-    setParams(
-      (current) => {
-        const next = new URLSearchParams(current);
-        for (const [key, value] of Object.entries(changes)) {
-          if (value) next.set(key, value);
-          else next.delete(key);
-        }
-        return next;
-      },
-      { replace: true },
-    );
-  }
-
-  const set = (key: string, value: string | null) => update({ [key]: value });
 
   return {
     query: params.get('q') ?? '',

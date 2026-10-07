@@ -1,4 +1,4 @@
-import { Ban, CalendarClock, Eye, Pencil } from 'lucide-react';
+import { Ban, CalendarClock, CopyPlus, Eye, Pencil } from 'lucide-react';
 import { useState } from 'react';
 
 import { MediaThumbnail } from '@/components/MediaThumbnail';
@@ -35,7 +35,7 @@ export function PublicationQueue({ now }: { now: Date }) {
     order: 'scheduled_asc',
     limit: QUEUE_LIMIT,
   });
-  const { openComposer, openDetails } = usePostDialogs();
+  const { openComposer, openDetails, openDuplicate } = usePostDialogs();
   const [cancelId, setCancelId] = useState<Id | null>(null);
   const cancelPost = useCancelPost();
   const toast = useToast();
@@ -90,6 +90,7 @@ export function PublicationQueue({ now }: { now: Date }) {
               now={now}
               onOpen={() => openDetails(post.id)}
               onEdit={() => openComposer({ postId: post.id })}
+              onDuplicate={() => openDuplicate(post.id)}
               onCancel={() => setCancelId(post.id)}
             />
           ))}
@@ -117,10 +118,11 @@ interface QueueRowProps {
   now: Date;
   onOpen: () => void;
   onEdit: () => void;
+  onDuplicate: () => void;
   onCancel: () => void;
 }
 
-function QueueRow({ post, now, onOpen, onEdit, onCancel }: QueueRowProps) {
+function QueueRow({ post, now, onOpen, onEdit, onDuplicate, onCancel }: QueueRowProps) {
   const overdue = isOverdue(post, now);
   return (
     <Tr onClick={onOpen} className="cursor-default">
@@ -164,6 +166,7 @@ function QueueRow({ post, now, onOpen, onEdit, onCancel }: QueueRowProps) {
           items={[
             { label: 'Ver detalhes', icon: Eye, onSelect: onOpen },
             { label: 'Editar', icon: Pencil, onSelect: onEdit, disabled: !isEditable(post.status) },
+            { label: 'Duplicar para outro canal', icon: CopyPlus, onSelect: onDuplicate },
             'separator',
             {
               label: 'Cancelar post',

@@ -55,6 +55,16 @@ export function useReschedulePost() {
   });
 }
 
+export function useDuplicatePost() {
+  const { posts } = useServices();
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: ({ id, channelIds }: { id: Id; channelIds: Id[] }) =>
+      posts.duplicateToChannels(id, channelIds),
+    onSuccess: () => invalidate(...AFFECTED),
+  });
+}
+
 export function useCancelPost() {
   const { posts } = useServices();
   const invalidate = useInvalidate();

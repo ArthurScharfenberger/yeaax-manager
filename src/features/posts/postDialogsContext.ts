@@ -15,6 +15,8 @@ export interface ComposerOptions {
 export interface PostDialogsApi {
   openComposer: (options?: ComposerOptions) => void;
   openDetails: (postId: Id) => void;
+  /** Copia o post para outros canais como rascunho. */
+  openDuplicate: (postId: Id) => void;
 }
 
 export const PostDialogsContext = createContext<PostDialogsApi | null>(null);

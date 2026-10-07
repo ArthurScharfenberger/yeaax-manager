@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import type { PostFilters, Repositories } from '@/db/repositories';
 import type { Clock } from '@/lib/clock';
-import { AppError } from '@/lib/errors';
+import { AppError, toAppError } from '@/lib/errors';
 import { createId } from '@/lib/ids';
 import { POST_STATUS_LABELS } from '@/lib/labels';
 import { PLATFORM_INFO } from '@/lib/platforms';
@@ -28,6 +28,11 @@ export const postInputSchema = z.object({
 });
 
 export type PostInput = z.infer<typeof postInputSchema>;
+
+export interface DuplicateResult {
+  created: Post[];
+  failed: { channelId: Id; message: string }[];
+}
 
 interface PostServiceDeps {
   repositories: Pick<Repositories, 'posts' | 'postHistory' | 'channels' | 'media'>;
@@ -121,6 +126,35 @@ export function createPostService({ repositories, clock }: PostServiceDeps) {
     return { ...data, caption: data.caption.trim() };
   }
 
+  async function createPost(input: PostInput, historyMessage?: string): Promise<Post> {
+    const data = await validate(input);
+    const now = clock.now().toISOString();
+    const post: Post = {
+      id: createId(),
+      channelId: data.channelId,
+      mediaId: data.mediaId,
+      caption: data.caption,
+      status: data.status,
+      scheduledAt: data.scheduledAt,
+      publishedAt: null,
+      externalPostId: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    await posts.insert(post);
+    await record(post.id, 'created', {
+      toStatus: post.status,
+      ...(historyMessage ? { message: historyMessage } : {}),
+    });
+    if (post.status === 'scheduled') {
+      await record(post.id, 'scheduled', {
+        message: `Agendado para ${describeSchedule(post.scheduledAt)}`,
+      });
+    }
+    return post;
+  }
+
   return {
     listDetailed: (filters?: PostFilters): Promise<PostWithRelations[]> =>
       posts.listDetailed(filters),
@@ -133,30 +167,37 @@ export function createPostService({ repositories, clock }: PostServiceDeps) {
 
     getHistory: (id: Id) => postHistory.listByPost(id),
 
-    async create(input: PostInput): Promise<Post> {
-      const data = await validate(input);
-      const now = clock.now().toISOString();
-      const post: Post = {
-        id: createId(),
-        channelId: data.channelId,
-        mediaId: data.mediaId,
-        caption: data.caption,
-        status: data.status,
-        scheduledAt: data.scheduledAt,
-        publishedAt: null,
-        externalPostId: null,
-        createdAt: now,
-        updatedAt: now,
-      };
+    create: (input: PostInput) => createPost(input),
 
-      await posts.insert(post);
-      await record(post.id, 'created', { toStatus: post.status });
-      if (post.status === 'scheduled') {
-        await record(post.id, 'scheduled', {
-          message: `Agendado para ${describeSchedule(post.scheduledAt)}`,
-        });
+    /**
+     * Copia um post para outros canais como **rascunho** (mesmo vídeo, legenda e horário planejado).
+     * Cada cópia ainda precisa ser revisada e confirmada pelo usuário antes de agendar (DEC-019).
+     * Falhas por canal (ex.: legenda acima do limite da outra plataforma) não impedem as demais.
+     */
+    async duplicateToChannels(postId: Id, channelIds: readonly Id[]): Promise<DuplicateResult> {
+      const source = await posts.getDetailed(postId);
+      if (!source) throw new AppError('NOT_FOUND', 'Post não encontrado.');
+
+      const result: DuplicateResult = { created: [], failed: [] };
+      for (const channelId of channelIds) {
+        if (channelId === source.channelId) continue;
+        try {
+          const copy = await createPost(
+            {
+              channelId,
+              mediaId: source.mediaId,
+              caption: source.caption,
+              status: 'draft',
+              scheduledAt: source.scheduledAt,
+            },
+            `Duplicado do post de @${source.channel.username} (${PLATFORM_INFO[source.channel.platform].label})`,
+          );
+          result.created.push(copy);
+        } catch (error) {
+          result.failed.push({ channelId, message: toAppError(error).message });
+        }
       }
-      return post;
+      return result;
     },
 
     async update(id: Id, input: PostInput): Promise<Post> {

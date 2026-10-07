@@ -2,6 +2,7 @@ import { type ReactNode, useMemo, useState } from 'react';
 
 import type { Id } from '@/types';
 
+import { DuplicatePostDialog } from './components/DuplicatePostDialog';
 import { PostComposerDialog } from './components/PostComposerDialog';
 import { PostDetailsDialog } from './components/PostDetailsDialog';
 import {
@@ -13,6 +14,7 @@ import {
 export function PostDialogsProvider({ children }: { children: ReactNode }) {
   const [composer, setComposer] = useState<ComposerOptions | null>(null);
   const [detailsId, setDetailsId] = useState<Id | null>(null);
+  const [duplicateId, setDuplicateId] = useState<Id | null>(null);
 
   const api = useMemo<PostDialogsApi>(
     () => ({
@@ -21,6 +23,10 @@ export function PostDialogsProvider({ children }: { children: ReactNode }) {
         setComposer(options);
       },
       openDetails: (postId) => setDetailsId(postId),
+      openDuplicate: (postId) => {
+        setDetailsId(null);
+        setDuplicateId(postId);
+      },
     }),
     [],
   );
@@ -33,9 +39,13 @@ export function PostDialogsProvider({ children }: { children: ReactNode }) {
           postId={detailsId}
           onClose={() => setDetailsId(null)}
           onEdit={() => api.openComposer({ postId: detailsId })}
+          onDuplicate={() => api.openDuplicate(detailsId)}
         />
       )}
       {composer && <PostComposerDialog options={composer} onClose={() => setComposer(null)} />}
+      {duplicateId && (
+        <DuplicatePostDialog postId={duplicateId} onClose={() => setDuplicateId(null)} />
+      )}
     </PostDialogsContext>
   );
 }

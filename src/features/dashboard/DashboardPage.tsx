@@ -65,9 +65,14 @@ export function DashboardPage() {
               title="Fila de publicação"
               meta="próximos 7 dias"
               actions={
-                <Link to={ROUTES.calendar} className={panelLink}>
-                  Abrir calendário
-                </Link>
+                <>
+                  <Link to={ROUTES.posts} className={panelLink}>
+                    Ver todos
+                  </Link>
+                  <Link to={ROUTES.calendar} className={panelLink}>
+                    Abrir calendário
+                  </Link>
+                </>
               }
             >
               <PublicationQueue now={now} />

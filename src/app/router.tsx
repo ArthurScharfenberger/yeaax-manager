@@ -6,6 +6,7 @@ import { CaptionsPage } from '@/features/ai/CaptionsPage';
 import { ChannelsPage } from '@/features/channels/ChannelsPage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
 import { LibraryPage } from '@/features/media/LibraryPage';
+import { PostsPage } from '@/features/posts/PostsPage';
 import { CalendarPage } from '@/features/scheduling/CalendarPage';
 import { SettingsPage } from '@/features/settings/SettingsPage';
 
@@ -24,6 +25,7 @@ export function createAppRouter() {
         { index: true, element: <DashboardPage /> },
         { path: 'channels', element: <ChannelsPage /> },
         { path: 'library', element: <LibraryPage /> },
+        { path: 'posts', element: <PostsPage /> },
         { path: 'calendar', element: <CalendarPage /> },
         { path: 'automation', element: <AutomationPage /> },
         { path: 'captions', element: <CaptionsPage /> },

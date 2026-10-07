@@ -44,6 +44,8 @@ export interface PostFilters {
   scheduledFrom?: IsoDateString;
   /** Fim exclusivo do intervalo de `scheduled_at` (ISO UTC). */
   scheduledTo?: IsoDateString;
+  /** `true`: só posts com data; `false`: só posts sem data (rascunhos não planejados). */
+  hasSchedule?: boolean;
   search?: string;
   order?: 'scheduled_asc' | 'updated_desc';
   limit?: number;
@@ -152,6 +154,9 @@ function buildWhere(filters: PostFilters): { where: string; params: SqlValue[] }
   if (filters.scheduledTo) {
     conditions.push('p.scheduled_at < ?');
     params.push(filters.scheduledTo);
+  }
+  if (filters.hasSchedule !== undefined) {
+    conditions.push(filters.hasSchedule ? 'p.scheduled_at IS NOT NULL' : 'p.scheduled_at IS NULL');
   }
   const search = filters.search?.trim();
   if (search) {

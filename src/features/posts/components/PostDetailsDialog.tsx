@@ -1,4 +1,4 @@
-import { Ban, Pencil, Trash2 } from 'lucide-react';
+import { Ban, CopyPlus, Pencil, Trash2 } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 
 import { MediaThumbnail } from '@/components/MediaThumbnail';
@@ -23,9 +23,15 @@ interface PostDetailsDialogProps {
   postId: Id;
   onClose: () => void;
   onEdit: () => void;
+  onDuplicate: () => void;
 }
 
-export function PostDetailsDialog({ postId, onClose, onEdit }: PostDetailsDialogProps) {
+export function PostDetailsDialog({
+  postId,
+  onClose,
+  onEdit,
+  onDuplicate,
+}: PostDetailsDialogProps) {
   const post = usePost(postId);
 
   return (
@@ -33,7 +39,16 @@ export function PostDetailsDialog({ postId, onClose, onEdit }: PostDetailsDialog
       title="Detalhes do post"
       size="lg"
       onClose={onClose}
-      footer={post.data && <DetailsFooter post={post.data} onClose={onClose} onEdit={onEdit} />}
+      footer={
+        post.data && (
+          <DetailsFooter
+            post={post.data}
+            onClose={onClose}
+            onEdit={onEdit}
+            onDuplicate={onDuplicate}
+          />
+        )
+      }
     >
       {post.isPending && <LoadingBlock />}
       {post.isError && <Notice tone="danger">{getErrorMessage(post.error)}</Notice>}
@@ -121,10 +136,12 @@ function DetailsFooter({
   post,
   onClose,
   onEdit,
+  onDuplicate,
 }: {
   post: PostWithRelations;
   onClose: () => void;
   onEdit: () => void;
+  onDuplicate: () => void;
 }) {
   const [confirm, setConfirm] = useState<'cancel' | 'delete' | null>(null);
   const cancelPost = useCancelPost();
@@ -148,6 +165,9 @@ function DetailsFooter({
           Cancelar post
         </Button>
       )}
+      <Button icon={CopyPlus} onClick={onDuplicate}>
+        Duplicar
+      </Button>
       <Button onClick={onClose}>Fechar</Button>
       {isEditable(post.status) && (
         <Button variant="primary" icon={Pencil} onClick={onEdit}>

@@ -124,6 +124,42 @@ describe('postService', () => {
     await expectAppError(service.cancel(post.id), 'INVALID_TRANSITION');
   });
 
+  it('duplica para outro canal como rascunho, mantendo vídeo, legenda e horário', async () => {
+    const source = await service.create(input({ status: 'scheduled', scheduledAt: FUTURE }));
+
+    const result = await service.duplicateToChannels(source.id, ['channel-1', 'channel-2']);
+
+    expect(result.failed).toEqual([]);
+    expect(result.created).toHaveLength(1); // o canal de origem é ignorado
+    expect(result.created[0]).toMatchObject({
+      channelId: 'channel-2',
+      mediaId: 'media-1',
+      caption: source.caption,
+      status: 'draft',
+      scheduledAt: FUTURE,
+    });
+    const [created] = await service.getHistory(result.created[0]!.id);
+    expect(created?.message).toBe('Duplicado do post de @yeaxx (TikTok)');
+  });
+
+  it('reporta falhas por canal sem impedir as demais cópias', async () => {
+    const hashtags = Array.from({ length: 31 }, (_, i) => `#t${i}`).join(' ');
+    const source = await service.create(input({ caption: hashtags }));
+    await repositories.channels.insert(
+      buildChannel({ id: 'channel-3', username: 'techfix.rs', displayName: 'TechFix' }),
+    );
+
+    const result = await service.duplicateToChannels(source.id, [
+      'channel-2', // Instagram: máx. 30 hashtags
+      'channel-3',
+      'inexistente',
+    ]);
+
+    expect(result.created.map((post) => post.channelId)).toEqual(['channel-3']);
+    expect(result.failed.map((item) => item.channelId)).toEqual(['channel-2', 'inexistente']);
+    expect(result.failed[0]?.message).toContain('30 hashtags');
+  });
+
   it('cancela agendamentos e exclui somente depois', async () => {
     const post = await service.create(input({ status: 'scheduled', scheduledAt: FUTURE }));
 
