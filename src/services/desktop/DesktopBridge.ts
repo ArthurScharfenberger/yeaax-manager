@@ -26,6 +26,22 @@ export interface DesktopBridge {
    * Devolve a resposta crua (não confiável: valide com Zod).
    */
   aiChatCompletion(body: Record<string, unknown>): Promise<unknown>;
+  /**
+   * TikTok — Login Kit Desktop + PKCE (DEC-027). O Rust abre a autorização no navegador, recebe o callback em
+   * `127.0.0.1` e troca o code pelo backend. Devolve só dados públicos e um id de conexão **pendente**: nada é
+   * gravado no cofre até `tiktokCommitConnection` (conexão em duas fases). Tokens nunca chegam aqui.
+   */
+  tiktokConnect(): Promise<TikTokPendingConnection>;
+  /** Cancela o login em andamento (fecha o listener local). */
+  tiktokCancelConnect(): Promise<void>;
+  /** Grava no cofre as credenciais da conexão pendente para o canal já salvo no banco. */
+  tiktokCommitConnection(connectionId: string, channelId: string): Promise<void>;
+  /** Descarta a conexão pendente sem gravar nada. */
+  tiktokDiscardConnection(connectionId: string): Promise<void>;
+  /** Perfil atual da conta do canal (renova o token no Rust se preciso). */
+  tiktokGetProfile(channelId: string): Promise<TikTokAccount>;
+  /** Revoga (melhor esforço) e apaga as credenciais do canal. */
+  tiktokDisconnect(channelId: string): Promise<void>;
   /** Pasta onde o banco local é salvo (`null` no modo preview). */
   getDataDirectory(): Promise<string | null>;
   /** Pasta dos arquivos de log (`null` no modo preview). */
@@ -46,6 +62,21 @@ export interface MediaFileInfo {
   fileName: string;
   extension: string;
   size: number;
+}
+
+/** Dados públicos de uma conta do TikTok (nunca tokens). */
+export interface TikTokAccount {
+  openId: string;
+  username: string | null;
+  displayName: string;
+  avatarUrl: string | null;
+  scopes: string[];
+}
+
+export interface TikTokPendingConnection {
+  /** Id opaco, de uso único, válido por 5 minutos dentro do processo do app. Não é credencial do TikTok. */
+  connectionId: string;
+  account: TikTokAccount;
 }
 
 export interface FfmpegStatus {

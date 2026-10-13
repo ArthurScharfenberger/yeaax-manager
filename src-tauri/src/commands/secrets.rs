@@ -43,19 +43,64 @@ fn validate_name(name: &str) -> CommandResult<()> {
     }
 }
 
-fn entry(name: &str) -> CommandResult<Entry> {
-    validate_name(name)?;
+fn raw_entry(name: &str) -> CommandResult<Entry> {
     STORE.as_ref().map_err(|_| store_error())?;
     Entry::new(SERVICE, name).map_err(|_| store_error())
 }
 
-/// Lê um segredo para uso interno do Rust. Nunca exponha o retorno ao webview.
-pub fn read_secret(name: &str) -> CommandResult<Option<String>> {
-    match entry(name)?.get_password() {
+fn entry(name: &str) -> CommandResult<Entry> {
+    validate_name(name)?;
+    raw_entry(name)
+}
+
+fn read_entry(entry: &Entry) -> CommandResult<Option<String>> {
+    match entry.get_password() {
         Ok(value) => Ok(Some(value)),
         Err(KeyringError::NoEntry) => Ok(None),
         Err(_) => Err(store_error()),
     }
+}
+
+fn delete_entry(entry: &Entry) -> CommandResult<()> {
+    match entry.delete_credential() {
+        Ok(()) | Err(KeyringError::NoEntry) => Ok(()),
+        Err(_) => Err(store_error()),
+    }
+}
+
+/// Lê um segredo para uso interno do Rust. Nunca exponha o retorno ao webview.
+pub fn read_secret(name: &str) -> CommandResult<Option<String>> {
+    read_entry(&entry(name)?)
+}
+
+/// Prefixo dos itens de token do TikTok (um por canal). Esses itens **não** são acessíveis pelos comandos
+/// `secret_*` do webview: só o módulo `tiktok::tokens` os lê e grava (DEC-027).
+pub const TIKTOK_TOKEN_PREFIX: &str = "tiktok_token:";
+
+fn tiktok_token_entry(channel_id: &str) -> CommandResult<Entry> {
+    let valid = (1..=64).contains(&channel_id.len())
+        && channel_id
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-');
+    if !valid {
+        return Err(CommandError::new("INVALID_INPUT", "Canal inválido."));
+    }
+    raw_entry(&format!("{TIKTOK_TOKEN_PREFIX}{channel_id}"))
+}
+
+pub(crate) fn read_tiktok_tokens(channel_id: &str) -> CommandResult<Option<String>> {
+    read_entry(&tiktok_token_entry(channel_id)?)
+}
+
+/// Grava (ou substitui, de forma atômica no cofre) os tokens do canal.
+pub(crate) fn write_tiktok_tokens(channel_id: &str, value: &str) -> CommandResult<()> {
+    tiktok_token_entry(channel_id)?
+        .set_password(value)
+        .map_err(|_| store_error())
+}
+
+pub(crate) fn delete_tiktok_tokens(channel_id: &str) -> CommandResult<()> {
+    delete_entry(&tiktok_token_entry(channel_id)?)
 }
 
 fn validate_value(value: &str) -> CommandResult<&str> {
@@ -83,10 +128,7 @@ pub async fn secret_has(name: String) -> CommandResult<bool> {
 
 #[tauri::command]
 pub async fn secret_delete(name: String) -> CommandResult<()> {
-    match entry(&name)?.delete_credential() {
-        Ok(()) | Err(KeyringError::NoEntry) => Ok(()),
-        Err(_) => Err(store_error()),
-    }
+    delete_entry(&entry(&name)?)
 }
 
 #[cfg(test)]
@@ -97,6 +139,19 @@ mod tests {
     fn accepts_only_known_secret_names() {
         assert!(validate_name(OPENAI_API_KEY).is_ok());
         assert_eq!(validate_name("qualquer").unwrap_err().code, "INVALID_INPUT");
+        // Tokens do TikTok nunca passam pelos comandos do webview.
+        assert!(validate_name("tiktok_token:canal-1").is_err());
+    }
+
+    #[test]
+    fn tiktok_token_entry_aceita_so_ids_de_canal() {
+        for id in ["", "../x", "a b", "canal:1", &"a".repeat(65)] {
+            assert_eq!(
+                tiktok_token_entry(id).unwrap_err().code,
+                "INVALID_INPUT",
+                "{id}"
+            );
+        }
     }
 
     #[test]

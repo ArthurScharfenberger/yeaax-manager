@@ -37,9 +37,17 @@ Estas políticas valem desde já; a arquitetura foi desenhada para cumpri-las qu
   O backend só aceita redirect URI no formato `http://127.0.0.1:<1024–65535>/tiktok/callback` e exige PKCE.
 - `state`, `code_verifier` e `code` ficam só na memória da tentativa de login e **nunca** vão para logs, banco ou
   webview.
-- Access/refresh tokens: **somente** no Credential Manager do Windows, um item por conta
-  (`tiktok_token:<open_id>`, JSON com tokens, expirações e escopos). O banco guarda apenas status e metadados
-  públicos (open_id, @, nome, avatar). Nenhum comando devolve tokens ao webview.
+- Access/refresh tokens: **somente** no Credential Manager do Windows, um item por canal
+  (`tiktok_token:<channel_id>`, JSON com open_id, tokens, expirações e escopos). Os comandos `secret_*` do webview
+  não alcançam esses itens (lista fixa); só `src-tauri/src/tiktok/tokens.rs` os lê e grava. O banco guarda apenas
+  status e metadados públicos (@, nome, avatar). Nenhum comando devolve tokens ao webview.
+- **Conexão transacional:** `tiktok_connect` não grava nada — deixa tokens e perfil pendentes na memória do Rust
+  (id opaco, uso único, 5 min) e devolve só dados públicos. O canal é gravado no banco e então
+  `tiktok_commit_connection` grava no cofre; reconectar com outra conta é recusado. Falhou → banco desfeito e
+  conexão descartada. O id pendente não é credencial do TikTok e só existe dentro do processo do app.
+- No Rust, valores sensíveis ficam no tipo `Secret` (sem `Display`/`Serialize`; `Debug` mostra `[redacted]`), e
+  as structs de tokens têm `Debug` manual sem os valores (testado). Os logs registram só porta local, códigos de
+  erro normalizados e eventos.
 - O backend **não guarda** tokens, codes nem logs com eles; devolve os tokens na resposta HTTPS ao Rust e esquece.
 - O frontend **nunca recebe tokens nem o `code`**: `SocialProvider.connect()` devolve só o perfil.
 - Refresh token rotativo: o novo substitui o anterior antes de qualquer outra ação. Refresh falhou → canal
@@ -125,13 +133,15 @@ registrada na revisão da DEC-024 (item 6) e mantida pela DEC-027:
 
 ## Justificativas de permissões e exceções
 
-| Item                                           | Motivo                                                                    |
-| ---------------------------------------------- | ------------------------------------------------------------------------- |
-| `dialog:allow-open`                            | seletor de vídeos na importação                                           |
-| `log:allow-log`                                | gravar no arquivo de log as entradas do logger do frontend (já redigidas) |
-| `sql:allow-execute`                            | escrita no banco local                                                    |
-| `assetProtocol.enable`                         | preview/metadados de vídeos autorizados individualmente                   |
-| `assetProtocol.scope: $APPDATA/thumbnails/*`   | exibir miniaturas geradas pelo app (DEC-018)                              |
-| comandos `save_thumbnail` / `delete_thumbnail` | gravar/remover miniaturas na pasta do app                                 |
-| `dragDropEnabled: false`                       | permite drag-and-drop HTML5 no calendário (DEC-010)                       |
-| listener loopback `127.0.0.1` (etapa 3)        | receber o redirect do Login Kit Desktop; porta do sistema, 1 uso, 5 min   |
+| Item                                                 | Motivo                                                                      |
+| ---------------------------------------------------- | --------------------------------------------------------------------------- |
+| `dialog:allow-open`                                  | seletor de vídeos na importação                                             |
+| `log:allow-log`                                      | gravar no arquivo de log as entradas do logger do frontend (já redigidas)   |
+| `sql:allow-execute`                                  | escrita no banco local                                                      |
+| `assetProtocol.enable`                               | preview/metadados de vídeos autorizados individualmente                     |
+| `assetProtocol.scope: $APPDATA/thumbnails/*`         | exibir miniaturas geradas pelo app (DEC-018)                                |
+| comandos `save_thumbnail` / `delete_thumbnail`       | gravar/remover miniaturas na pasta do app                                   |
+| `dragDropEnabled: false`                             | permite drag-and-drop HTML5 no calendário (DEC-010)                         |
+| listener loopback `127.0.0.1`                        | receber o redirect do Login Kit Desktop; porta do sistema, 1 uso, 5 min     |
+| plugin `opener` (sem permissão no webview)           | o Rust abre a URL oficial de autorização no navegador padrão                |
+| rede do Rust: `api.yeaax.xyz`, `open.tiktokapis.com` | troca/refresh/revoke (backend) e perfil (TikTok); a CSP do webview não muda |

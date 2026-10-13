@@ -8,3 +8,4 @@ pub mod media;
 pub mod secrets;
 pub mod system;
 pub mod thumbnails;
+pub mod tiktok;

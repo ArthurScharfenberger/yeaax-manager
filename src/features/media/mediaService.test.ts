@@ -4,6 +4,7 @@ import type { Repositories } from '@/db/repositories';
 import { createFixedClock } from '@/lib/clock';
 import { AppError } from '@/lib/errors';
 import type { DesktopBridge } from '@/services/desktop/DesktopBridge';
+import { createPreviewDesktopBridge } from '@/services/desktop/previewDesktopBridge';
 import { buildMedia } from '@/test/factories';
 import { createTestRepositories } from '@/test/testDb';
 
@@ -20,6 +21,8 @@ function createFakeDesktop(files: Record<string, number>) {
   let failThumbnailSave = false;
 
   const desktop: DesktopBridge = {
+    // Métodos não usados aqui (TikTok etc.) vêm da ponte de preview.
+    ...createPreviewDesktopBridge(),
     mode: 'desktop',
     pickVideoFiles: () => Promise.resolve(Object.keys(files)),
     inspectMediaFile: (path) => {

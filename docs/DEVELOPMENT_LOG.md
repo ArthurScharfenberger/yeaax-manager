@@ -18,6 +18,55 @@ Formato:
 
 ---
 
+## Sessão 2026-10-13 (5) — Etapa 3: `tiktok_connect` (Login Kit Desktop + PKCE)
+
+### Objetivo
+
+Implementar o login real do TikTok no app desktop: listener local, navegador do sistema, troca via backend,
+tokens no cofre, perfil e desconexão — com os cuidados pedidos (listener antes do navegador e mesma porta na
+troca; listener encerra no primeiro resultado; nada sensível ao frontend; conexão transacional). Sem publicação.
+
+### Alterações realizadas
+
+- Rust `src-tauri/src/tiktok/`: `listener.rs` (bind `127.0.0.1:0`, uso único, timeout 5 min, cancelamento,
+  limite de requisições inválidas), `backend.rs` (`/config`, token, refresh, revoke; erros com mensagens fixas),
+  `tokens.rs` (cofre por canal, refresh com trava, `Debug` sem valores), `api.rs` (`/v2/user/info/`, valida que é a
+  mesma conta), `pending.rs` (conexões pendentes, uso único, 5 min), `secret.rs` (envelope que nunca aparece em
+  `Debug`). `commands/tiktok.rs`: `tiktok_connect`, `tiktok_cancel_connect`, `tiktok_commit_connection`,
+  `tiktok_discard_connection`, `tiktok_get_profile`, `tiktok_disconnect`. `secrets.rs`: itens `tiktok_token:`
+  só internos. Dependências: `tokio`, `tauri-plugin-opener`.
+- TS: `DesktopBridge` + implementações (Zod nas respostas; preview rejeita), `SocialProvider.ConnectResult.session`
+  (commit/discard), `TikTokProvider` real (desktop) e mock no preview, `channelService.connectNew/connect`
+  transacionais, códigos de erro `TIKTOK_*`, status da integração `IN_PROGRESS`, aviso da página Canais.
+- Testes: Rust 53 (listener real em 127.0.0.1: ignora inválidas, fecha após sucesso/erro/timeout/cancelamento;
+  URL de autorização; conta sem campos sensíveis; tokens sem `Debug`), TS 106 (conexão em duas fases e
+  `TikTokProvider`), backend 61. Clippy limpo. Preview validado (TikTok simulado, sem erros no console).
+
+### Arquivos importantes
+
+`src-tauri/src/commands/tiktok.rs`, `src-tauri/src/tiktok/*.rs`, `src/services/social/TikTokProvider.ts`,
+`src/features/channels/channelService.ts`, `src/features/channels/channelConnection.test.ts`.
+
+### Decisões
+
+Complemento da DEC-027 (tokens por canal, conexão em duas fases, descarte sem revogar, login único, novas deps).
+
+### Problemas encontrados
+
+- `reqwest` 0.13 não traz `.query()` sem feature → URL montada com `url::Url::parse_with_params`.
+- `erasableSyntaxOnly` proíbe parameter properties no construtor → campo explícito.
+
+### Pendências
+
+- Teste real (usuário): backend publicado, portal como Desktop, conta de teste no sandbox.
+- Etapa 4: UI da conta conectada (botão sem @, `external_id`, avatar/CSP, `expired`, cancelar login).
+
+### Próximo passo
+
+Teste real da conexão no sandbox; depois etapa 4.
+
+---
+
 ## Sessão 2026-10-13 (4) — Login Kit Desktop + PKCE (DEC-027)
 
 ### Objetivo

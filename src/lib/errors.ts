@@ -25,6 +25,17 @@ export const ERROR_CODES = [
   'AI_RATE_LIMIT',
   'AI_UNAVAILABLE',
   'AI_ERROR',
+  // TikTok (src-tauri/src/tiktok e commands/tiktok.rs)
+  'TIKTOK_NOT_CONFIGURED',
+  'TIKTOK_UNAVAILABLE',
+  'TIKTOK_RATE_LIMIT',
+  'TIKTOK_AUTH_EXPIRED',
+  'TIKTOK_NOT_CONNECTED',
+  'TIKTOK_DENIED',
+  'TIKTOK_LOGIN_TIMEOUT',
+  'TIKTOK_LOGIN_CANCELLED',
+  'TIKTOK_PROFILE',
+  'TIKTOK_ERROR',
   'DATABASE',
   'DATA_INTEGRITY',
   'PROVIDER',
@@ -70,6 +81,7 @@ const UNEXPECTED_ERROR_CODES: ReadonlySet<ErrorCode> = new Set([
   'IO_ERROR',
   'SECRET_STORE',
   'AI_ERROR',
+  'TIKTOK_ERROR',
 ]);
 
 /** `true` para erros de validação/regra (ex.: agendar no passado), que não indicam bug. */

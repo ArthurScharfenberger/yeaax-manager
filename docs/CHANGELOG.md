@@ -15,6 +15,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); 
 
 ### Adicionado
 
+- **Conexão real com o TikTok no app desktop** (Login Kit Desktop + PKCE): "Conectar" abre a autorização oficial no
+  navegador, o app recebe o retorno em `127.0.0.1`, troca o code pelo backend e guarda os tokens no Gerenciador de
+  Credenciais. Conexão transacional (canal e credenciais gravados juntos ou nada muda), sincronização do perfil e
+  desconexão com revogação. No preview do navegador continua simulado. Publicação ainda não.
 - Login do TikTok passa a ser **Login Kit Desktop + PKCE** (DEC-027): núcleo no Rust com geração de `state` e
   `code_verifier` pelo CSPRNG do sistema, `code_challenge` SHA-256 em hex (formato exigido pelo TikTok) e validação
   estrita do callback local em `127.0.0.1` (16 testes novos).

@@ -18,6 +18,14 @@ export function createPreviewDesktopBridge(): DesktopBridge {
     hasSecret: () => Promise.resolve(false),
     deleteSecret: () => Promise.resolve(),
     aiChatCompletion: () => Promise.reject(new AppError('NOT_AVAILABLE', DESKTOP_ONLY_MESSAGE)),
+    // No preview o TikTok usa o MockSocialProvider (services/social); estes nunca são chamados.
+    tiktokConnect: () => Promise.reject(new AppError('NOT_AVAILABLE', DESKTOP_ONLY_MESSAGE)),
+    tiktokCancelConnect: () => Promise.resolve(),
+    tiktokCommitConnection: () =>
+      Promise.reject(new AppError('NOT_AVAILABLE', DESKTOP_ONLY_MESSAGE)),
+    tiktokDiscardConnection: () => Promise.resolve(),
+    tiktokGetProfile: () => Promise.reject(new AppError('NOT_AVAILABLE', DESKTOP_ONLY_MESSAGE)),
+    tiktokDisconnect: () => Promise.resolve(),
     getDataDirectory: () => Promise.resolve(null),
     getLogDirectory: () => Promise.resolve(null),
     toAssetUrl: () => null,

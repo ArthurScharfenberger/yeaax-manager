@@ -74,9 +74,9 @@ export function ChannelsPage() {
 
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto flex max-w-[1200px] flex-col gap-4 p-6">
-          <Notice title="Conexões simuladas">
-            Conectar e desconectar usam providers mock. O login oficial (OAuth) de cada plataforma
-            será implementado na fase de integrações — ver docs/INTEGRATIONS.md.
+          <Notice title="Integrações em andamento">
+            No app desktop, o TikTok usa o login oficial (abre o navegador para autorizar); o
+            Instagram ainda é simulado. No preview do navegador, as duas conexões são simuladas.
           </Notice>
 
           <div className="flex items-center justify-between">

@@ -9,8 +9,7 @@ use super::pkce::constant_time_eq;
 
 pub const LOOPBACK_HOST: &str = "127.0.0.1";
 pub const CALLBACK_PATH: &str = "/tiktok/callback";
-/// Valor cadastrado no portal do TikTok (porta curinga).
-pub const REGISTERED_REDIRECT_URI: &str = "http://127.0.0.1:*/tiktok/callback";
+// No portal do TikTok fica cadastrado `http://127.0.0.1:*/tiktok/callback` (porta curinga).
 /// Tamanho máximo aceito para a linha de requisição + cabeçalhos.
 pub const MAX_REQUEST_HEAD_BYTES: usize = 8 * 1024;
 const MAX_CODE_LENGTH: usize = 1024;
@@ -175,10 +174,6 @@ mod tests {
     #[test]
     fn redirect_uri_usa_loopback_e_caminho_fixo() {
         assert_eq!(redirect_uri(PORT), "http://127.0.0.1:53682/tiktok/callback");
-        assert_eq!(
-            REGISTERED_REDIRECT_URI,
-            "http://127.0.0.1:*/tiktok/callback"
-        );
     }
 
     #[test]

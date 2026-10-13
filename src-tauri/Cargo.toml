@@ -30,6 +30,10 @@ keyring-core = "1"
 getrandom = "0.3"
 sha2 = "0.10"
 url = "2"
+# Listener loopback, timeouts e trava do refresh (já presente na árvore via Tauri).
+tokio = { version = "1", features = ["net", "io-util", "time", "sync", "macros", "rt"] }
+# Abre a autorização do TikTok no navegador padrão — chamado só pelo Rust, sem permissão no webview.
+tauri-plugin-opener = "2"
 
 [profile.release]
 codegen-units = 1

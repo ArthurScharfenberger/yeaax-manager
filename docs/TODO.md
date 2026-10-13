@@ -18,9 +18,12 @@ Fase atual: **TikTok real** (ordem em `docs/INTEGRATIONS.md` → TikTok).
       conta como target user (conta **privada** para os testes).
 - [ ] Usuário — Vercel/DNS: projeto separado com Root Directory `backend`, domínio `api.yeaax.xyz` (CNAME) e
       variáveis secretas `TIKTOK_CLIENT_KEY` e `TIKTOK_CLIENT_SECRET` (opcional `TIKTOK_SCOPES`).
-- [ ] Etapa 3 — listener loopback, navegador do sistema (`tauri-plugin-opener`), troca via backend, tokens no
-      cofre e comando `tiktok_connect` (PKCE e validação do callback já prontos em `src-tauri/src/tiktok/`).
-- [ ] Etapas 4–7 — conta conectada, compositor TikTok, publicação, status/demonstração.
+- [ ] **Teste real da etapa 3** (usuário, depois do deploy e do portal): `npm.cmd run app:dev` → Canais →
+      Adicionar canal → TikTok → autorizar no navegador → canal aparece conectado; Sincronizar; Desconectar.
+- [ ] Etapa 4 — UI da conta conectada: botão "Conectar TikTok" sem pedir @, `channels.external_id` (open_id),
+      avatar (liberar o CDN do TikTok na CSP, com justificativa), canal `expired` quando o refresh falhar,
+      botão para cancelar o login em andamento (`tiktokCancelConnect`).
+- [ ] Etapas 5–7 — compositor TikTok, publicação, status/demonstração.
 - [ ] Usuário: criar a chave em platform.openai.com, colar em Configurações → IA, "Testar conexão" e usar
       "Postar com IA" num vídeo real (validar qualidade das legendas e leitura da miniatura).
 - [ ] Instagram real — **depois do TikTok**: app na Meta, token do painel no cofre, Reels por upload resumável.

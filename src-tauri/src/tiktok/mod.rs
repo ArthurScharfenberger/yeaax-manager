@@ -1,9 +1,19 @@
 //! Integração com o TikTok no lado nativo (Login Kit Desktop + PKCE — DEC-027).
 //!
-//! Etapa 3 em andamento: por enquanto só a lógica pura (PKCE, `state`, validação do callback local), coberta
-//! por testes. O listener, a troca pelo backend e o cofre de tokens chegam nos próximos commits.
-// Os módulos ainda não são chamados por nenhum comando; a permissão some quando forem ligados (etapa 3).
-#![cfg_attr(not(test), allow(dead_code))]
+//! - `pkce` / `loopback`: lógica pura (PKCE com desafio hex, `state`, validação do callback local);
+//! - `listener`: servidor HTTP de uso único em `127.0.0.1`;
+//! - `backend`: troca/renovação/revogação via `api.yeaax.xyz` (o `client_secret` só existe lá);
+//! - `tokens`: cofre do Windows por canal; `pending`: conexões aguardando confirmação;
+//! - `api`: chamadas diretas ao TikTok com o token do usuário (perfil; publicação na etapa 6);
+//! - `secret`: envelope que impede valores sensíveis de aparecerem em `Debug`/logs.
+//!
+//! Os comandos expostos ao webview ficam em `commands/tiktok.rs`.
 
+pub mod api;
+pub mod backend;
+pub mod listener;
 pub mod loopback;
+pub mod pending;
 pub mod pkce;
+pub mod secret;
+pub mod tokens;

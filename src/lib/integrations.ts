@@ -25,8 +25,9 @@ export const INTEGRATIONS: readonly IntegrationInfo[] = [
   {
     id: 'tiktok',
     name: 'TikTok',
-    status: 'MOCK',
-    description: 'Login Kit + Content Posting API. Provider simulado, sem chamadas reais.',
+    status: 'IN_PROGRESS',
+    description:
+      'Login Kit Desktop + PKCE: conexão e perfil reais no app desktop (simulado no preview). Publicação em breve.',
   },
   {
     id: 'instagram',

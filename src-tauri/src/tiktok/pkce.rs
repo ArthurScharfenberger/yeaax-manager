@@ -44,7 +44,8 @@ pub fn code_challenge(verifier: &str) -> String {
         .collect()
 }
 
-/// RFC 7636 §4.1: 43–128 caracteres de `[A-Za-z0-9-._~]`.
+/// RFC 7636 §4.1: 43–128 caracteres de `[A-Za-z0-9-._~]` (o backend valida o mesmo formato).
+#[cfg(test)]
 pub fn is_valid_code_verifier(verifier: &str) -> bool {
     (43..=128).contains(&verifier.len())
         && verifier

@@ -72,6 +72,10 @@ públicos. Ver decisões DEC-019 e DEC-020.
 - **Escopos:** `user.info.basic` (open_id, avatar, nome de exibição); `user.info.profile` (link do perfil, bio,
   verificado e o `username` — **confirmar o campo** na resposta de `/v2/user/info/`); `video.publish` (Direct Post +
   status); `video.upload` (rascunho + status).
+- **Perfil:** `GET https://open.tiktokapis.com/v2/user/info/?fields=open_id,avatar_url,display_name,username` com
+  `Authorization: Bearer <access_token>`; resposta `{ data: { user }, error: { code: "ok", message, log_id } }`.
+  `username` só com `user.info.profile` (pedido só quando o escopo foi concedido). Erros tratados:
+  `access_token_invalid`, `scope_not_authorized`, `rate_limit_exceeded` **(códigos a confirmar no sandbox)**.
 - Impacto: DEC-023 (secret no backend) e DEC-027 (Login Kit Desktop + PKCE; substituiu a DEC-024).
 
 ### Content Posting API — modos e auditoria

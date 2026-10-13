@@ -61,6 +61,17 @@ export interface ConnectRequest {
 /** Resultado da conexão. Não contém tokens — eles ficam no lado nativo. */
 export interface ConnectResult {
   profile: SocialProfile;
+  /**
+   * Presente quando as credenciais ainda não foram gravadas (TikTok real — DEC-027). Quem chamou deve gravar o
+   * canal no banco e então `commit(channelId)`; se algo falhar, desfazer o banco e `discard()`. Assim a conexão
+   * nunca fica pela metade.
+   */
+  session?: ConnectionSession;
+}
+
+export interface ConnectionSession {
+  commit(channelId: Id): Promise<void>;
+  discard(): Promise<void>;
 }
 
 export interface PublishRequest {

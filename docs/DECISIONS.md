@@ -459,3 +459,14 @@ Feita contra a documentação atual do Login Kit (Web e Desktop) e do gerenciame
   porta escolhida pelo sistema no bind e pelo `state`.
 - **Impactos:** novas dependências Rust `getrandom` 0.3, `sha2` 0.10 e `url` 2 (já presentes na árvore via Tauri);
   backend: `POST /auth/tiktok/token` exige `codeVerifier` e `redirectUri`; `/config` informa redirect e PKCE.
+- **Implementação (etapa 3, 2026-10-13):**
+  - Tokens no cofre **por canal** (`tiktok_token:<channel_id>`), não por open_id: o canal é a referência que o
+    app já tem (`SocialAccountRef.channelId`) e dispensa migration nesta etapa; o open_id fica dentro do item.
+  - **Conexão em duas fases** (pedido do usuário: "ou a conta fica conectada corretamente, ou o estado local volta
+    ao anterior"): `tiktok_connect` deixa tokens pendentes em memória; o frontend grava o banco e confirma com
+    `tiktok_commit_connection`, ou desfaz e chama `tiktok_discard_connection`. O descarte **não revoga** no
+    TikTok, para não derrubar uma autorização anterior válida da mesma conta.
+  - Login único: um novo login (ou `tiktok_cancel_connect`) encerra o anterior. Refresh serializado por uma trava.
+  - Novas dependências Rust: `tokio` (já na árvore; listener, timeouts, trava) e `tauri-plugin-opener` 2 (abrir o
+    navegador; usado só pelo Rust, sem permissão nova no webview). URL do backend fixa em release; override
+    `YEAAX_API_BASE_URL` só em build de desenvolvimento.

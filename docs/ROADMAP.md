@@ -56,12 +56,13 @@ Marque `[x]` ao concluir (com a versão entre parênteses quando fizer sentido).
 - [x] Login Kit Desktop + PKCE no lugar do Web; callback público removido (DEC-027, 2026-10-13)
 - [x] Backend mínimo `backend/`: `/health`, `/config`, token (PKCE), refresh, revoke + testes (DEC-023/026/027, 2026-10-13)
 - [ ] Deploy do backend na Vercel em `api.yeaax.xyz`
-- [ ] Tokens no Credential Manager por conta (`tiktok_token:<open_id>`) — DEC-027
+- [x] Tokens no Credential Manager por canal (`tiktok_token:<channel_id>`), conexão em duas fases — DEC-027 (2026-10-13)
 - [ ] Compositor com campos por plataforma (UX obrigatória do TikTok, `share_to_feed`/capa no Instagram) + coluna `platform_options`
 - [ ] Validação de especificações por plataforma antes de agendar (duração, tamanho, formato)
 - [ ] Instagram: token do painel + renovação automática + publicação de Reels por upload resumável
 - [x] TikTok: PKCE (hex) e validação do callback local no Rust, com testes (2026-10-13)
-- [ ] TikTok: Login Kit **Desktop** (listener loopback + troca via backend) + conta real conectada (perfil, @, avatar) — **prioridade**
+- [x] TikTok: Login Kit **Desktop** no Rust (listener loopback, troca via backend, perfil) + `TikTokProvider` real (2026-10-13)
+- [ ] TikTok: teste real no sandbox + UI da conta conectada (botão, avatar, `external_id`) — **prioridade**
 - [ ] TikTok: Content Posting API (Direct Post `SELF_ONLY` no sandbox; público após auditoria; rascunho como alternativa)
 - [ ] TikTok: fluxo demonstrável para o vídeo do App Review
 - [ ] TikTok: App Review/auditoria (necessária para posts públicos) — usuário decidiu solicitar

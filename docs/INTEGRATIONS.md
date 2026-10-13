@@ -4,12 +4,12 @@ Status possíveis: `NOT_STARTED` · `MOCK` · `IN_PROGRESS` · `ACTIVE` · `BLOC
 O mesmo status aparece na UI (Configurações → Integrações), definido em `src/lib/integrations.ts` —
 **mantenha os dois em sincronia.**
 
-| Integração | Status        | Código                                                                     | Próximo passo                            |
-| ---------- | ------------- | -------------------------------------------------------------------------- | ---------------------------------------- |
-| TikTok     | `MOCK`        | `src/services/social/TikTokProvider.ts`, `backend/`                        | **Prioridade atual:** OAuth Desktop real |
-| Instagram  | `MOCK`        | `src/services/social/InstagramProvider.ts`                                 | Fase 3: Instagram Graph API              |
-| OpenAI     | `IN_PROGRESS` | `src/services/ai/OpenAIProvider.ts`, `src-tauri/src/commands/ai.rs`        | Validar com a chave real do usuário      |
-| FFmpeg     | `NOT_STARTED` | `src/services/media/VideoProcessor.ts`, `src-tauri/src/commands/system.rs` | Fase 2: ffprobe + miniaturas             |
+| Integração | Status        | Código                                                                       | Próximo passo                                |
+| ---------- | ------------- | ---------------------------------------------------------------------------- | -------------------------------------------- |
+| TikTok     | `IN_PROGRESS` | `src/services/social/TikTokProvider.ts`, `src-tauri/src/tiktok/`, `backend/` | Teste real no sandbox; etapa 4 (UI da conta) |
+| Instagram  | `MOCK`        | `src/services/social/InstagramProvider.ts`                                   | Fase 3: Instagram Graph API                  |
+| OpenAI     | `IN_PROGRESS` | `src/services/ai/OpenAIProvider.ts`, `src-tauri/src/commands/ai.rs`          | Validar com a chave real do usuário          |
+| FFmpeg     | `NOT_STARTED` | `src/services/media/VideoProcessor.ts`, `src-tauri/src/commands/system.rs`   | Fase 2: ffprobe + miniaturas                 |
 
 ## Regras gerais (valem para todas)
 
@@ -25,11 +25,16 @@ O mesmo status aparece na UI (Configurações → Integrações), definido em `s
 
 ---
 
-## TikTok — `MOCK` (prioridade atual)
+## TikTok — `IN_PROGRESS` (prioridade atual)
 
 - **Contrato:** `SocialProvider` (connect, disconnect, getProfile, publish, getPublicationStatus, getAnalytics).
-- **Hoje:** `TikTokProvider extends MockSocialProvider` — latência simulada, nenhuma rede. Ainda **não há
-  publicador**: `publish()` não é chamado por nenhum caso de uso.
+- **Hoje:** no app desktop, `TikTokProvider` é real para conectar, perfil e desconectar (comandos
+  `tiktok_*` no Rust); `publish()` ainda devolve `NOT_AVAILABLE` (etapa 6). No preview do navegador o TikTok
+  continua com o `MockSocialProvider`. Ainda **não há publicador**: `publish()` não é chamado por nenhum caso de uso.
+- **Conexão em duas fases:** `tiktok_connect` obtém tokens e perfil e os deixa **pendentes na memória** do Rust
+  (id opaco, 5 min, uso único); o `channelService` grava o canal e chama `tiktok_commit_connection(id, canal)`,
+  que grava no cofre (`tiktok_token:<channel_id>`). Qualquer falha → o canal criado é removido/restaurado e a
+  conexão é descartada (`tiktok_discard_connection`).
 - **App:** "Yeaax Manager" no TikTok for Developers; Login Kit **Desktop** (PKCE, redirect `http://127.0.0.1:*/tiktok/callback`);
   produtos Login Kit + Content Posting API;
   escopos `user.info.basic`, `user.info.profile`, `video.publish`, `video.upload`. Termos e privacidade em
@@ -42,10 +47,11 @@ O mesmo status aparece na UI (Configurações → Integrações), definido em `s
   1. [x] Documentação e decisões (DEC-023, DEC-025, DEC-027; DEC-024 substituída).
   2. [x] Backend `backend/`: `/health`, `/config`, `/auth/tiktok/{token,refresh,revoke}` + testes (DEC-026/027).
          [ ] Deploy na Vercel em `api.yeaax.xyz` (usuário).
-  3. [ ] Rust OAuth. [x] PKCE (`tiktok/pkce.rs`) e validação do callback local (`tiktok/loopback.rs`) com testes.
-         [ ] Listener, navegador do sistema, troca via backend, tokens no cofre, comando `tiktok_connect`.
-  4. [ ] Conta conectada: migration 0002 (`channels.external_id`), `connect/getProfile/disconnect` reais, botão
-         "Conectar TikTok". Primeiro teste ponta a ponta no sandbox.
+  3. [x] Rust OAuth: PKCE, listener `127.0.0.1` de uso único, navegador do sistema (`tauri-plugin-opener`), troca
+         via backend, tokens no cofre por canal, refresh com trava, perfil (`/v2/user/info/`), comandos `tiktok_*`;
+         `TikTokProvider` real no desktop; conexão transacional. [ ] Teste real no sandbox (usuário).
+  4. [ ] Conta conectada na UI: botão "Conectar TikTok" sem pedir @, `channels.external_id` (open_id), avatar
+         (liberar o CDN do TikTok na CSP), status `expired` quando o refresh falhar.
   5. [ ] Compositor TikTok (UX obrigatória — DEC-019): `creator_info`, nickname, privacidade sem padrão, toggles
          desmarcados, divulgação comercial, aviso de música, prévia; `posts.platform_options`.
   6. [ ] Publicação: init `FILE_UPLOAD` + chunks sequenciais com progresso, polling de status,

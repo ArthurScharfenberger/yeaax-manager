@@ -5,7 +5,13 @@ import { z } from 'zod';
 
 import { toAppError } from '@/lib/errors';
 
-import type { DesktopBridge, FfmpegStatus, MediaFileInfo } from './DesktopBridge';
+import type {
+  DesktopBridge,
+  FfmpegStatus,
+  MediaFileInfo,
+  TikTokAccount,
+  TikTokPendingConnection,
+} from './DesktopBridge';
 
 /** Mantido em sincronia com src-tauri/src/commands/media.rs. */
 const VIDEO_EXTENSIONS = ['mp4', 'mov', 'webm'];
@@ -21,6 +27,22 @@ const mediaFileInfoSchema = z.object({
 const ffmpegStatusSchema = z.object({
   available: z.boolean(),
   version: z.string().nullable(),
+});
+
+const tiktokAccountSchema = z.object({
+  openId: z.string().min(1).max(128),
+  username: z
+    .string()
+    .regex(/^[A-Za-z0-9._]{1,64}$/)
+    .nullable(),
+  displayName: z.string().max(100),
+  avatarUrl: z.url({ protocol: /^https$/ }).nullable(),
+  scopes: z.array(z.string().max(64)),
+});
+
+const tiktokPendingSchema = z.object({
+  connectionId: z.string().min(1).max(64),
+  account: tiktokAccountSchema,
 });
 
 async function invokeCommand<T>(
@@ -77,6 +99,28 @@ export function createTauriDesktopBridge(): DesktopBridge {
     },
 
     aiChatCompletion: (body) => invokeCommand('ai_chat_completion', z.unknown(), { body }),
+
+    tiktokConnect: (): Promise<TikTokPendingConnection> =>
+      invokeCommand('tiktok_connect', tiktokPendingSchema),
+
+    async tiktokCancelConnect() {
+      await invokeCommand('tiktok_cancel_connect', z.null());
+    },
+
+    async tiktokCommitConnection(connectionId, channelId) {
+      await invokeCommand('tiktok_commit_connection', z.null(), { connectionId, channelId });
+    },
+
+    async tiktokDiscardConnection(connectionId) {
+      await invokeCommand('tiktok_discard_connection', z.null(), { connectionId });
+    },
+
+    tiktokGetProfile: (channelId): Promise<TikTokAccount> =>
+      invokeCommand('tiktok_get_profile', tiktokAccountSchema, { channelId }),
+
+    async tiktokDisconnect(channelId) {
+      await invokeCommand('tiktok_disconnect', z.null(), { channelId });
+    },
 
     getDataDirectory: () => appConfigDir(),
 

@@ -6,7 +6,11 @@ import { AppError } from '@/lib/errors';
 import { createId } from '@/lib/ids';
 import { logger } from '@/lib/logger';
 import { PLATFORM_INFO } from '@/lib/platforms';
-import type { SocialAccountRef, SocialProviderRegistry } from '@/services/social';
+import type {
+  ConnectionSession,
+  SocialAccountRef,
+  SocialProviderRegistry,
+} from '@/services/social';
 import { type Channel, type Id, platformSchema } from '@/types';
 
 export const newChannelSchema = z.object({
@@ -47,20 +51,45 @@ export function createChannelService({ repositories, social, clock }: ChannelSer
     return channel;
   }
 
+  async function ensureHandleAvailable(platform: Channel['platform'], username: string) {
+    if (await channels.findByHandle(platform, username)) {
+      throw new AppError(
+        'CONFLICT',
+        `@${username} já está cadastrado no ${PLATFORM_INFO[platform].label}.`,
+      );
+    }
+  }
+
+  /** Desfaz o banco (se algo foi gravado) e descarta a conexão pendente. Falhas aqui só vão para o log. */
+  async function rollback(
+    session: ConnectionSession | undefined,
+    undoDatabase: (() => Promise<void>) | null,
+  ) {
+    try {
+      if (undoDatabase) await undoDatabase();
+    } catch (error) {
+      logger.error('Falha ao desfazer o canal após erro na conexão', { error });
+    }
+    try {
+      await session?.discard();
+    } catch (error) {
+      logger.warn('Falha ao descartar a conexão pendente', { error });
+    }
+  }
+
   return {
     list: () => channels.list(),
 
-    /** Conecta uma conta nova (fluxo simulado enquanto o OAuth não existe). */
+    /**
+     * Conecta uma conta nova. Com o TikTok real (DEC-027) a conexão tem duas fases: o canal é gravado e só então
+     * as credenciais vão para o cofre (`session.commit`); se qualquer passo falhar, o canal criado é removido e a
+     * conexão pendente descartada — nada fica pela metade.
+     */
     async connectNew(input: NewChannelInput): Promise<Channel> {
       const data = newChannelSchema.parse(input);
-      if (await channels.findByHandle(data.platform, data.username)) {
-        throw new AppError(
-          'CONFLICT',
-          `@${data.username} já está cadastrado no ${PLATFORM_INFO[data.platform].label}.`,
-        );
-      }
+      await ensureHandleAvailable(data.platform, data.username);
 
-      const { profile } = await social[data.platform].connect({
+      const { profile, session } = await social[data.platform].connect({
         usernameHint: data.username,
         displayNameHint: data.displayName || data.username,
       });
@@ -77,25 +106,64 @@ export function createChannelService({ repositories, social, clock }: ChannelSer
         createdAt: now,
         updatedAt: now,
       };
-      await channels.insert(channel);
+      let inserted = false;
+      try {
+        // O OAuth real pode devolver outra conta que não a digitada.
+        if (profile.username.toLowerCase() !== data.username.toLowerCase()) {
+          await ensureHandleAvailable(data.platform, profile.username);
+        }
+        await channels.insert(channel);
+        inserted = true;
+        await session?.commit(channel.id);
+      } catch (error) {
+        await rollback(session, inserted ? () => channels.delete(channel.id) : null);
+        throw error;
+      }
       logger.info('Canal conectado', { platform: channel.platform, username: channel.username });
       return channel;
     },
 
+    /** Reconecta um canal existente (mesma conta). Falhas restauram o canal como estava. */
     async connect(id: Id): Promise<void> {
       const channel = await requireChannel(id);
-      const { profile } = await social[channel.platform].connect({
+      const { profile, session } = await social[channel.platform].connect({
         usernameHint: channel.username,
         displayNameHint: channel.displayName,
       });
       const now = clock.now().toISOString();
-      await channels.update(id, {
-        status: 'connected',
-        displayName: profile.displayName,
-        avatarUrl: profile.avatarUrl,
-        lastSyncedAt: now,
-        updatedAt: now,
-      });
+      let updated = false;
+      try {
+        if (profile.username.toLowerCase() !== channel.username.toLowerCase()) {
+          throw new AppError(
+            'CONFLICT',
+            `Você entrou como @${profile.username}, mas este canal é @${channel.username}. Entre com a conta certa ou adicione um canal novo.`,
+          );
+        }
+        await channels.update(id, {
+          status: 'connected',
+          displayName: profile.displayName,
+          avatarUrl: profile.avatarUrl,
+          lastSyncedAt: now,
+          updatedAt: now,
+        });
+        updated = true;
+        await session?.commit(id);
+      } catch (error) {
+        await rollback(
+          session,
+          updated
+            ? () =>
+                channels.update(id, {
+                  status: channel.status,
+                  displayName: channel.displayName,
+                  avatarUrl: channel.avatarUrl,
+                  lastSyncedAt: channel.lastSyncedAt,
+                  updatedAt: channel.updatedAt,
+                })
+            : null,
+        );
+        throw error;
+      }
     },
 
     async disconnect(id: Id): Promise<void> {

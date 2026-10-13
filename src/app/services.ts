@@ -31,7 +31,7 @@ export function createAppServices(options: {
   const { db, desktop, mode } = options;
   const clock = options.clock ?? systemClock;
   const repositories = createRepositories(db);
-  const social = createSocialProviders();
+  const social = createSocialProviders(desktop);
 
   // Adapta a análise do WebView2 (Blob) ao contrato do serviço (bytes).
   async function analyzeLocalVideo(path: string) {

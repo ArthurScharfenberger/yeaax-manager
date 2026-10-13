@@ -58,9 +58,11 @@ Detalhes (validação, CORS fechado, rate limit, logs, deploy): [backend/README.
 4. Rust valida `Host`, caminho e `state` (tempo constante, uso único) e fecha o listener.
 5. Rust chama `POST https://api.yeaax.xyz/auth/tiktok/token` com `{ code, codeVerifier, redirectUri }`; o backend
    acrescenta o `client_secret`, chama `/v2/oauth/token/` e devolve os tokens (não guarda nada).
-6. Rust grava os tokens no Credential Manager (`tiktok_token:<open_id>`) e busca o perfil em `/v2/user/info/`
-   direto no TikTok.
-7. O frontend recebe apenas o perfil (`ConnectResult`) e cria/atualiza o canal.
+6. Rust busca o perfil em `/v2/user/info/` direto no TikTok e guarda tokens + perfil como **conexão pendente**
+   (memória, id opaco, 5 min). Nada vai para o cofre ainda.
+7. O frontend recebe só `{ connectionId, account }` (dados públicos), grava o canal no banco e chama
+   `tiktok_commit_connection(connectionId, channelId)` → tokens no Credential Manager (`tiktok_token:<channel_id>`).
+   Se algo falhar, desfaz o banco e chama `tiktok_discard_connection` (conexão transacional — `channelService`).
 
 ## Camadas e dependências
 
@@ -143,7 +145,10 @@ src-tauri/
 ├── src/lib.rs              Registro de plugins e comandos
 ├── src/migrations.rs       Lista de migrations (include_str!)
 ├── src/commands/           media.rs (inspect_media_file), system.rs (detect_ffmpeg),
-│                           thumbnails.rs (save_thumbnail, delete_thumbnail)
+│                           thumbnails.rs (save_thumbnail, delete_thumbnail), secrets.rs, ai.rs,
+│                           tiktok.rs (tiktok_connect/cancel/commit/discard/get_profile/disconnect)
+├── src/tiktok/             pkce, loopback (validação pura), listener (127.0.0.1, uso único), backend
+│                           (api.yeaax.xyz), tokens (cofre por canal), pending, api (/v2/user/info/), secret
 ├── src/error.rs            CommandError { code, message }
 ├── migrations/*.sql        Schema (fonte única para Rust, preview e testes)
 ├── capabilities/default.json  Permissões mínimas da janela
@@ -176,12 +181,12 @@ O modo preview existe apenas em desenvolvimento: o build de produção não incl
 
 ## Providers (integrações)
 
-| Interface        | Implementação atual                                                                                                          | Futuro                                                                                         |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `SocialProvider` | `TikTokProvider` / `InstagramProvider` (ambos `extends MockSocialProvider`)                                                  | APIs oficiais via comandos Rust; tokens no Credential Manager; secret no backend (DEC-023/024) |
-| `AIProvider`     | `OpenAIProvider` (o Rust faz a chamada com a chave do cofre) e `MockAIProvider` (regras locais), escolhidos pelo `AIService` | outros provedores compatíveis                                                                  |
-| `VideoProcessor` | `getStatus` real (detecção), demais operações lançam `NOT_AVAILABLE`                                                         | FFmpeg/ffprobe como jobs no Rust                                                               |
-| `DesktopBridge`  | `tauriDesktopBridge` / `previewDesktopBridge`                                                                                | + credenciais, notificações                                                                    |
+| Interface        | Implementação atual                                                                                                          | Futuro                                      |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| `SocialProvider` | `TikTokProvider` real no desktop (comandos `tiktok_*`; mock no preview); `InstagramProvider extends MockSocialProvider`      | publicação TikTok (etapa 6); Instagram real |
+| `AIProvider`     | `OpenAIProvider` (o Rust faz a chamada com a chave do cofre) e `MockAIProvider` (regras locais), escolhidos pelo `AIService` | outros provedores compatíveis               |
+| `VideoProcessor` | `getStatus` real (detecção), demais operações lançam `NOT_AVAILABLE`                                                         | FFmpeg/ffprobe como jobs no Rust            |
+| `DesktopBridge`  | `tauriDesktopBridge` / `previewDesktopBridge`                                                                                | + credenciais, notificações                 |
 
 O registro (`createSocialProviders`, `createAIProvider`) é o único ponto que conhece as classes concretas.
 

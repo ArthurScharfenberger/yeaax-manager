@@ -41,6 +41,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(log_plugin())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_opener::init())
         .plugin(
             tauri_plugin_sql::Builder::default()
                 .add_migrations(migrations::DATABASE_URL, migrations::all())
@@ -55,6 +56,12 @@ pub fn run() {
             commands::secrets::secret_has,
             commands::secrets::secret_delete,
             commands::ai::ai_chat_completion,
+            commands::tiktok::tiktok_connect,
+            commands::tiktok::tiktok_cancel_connect,
+            commands::tiktok::tiktok_commit_connection,
+            commands::tiktok::tiktok_discard_connection,
+            commands::tiktok::tiktok_get_profile,
+            commands::tiktok::tiktok_disconnect,
         ])
         .run(tauri::generate_context!())
         .expect("falha ao iniciar o Yeaax Manager");
