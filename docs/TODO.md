@@ -2,6 +2,8 @@
 
 Lista operacional. Itens concluídos saem daqui (o histórico fica no CHANGELOG e no DEVELOPMENT_LOG).
 
+Repositório remoto configurado: [yeaax-manager](https://github.com/ArthurScharfenberger/yeaax-manager), branch `main`.
+
 ## Agora
 
 - [ ] Usuário: criar a chave em platform.openai.com, colar em Configurações → IA, "Testar conexão" e usar

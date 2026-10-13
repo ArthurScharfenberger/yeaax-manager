@@ -1,5 +1,7 @@
 # Social Manager
 
+Repositório: [yeaax-manager](https://github.com/ArthurScharfenberger/yeaax-manager).
+
 Central pessoal **local-first** para organizar, preparar, agendar e (futuramente) publicar e analisar
 conteúdo em múltiplos canais do **TikTok** e do **Instagram**. Aplicativo desktop que roda inteiramente no
 seu computador — sem servidor, sem Docker, sem nuvem.

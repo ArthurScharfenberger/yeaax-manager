@@ -13,6 +13,7 @@ Marque `[x]` ao concluir (com a versão entre parênteses quando fizer sentido).
 - [x] Tratamento de erros (`AppError`) e logger com redação de dados sensíveis (v0.1.0)
 - [x] Modo preview no navegador com SQLite WASM (v0.1.0)
 - [x] Documentação completa + AGENTS.md (v0.1.0)
+- [x] Repositório remoto GitHub configurado: `ArthurScharfenberger/yeaax-manager`, branch `main` (2026-10-13)
 
 ### Produto
 

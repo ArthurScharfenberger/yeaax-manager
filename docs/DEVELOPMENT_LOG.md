@@ -18,6 +18,45 @@ Formato:
 
 ---
 
+## Sessão 2026-10-13 — Repositório no GitHub
+
+### Objetivo
+
+Preparar o commit e o envio do projeto para `ArthurScharfenberger/yeaax-manager`, conforme solicitado.
+
+### Alterações realizadas
+
+- Configurado `origin` para `https://github.com/ArthurScharfenberger/yeaax-manager.git`.
+- Adicionado o link do repositório ao README; mantidos a branch `main` e os commits existentes.
+
+### Arquivos importantes
+
+`README.md`, `docs/DEVELOPMENT_LOG.md`, `docs/TODO.md`, `docs/ROADMAP.md`.
+
+### Decisões
+
+Preservar o histórico local existente. Nenhuma mudança de arquitetura, dependências ou versão.
+
+### Problemas encontrados
+
+A sandbox bloqueou o acesso ao GitHub e a inicialização dos testes (`spawn EPERM`); as verificações
+foram repetidas com execução autorizada fora da sandbox.
+
+### Validação
+
+`npm run check` passou: TypeScript, lint, formatação e 96 testes. O remoto estava vazio antes do envio.
+Nenhum código de aplicação foi alterado nesta sessão.
+
+### Pendências
+
+Permanecem as validações funcionais e integrações listadas em `TODO.md`.
+
+### Próximo passo
+
+Validar a conexão com OpenAI no desktop usando a chave do usuário e continuar a integração oficial do Instagram.
+
+---
+
 ## Sessão 2026-10-07 (4) — "Postar com IA" com OpenAI
 
 ### Objetivo
