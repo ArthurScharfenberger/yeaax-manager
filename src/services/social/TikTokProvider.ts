@@ -6,6 +6,7 @@ import type { DesktopBridge, TikTokAccount } from '@/services/desktop/DesktopBri
 import type {
   AnalyticsResult,
   ConnectResult,
+  CreatorInfo,
   ProviderCapabilities,
   PublicationStatusResult,
   PublishResult,
@@ -91,6 +92,20 @@ export class TikTokProvider implements SocialProvider {
 
   disconnect(account: SocialAccountRef): Promise<void> {
     return this.desktop.tiktokDisconnect(account.channelId);
+  }
+
+  async getCreatorInfo(account: SocialAccountRef): Promise<CreatorInfo> {
+    const info = await this.desktop.tiktokCreatorInfo(account.channelId);
+    return {
+      nickname: info.nickname,
+      username: info.username,
+      avatarUrl: safeAvatarUrl(info.avatarUrl),
+      privacyOptions: info.privacyLevelOptions,
+      commentDisabled: info.commentDisabled,
+      duetDisabled: info.duetDisabled,
+      stitchDisabled: info.stitchDisabled,
+      maxDurationSeconds: info.maxVideoPostDurationSec,
+    };
   }
 
   async getProfile(account: SocialAccountRef): Promise<SocialProfile> {

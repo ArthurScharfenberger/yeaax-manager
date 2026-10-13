@@ -20,7 +20,11 @@ Fase atual: **TikTok real** (ordem em `docs/INTEGRATIONS.md` → TikTok).
       variáveis secretas `TIKTOK_CLIENT_KEY` e `TIKTOK_CLIENT_SECRET` (opcional `TIKTOK_SCOPES`).
 - [ ] Validar a etapa 4 no app (usuário): avatar real aparece; "Adicionar canal → TikTok" conecta sem pedir @ e
       reconecta o mesmo canal se a conta já existir; "Cancelar login" fecha a espera; reabrir o app mantém conectado.
-- [ ] Etapas 5–7 — compositor TikTok (UX obrigatória), publicação real, status/demonstração para o App Review.
+- [ ] Validar a etapa 5 no app (usuário): Novo post → canal `@yeeax` → aparece "Publicar no TikTok como …" com o
+      nickname real; privacidade só com as opções da conta; agendar fica bloqueado até escolher a privacidade.
+- [ ] Etapa 6 — publicação real: no horário (app aberto) ou "Publicar agora"; `creator_info` + revalidação das
+      escolhas antes de enviar; init `FILE_UPLOAD` + chunks; polling de status; aviso de processamento.
+- [ ] Etapa 7 — roteiro e gravação do vídeo do App Review (avaliar legendas em inglês: a UI é pt-BR).
 - [ ] Usuário: criar a chave em platform.openai.com, colar em Configurações → IA, "Testar conexão" e usar
       "Postar com IA" num vídeo real (validar qualidade das legendas e leitura da miniatura).
 - [ ] Instagram real — **depois do TikTok**: app na Meta, token do painel no cofre, Reels por upload resumável.

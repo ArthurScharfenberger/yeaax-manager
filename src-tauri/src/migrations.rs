@@ -24,5 +24,11 @@ pub fn all() -> Vec<Migration> {
             sql: include_str!("../migrations/0002_channel_external_id.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 3,
+            description: "post_platform_options",
+            sql: include_str!("../migrations/0003_post_platform_options.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }

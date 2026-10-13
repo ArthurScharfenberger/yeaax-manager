@@ -2,7 +2,6 @@ import { CircleCheck, Plus, Sparkles, Trash2, X } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 
 import { useServices } from '@/app/ServicesContext';
-import { MediaThumbnail } from '@/components/MediaThumbnail';
 import { PlatformMark } from '@/components/PlatformMark';
 import { MediaStatusBadge, PostStatusBadge } from '@/components/StatusBadges';
 import { Button } from '@/components/ui/Button';
@@ -17,6 +16,7 @@ import type { Media } from '@/types';
 import { formatDateTime, formatDuration, formatFileSize, formatResolution } from '@/utils/format';
 
 import { useMediaFile, useMediaMutations } from '../hooks';
+import { MediaVideoPreview } from './MediaVideoPreview';
 import { TagEditor } from './TagEditor';
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
@@ -26,27 +26,6 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
       <dd className="min-w-0 text-xs text-ink">{children}</dd>
     </div>
   );
-}
-
-function Preview({ media }: { media: Media }) {
-  const { desktop } = useServices();
-  const file = useMediaFile(media.filePath);
-  const src = file.isSuccess ? desktop.toAssetUrl(file.data.path) : null;
-
-  if (src) {
-    return (
-      // `preload="metadata"`: o vídeo completo só é lido se o usuário der play.
-      <video
-        src={src}
-        controls
-        preload="metadata"
-        className="aspect-[9/16] max-h-80 w-full rounded bg-ink object-contain"
-      >
-        <track kind="captions" />
-      </video>
-    );
-  }
-  return <MediaThumbnail media={media} className="aspect-[9/16] max-h-80 w-full rounded" />;
 }
 
 interface MediaDetailsPanelProps {
@@ -77,7 +56,7 @@ export function MediaDetailsPanel({ media, onClose }: MediaDetailsPanelProps) {
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
-        <Preview media={media} />
+        <MediaVideoPreview media={media} className="max-h-80" />
 
         {isDemo && <Notice>Vídeo de demonstração — não existe arquivo real.</Notice>}
         {file.isError && (

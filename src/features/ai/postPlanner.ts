@@ -1,4 +1,5 @@
 import type { Repositories } from '@/db/repositories';
+import { requiresPostOptions } from '@/features/posts/tiktokOptionsRules';
 import { AUTO_SCHEDULE_SETTING } from '@/features/automation/autoSchedule';
 import { DUPLICATE_GUARD_STATUSES } from '@/features/posts/postRules';
 import type { DuplicateResult, PostService } from '@/features/posts/postService';
@@ -165,7 +166,8 @@ export function createPostPlanner(deps: PostPlannerDeps) {
     },
 
     /**
-     * Cria os posts confirmados: agendados se houver horário, senão rascunhos.
+     * Cria os posts confirmados: agendados se houver horário (TikTok: em revisão, aguardando as escolhas do
+     * compositor), senão rascunhos.
      * Cada canal é independente — falhas (ex.: legenda acima do limite) não bloqueiam os demais.
      */
     async confirm(confirmation: PlanConfirmation): Promise<DuplicateResult> {
@@ -173,13 +175,21 @@ export function createPostPlanner(deps: PostPlannerDeps) {
       const historyMessage = `Criado com IA a partir do pedido: "${confirmation.instruction}"`;
       for (const item of confirmation.posts) {
         try {
+          // TikTok exige escolhas e consentimento por post (DEC-029): com horário, vai para revisão e o usuário
+          // completa privacidade/opções no compositor antes de agendar.
+          const channel = await repositories.channels.getById(item.channelId);
+          const needsOptions = channel ? requiresPostOptions(channel.platform) : false;
           result.created.push(
             await posts.create(
               {
                 channelId: item.channelId,
                 mediaId: confirmation.mediaId,
                 caption: item.caption,
-                status: confirmation.scheduledAt ? 'scheduled' : 'draft',
+                status: confirmation.scheduledAt
+                  ? needsOptions
+                    ? 'review'
+                    : 'scheduled'
+                  : 'draft',
                 scheduledAt: confirmation.scheduledAt?.toISOString() ?? null,
               },
               historyMessage,

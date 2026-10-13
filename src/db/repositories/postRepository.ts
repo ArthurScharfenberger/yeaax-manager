@@ -2,6 +2,8 @@ import {
   channelStatusSchema,
   type Id,
   type IsoDateString,
+  type PlatformOptions,
+  platformOptionsSchema,
   platformSchema,
   type Post,
   type PostStatus,
@@ -21,6 +23,7 @@ interface PostRow {
   scheduled_at: string | null;
   published_at: string | null;
   external_post_id: string | null;
+  platform_options: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -59,10 +62,29 @@ export interface PostPatch {
   scheduledAt?: IsoDateString | null;
   publishedAt?: IsoDateString | null;
   externalPostId?: string | null;
+  platformOptions?: PlatformOptions | null;
   updatedAt: IsoDateString;
 }
 
-const PATCH_COLUMNS: Record<keyof PostPatch, string> = {
+/** `PostPatch` com as opções já serializadas em JSON (coluna TEXT). */
+type PostPatchRow = Omit<PostPatch, 'platformOptions'> & { platformOptions?: string | null };
+
+function serializeOptions(options: PlatformOptions | null): string | null {
+  return options ? JSON.stringify(options) : null;
+}
+
+/** JSON inválido ou fora do schema vira `null`: o usuário escolhe de novo (agendar exige opções válidas). */
+function parseOptions(raw: string | null): PlatformOptions | null {
+  if (!raw) return null;
+  try {
+    const parsed = platformOptionsSchema.safeParse(JSON.parse(raw));
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
+}
+
+const PATCH_COLUMNS: Record<keyof PostPatchRow, string> = {
   channelId: 'channel_id',
   mediaId: 'media_id',
   caption: 'caption',
@@ -70,15 +92,16 @@ const PATCH_COLUMNS: Record<keyof PostPatch, string> = {
   scheduledAt: 'scheduled_at',
   publishedAt: 'published_at',
   externalPostId: 'external_post_id',
+  platformOptions: 'platform_options',
   updatedAt: 'updated_at',
 };
 
 const COLUMNS =
-  'id, channel_id, media_id, caption, status, scheduled_at, published_at, external_post_id, created_at, updated_at';
+  'id, channel_id, media_id, caption, status, scheduled_at, published_at, external_post_id, platform_options, created_at, updated_at';
 
 const DETAILED_SELECT = `
   SELECT p.id, p.channel_id, p.media_id, p.caption, p.status, p.scheduled_at, p.published_at,
-         p.external_post_id, p.created_at, p.updated_at,
+         p.external_post_id, p.platform_options, p.created_at, p.updated_at,
          c.platform AS channel_platform, c.username AS channel_username,
          c.display_name AS channel_display_name, c.status AS channel_status,
          m.filename AS media_filename, m.file_path AS media_file_path,
@@ -103,6 +126,7 @@ function toPost(row: PostRow): Post {
     scheduledAt: row.scheduled_at,
     publishedAt: row.published_at,
     externalPostId: row.external_post_id,
+    platformOptions: parseOptions(row.platform_options),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -197,7 +221,7 @@ export function createPostRepository(db: DbClient) {
     },
 
     async insert(post: Post): Promise<void> {
-      await db.execute(`INSERT INTO posts (${COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+      await db.execute(`INSERT INTO posts (${COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
         post.id,
         post.channelId,
         post.mediaId,
@@ -206,13 +230,19 @@ export function createPostRepository(db: DbClient) {
         post.scheduledAt,
         post.publishedAt,
         post.externalPostId,
+        serializeOptions(post.platformOptions),
         post.createdAt,
         post.updatedAt,
       ]);
     },
 
     async update(id: Id, patch: PostPatch): Promise<void> {
-      const { clause, params } = buildSetClause(patch, PATCH_COLUMNS);
+      const { platformOptions, ...rest } = patch;
+      const row: PostPatchRow =
+        platformOptions === undefined
+          ? rest
+          : { ...rest, platformOptions: serializeOptions(platformOptions) };
+      const { clause, params } = buildSetClause(row, PATCH_COLUMNS);
       await db.execute(`UPDATE posts SET ${clause} WHERE id = ?`, [...params, id]);
     },
 

@@ -1,6 +1,6 @@
 import type { IntegrationStatus } from '@/lib/integrations';
 import type { PlatformLimits } from '@/lib/platforms';
-import type { Id, IsoDateString, Platform } from '@/types';
+import type { Id, IsoDateString, Platform, TikTokPrivacyLevel } from '@/types';
 
 /**
  * Contrato comum para integrações com redes sociais.
@@ -23,6 +23,11 @@ export interface SocialProvider {
   connect(request: ConnectRequest): Promise<ConnectResult>;
   /** Cancela uma autorização em andamento (só providers com login oficial). */
   cancelConnect?(): Promise<void>;
+  /**
+   * TikTok: o que a conta permite publicar agora (`creator_info`). Consultado sempre que o compositor abre, como
+   * exigem as diretrizes. Ausente nas plataformas sem essa exigência.
+   */
+  getCreatorInfo?(account: SocialAccountRef): Promise<CreatorInfo>;
   /** Revoga/descarta a autorização local da conta. */
   disconnect(account: SocialAccountRef): Promise<void>;
   getProfile(account: SocialAccountRef): Promise<SocialProfile>;
@@ -59,6 +64,18 @@ export interface SocialProfile {
   username: string;
   displayName: string;
   avatarUrl: string | null;
+}
+
+/** Dados públicos da conta para publicar no TikTok (nunca tokens). */
+export interface CreatorInfo {
+  nickname: string;
+  username: string | null;
+  avatarUrl: string | null;
+  privacyOptions: TikTokPrivacyLevel[];
+  commentDisabled: boolean;
+  duetDisabled: boolean;
+  stitchDisabled: boolean;
+  maxDurationSeconds: number | null;
 }
 
 export interface ConnectRequest {

@@ -85,6 +85,7 @@ describe('channelService', () => {
       scheduledAt: null,
       publishedAt: null,
       externalPostId: null,
+      platformOptions: null,
       createdAt: NOW.toISOString(),
       updatedAt: NOW.toISOString(),
     });

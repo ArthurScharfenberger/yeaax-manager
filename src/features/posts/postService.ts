@@ -6,7 +6,16 @@ import { AppError, toAppError } from '@/lib/errors';
 import { createId } from '@/lib/ids';
 import { POST_STATUS_LABELS } from '@/lib/labels';
 import { PLATFORM_INFO } from '@/lib/platforms';
-import type { Id, Post, PostHistoryEvent, PostStatus, PostWithRelations } from '@/types';
+import {
+  type Id,
+  type Platform,
+  type PlatformOptions,
+  platformOptionsSchema,
+  type Post,
+  type PostHistoryEvent,
+  type PostStatus,
+  type PostWithRelations,
+} from '@/types';
 import { formatDateTime } from '@/utils/format';
 
 import {
@@ -18,6 +27,12 @@ import {
   DUPLICATE_GUARD_STATUSES,
   isEditable,
 } from './postRules';
+import {
+  normalizeTikTokOptions,
+  requiresPostOptions,
+  TIKTOK_OPTION_ISSUE_MESSAGES,
+  tiktokOptionIssues,
+} from './tiktokOptionsRules';
 
 export const postInputSchema = z.object({
   channelId: z.string().min(1, 'Selecione um canal.'),
@@ -25,9 +40,12 @@ export const postInputSchema = z.object({
   caption: z.string(),
   status: z.enum(COMPOSER_STATUSES),
   scheduledAt: z.iso.datetime({ error: 'Data de agendamento inválida.' }).nullable(),
+  /** Escolhas da plataforma (TikTok: privacidade, interações, divulgação comercial). */
+  platformOptions: platformOptionsSchema.nullable().default(null),
 });
 
-export type PostInput = z.infer<typeof postInputSchema>;
+export type PostInput = z.input<typeof postInputSchema>;
+type ValidPostInput = z.output<typeof postInputSchema>;
 
 export interface DuplicateResult {
   created: Post[];
@@ -70,12 +88,13 @@ export function createPostService({ repositories, clock }: PostServiceDeps) {
   }
 
   /** Validação compartilhada por criação e edição. */
-  async function validate(input: PostInput, currentPostId?: Id): Promise<PostInput> {
+  async function validate(input: PostInput, currentPostId?: Id): Promise<ValidPostInput> {
     const data = postInputSchema.parse(input);
 
     const channel = await channels.getById(data.channelId);
     if (!channel) throw new AppError('NOT_FOUND', 'Canal não encontrado.');
-    if (data.mediaId && !(await media.getById(data.mediaId))) {
+    const selectedMedia = data.mediaId ? await media.getById(data.mediaId) : null;
+    if (data.mediaId && !selectedMedia) {
       throw new AppError('NOT_FOUND', 'Vídeo não encontrado na biblioteca.');
     }
 
@@ -123,7 +142,44 @@ export function createPostService({ repositories, clock }: PostServiceDeps) {
       }
     }
 
-    return { ...data, caption: data.caption.trim() };
+    return {
+      ...data,
+      caption: data.caption.trim(),
+      platformOptions: resolvePlatformOptions(
+        channel.platform,
+        data.status,
+        data.platformOptions,
+        selectedMedia?.duration ?? null,
+      ),
+    };
+  }
+
+  /**
+   * TikTok (DEC-029): agendar exige as escolhas das diretrizes (privacidade sem padrão, divulgação comercial
+   * coerente, duração) e registra o consentimento do usuário (`consentedAt`) no momento em que ele confirma.
+   * As regras que dependem da conta (opções de privacidade, interações bloqueadas) são checadas no compositor
+   * com o `creator_info` e de novo na publicação.
+   */
+  function resolvePlatformOptions(
+    platform: Platform,
+    status: PostStatus,
+    options: PlatformOptions | null,
+    durationSeconds: number | null,
+  ): PlatformOptions | null {
+    if (!requiresPostOptions(platform)) return null;
+    const tiktok = options?.platform === 'tiktok' ? options : null;
+    if (status !== 'scheduled') {
+      return tiktok ? normalizeTikTokOptions(tiktok, null) : null;
+    }
+    if (!tiktok) {
+      throw new AppError(
+        'VALIDATION',
+        'Defina a privacidade e as opções do TikTok antes de agendar.',
+      );
+    }
+    const issue = tiktokOptionIssues(tiktok, null, durationSeconds)[0];
+    if (issue) throw new AppError('VALIDATION', TIKTOK_OPTION_ISSUE_MESSAGES[issue]);
+    return normalizeTikTokOptions(tiktok, clock.now().toISOString());
   }
 
   async function createPost(input: PostInput, historyMessage?: string): Promise<Post> {
@@ -138,6 +194,7 @@ export function createPostService({ repositories, clock }: PostServiceDeps) {
       scheduledAt: data.scheduledAt,
       publishedAt: null,
       externalPostId: null,
+      platformOptions: data.platformOptions,
       createdAt: now,
       updatedAt: now,
     };
@@ -224,6 +281,7 @@ export function createPostService({ repositories, clock }: PostServiceDeps) {
         caption: updated.caption,
         status: updated.status,
         scheduledAt: updated.scheduledAt,
+        platformOptions: updated.platformOptions,
         updatedAt: updated.updatedAt,
       });
 

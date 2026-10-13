@@ -7,10 +7,14 @@ import { buildChannel, buildMedia } from '@/test/factories';
 import { createTestRepositories } from '@/test/testDb';
 
 import { createPostService, type PostInput, type PostService } from './postService';
+import { emptyTikTokOptions } from './tiktokOptionsRules';
 
 const NOW = new Date('2026-10-07T12:00:00.000Z');
 const FUTURE = '2026-10-07T22:30:00.000Z';
 const PAST = '2026-10-07T09:00:00.000Z';
+
+/** Escolhas mínimas exigidas pelo TikTok (o canal-1 é TikTok; no Instagram as opções são ignoradas). */
+const TIKTOK_READY = { ...emptyTikTokOptions(), privacyLevel: 'SELF_ONLY' as const };
 
 function input(overrides: Partial<PostInput> = {}): PostInput {
   return {
@@ -19,6 +23,7 @@ function input(overrides: Partial<PostInput> = {}): PostInput {
     caption: 'Civic Si no fim de tarde #civic',
     status: 'draft',
     scheduledAt: null,
+    platformOptions: TIKTOK_READY,
     ...overrides,
   };
 }
@@ -168,5 +173,87 @@ describe('postService', () => {
     await service.remove(post.id);
 
     expect(await repositories.posts.getById(post.id)).toBeNull();
+  });
+});
+
+describe('postService — escolhas do TikTok (DEC-029)', () => {
+  let repositories: Repositories;
+  let service: PostService;
+
+  beforeEach(async () => {
+    repositories = createTestRepositories();
+    service = createPostService({ repositories, clock: createFixedClock(NOW) });
+    await repositories.channels.insert(buildChannel());
+    await repositories.channels.insert(
+      buildChannel({ id: 'channel-2', platform: 'instagram', username: 'yeaxx' }),
+    );
+    await repositories.media.insert(buildMedia({ duration: 30 }));
+  });
+
+  it('agendar no TikTok sem as escolhas é recusado; rascunho é permitido', async () => {
+    await expectAppError(
+      service.create(input({ status: 'scheduled', scheduledAt: FUTURE, platformOptions: null })),
+      'VALIDATION',
+    );
+    const noPrivacy = { ...TIKTOK_READY, privacyLevel: null };
+    await expectAppError(
+      service.create(
+        input({ status: 'scheduled', scheduledAt: FUTURE, platformOptions: noPrivacy }),
+      ),
+      'VALIDATION',
+    );
+    await expect(service.create(input({ platformOptions: null }))).resolves.toMatchObject({
+      status: 'draft',
+    });
+  });
+
+  it('registra o consentimento ao agendar e o limpa fora do agendamento', async () => {
+    const scheduled = await service.create(input({ status: 'scheduled', scheduledAt: FUTURE }));
+    expect(scheduled.platformOptions).toMatchObject({
+      privacyLevel: 'SELF_ONLY',
+      consentedAt: NOW.toISOString(),
+    });
+
+    const draft = await service.update(
+      scheduled.id,
+      input({ status: 'draft', scheduledAt: FUTURE }),
+    );
+    expect(draft.platformOptions?.consentedAt).toBeNull();
+    expect((await repositories.posts.getById(scheduled.id))?.platformOptions).toMatchObject({
+      privacyLevel: 'SELF_ONLY',
+      consentedAt: null,
+    });
+  });
+
+  it('aplica as regras de divulgação comercial', async () => {
+    const commercialWithoutType = {
+      ...TIKTOK_READY,
+      privacyLevel: 'PUBLIC_TO_EVERYONE' as const,
+      commercialContent: true,
+    };
+    await expectAppError(
+      service.create(
+        input({ status: 'scheduled', scheduledAt: FUTURE, platformOptions: commercialWithoutType }),
+      ),
+      'VALIDATION',
+    );
+    const brandedPrivate = { ...TIKTOK_READY, commercialContent: true, brandedContent: true };
+    await expectAppError(
+      service.create(
+        input({ status: 'scheduled', scheduledAt: FUTURE, platformOptions: brandedPrivate }),
+      ),
+      'VALIDATION',
+    );
+    // Sem divulgação comercial, os tipos são limpos ao gravar.
+    const leftover = { ...TIKTOK_READY, commercialContent: false, yourBrand: true };
+    const post = await service.create(input({ platformOptions: leftover }));
+    expect(post.platformOptions).toMatchObject({ yourBrand: false, brandedContent: false });
+  });
+
+  it('canais de outras plataformas não guardam opções do TikTok', async () => {
+    const post = await service.create(
+      input({ channelId: 'channel-2', status: 'scheduled', scheduledAt: FUTURE }),
+    );
+    expect(post.platformOptions).toBeNull();
   });
 });

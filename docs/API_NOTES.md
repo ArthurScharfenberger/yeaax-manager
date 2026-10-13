@@ -90,6 +90,27 @@ públicos. Ver decisões DEC-019 e DEC-020.
   testar no sandbox ao criar o app)**.
 - Impacto: publicar posts públicos de forma automática exige **auditar o app** no TikTok for Developers.
 
+### Diretrizes de publicação e `creator_info` — verificação de 2026-10-13 (etapa 5)
+
+- Fontes: [Content Sharing Guidelines](https://developers.tiktok.com/doc/content-sharing-guidelines),
+  [Query Creator Info](https://developers.tiktok.com/doc/content-posting-api-reference-query-creator-info)
+- `POST https://open.tiktokapis.com/v2/post/publish/creator_info/query/` (`Authorization: Bearer`, `Content-Type:
+application/json; charset=UTF-8`, escopo `video.publish`, 20 req/min por token). `data`: `creator_avatar_url`
+  (TTL 2 h), `creator_username`, `creator_nickname`, `privacy_level_options` (conta pública: `PUBLIC_TO_EVERYONE`,
+  `MUTUAL_FOLLOW_FRIENDS`, `SELF_ONLY`; privada: `FOLLOWER_OF_CREATOR`, `MUTUAL_FOLLOW_FRIENDS`, `SELF_ONLY`),
+  `comment_disabled`, `duet_disabled`, `stitch_disabled`, `max_video_post_duration_sec`. Erros com HTTP 200:
+  `spam_risk_too_many_posts`, `spam_risk_user_banned_from_posting`, `reached_active_user_cap` → não dá para postar
+  agora (`TIKTOK_CANNOT_POST`); 401 `access_token_invalid`/`scope_not_authorized`; 429 `rate_limit_exceeded`.
+- Diretrizes (resumo do que o compositor implementa — DEC-029): buscar o `creator_info` a cada abertura e mostrar
+  o nickname; parar se a conta não puder postar; checar a duração; título editável; privacidade sem padrão;
+  interações desmarcadas e desabilitadas quando a conta bloqueia (fotos: só comentário); divulgação comercial
+  desligada por padrão, com "Your brand" (rótulo "Promotional content") e "Branded content" (rótulo "Paid
+  partnership"; com os dois, "Paid partnership"); botão desabilitado se a divulgação estiver ligada sem tipo;
+  conteúdo de marca não pode ser privado (desabilitar "Only me", aviso "Branded content visibility cannot be set to
+  private"); declarações "By posting, you agree to TikTok's Music Usage Confirmation" (ou "...Branded Content Policy
+  and Music Usage Confirmation"); prévia; enviar só após consentimento expresso; avisar que o processamento pode
+  levar minutos; acompanhar o status; nada de marca d'água/logo/texto promocional do app.
+
 ### Regras de UX obrigatórias (Direct Post)
 
 - Data: 2026-10-07 · Fonte: [Content Sharing Guidelines](https://developers.tiktok.com/doc/content-sharing-guidelines)

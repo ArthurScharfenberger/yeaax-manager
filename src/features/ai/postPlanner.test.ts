@@ -123,4 +123,28 @@ describe('postPlanner', () => {
     const created = history.find((entry) => entry.event === 'created');
     expect(created?.message).toBe('Criado com IA a partir do pedido: "Poste em inglês"');
   });
+
+  it('com horário, posts do TikTok vão para revisão (escolhas e consentimento no compositor)', async () => {
+    const target = planner({
+      summary: '',
+      language: 'en',
+      posts: [],
+      schedule: { mode: 'auto', datetime: null },
+    });
+    const result = await target.confirm({
+      mediaId: 'media-1',
+      instruction: 'Poste em todos',
+      posts: [
+        { channelId: 'channel-1', caption: 'TikTok' },
+        { channelId: 'channel-2', caption: 'Instagram' },
+      ],
+      scheduledAt: new Date(2026, 9, 8, 19, 0),
+    });
+
+    expect(result.failed).toEqual([]);
+    expect(result.created.map((post) => [post.channelId, post.status])).toEqual([
+      ['channel-1', 'review'],
+      ['channel-2', 'scheduled'],
+    ]);
+  });
 });

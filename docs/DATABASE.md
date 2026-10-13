@@ -73,17 +73,18 @@ app_settings (chave/valor, independente)
 
 ### `posts` — publicações
 
-| Coluna                  | Tipo            | Notas                                                                                        |
-| ----------------------- | --------------- | -------------------------------------------------------------------------------------------- |
-| id                      | TEXT PK         |                                                                                              |
-| channel_id              | TEXT → channels | `ON DELETE RESTRICT` (canal com posts não pode ser removido)                                 |
-| media_id                | TEXT? → media   | `ON DELETE SET NULL` (remover da biblioteca não apaga o post)                                |
-| caption                 | TEXT            | padrão `''`                                                                                  |
-| status                  | TEXT            | `draft` \| `review` \| `scheduled` \| `publishing` \| `published` \| `failed` \| `cancelled` |
-| scheduled_at            | TEXT?           | obrigatório para `scheduled` (regra na aplicação)                                            |
-| published_at            | TEXT?           |                                                                                              |
-| external_post_id        | TEXT?           | id na plataforma                                                                             |
-| created_at / updated_at | TEXT            |                                                                                              |
+| Coluna                  | Tipo            | Notas                                                                                                                                                        |
+| ----------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| id                      | TEXT PK         |                                                                                                                                                              |
+| channel_id              | TEXT → channels | `ON DELETE RESTRICT` (canal com posts não pode ser removido)                                                                                                 |
+| media_id                | TEXT? → media   | `ON DELETE SET NULL` (remover da biblioteca não apaga o post)                                                                                                |
+| caption                 | TEXT            | padrão `''`                                                                                                                                                  |
+| status                  | TEXT            | `draft` \| `review` \| `scheduled` \| `publishing` \| `published` \| `failed` \| `cancelled`                                                                 |
+| scheduled_at            | TEXT?           | obrigatório para `scheduled` (regra na aplicação)                                                                                                            |
+| published_at            | TEXT?           |                                                                                                                                                              |
+| external_post_id        | TEXT?           | id na plataforma                                                                                                                                             |
+| platform_options        | TEXT?           | JSON das escolhas da plataforma (TikTok: privacidade, interações, divulgação comercial, `consentedAt`) — migration 3; validado com Zod, inválido vira `null` |
+| created_at / updated_at | TEXT            |                                                                                                                                                              |
 
 Índices: `channel_id`, `media_id`, `status`, `scheduled_at`.
 Regra anti-duplicidade (aplicação): o mesmo `media_id` não pode estar `scheduled/publishing/published` duas
@@ -116,10 +117,11 @@ Valores inválidos voltam ao padrão com aviso no log. **Nunca guarde segredos a
 - Mudança de enum: não exige migration (DEC-007), só atualizar o schema Zod em `src/types`.
 - Recriar tabela referenciada por FK com cascade (ex.: `posts`) apaga dados dependentes — evite; prefira `ALTER TABLE ADD COLUMN`.
 
-| Versão | Arquivo                        | Conteúdo                                                                          |
-| ------ | ------------------------------ | --------------------------------------------------------------------------------- |
-| 1      | `0001_initial_schema.sql`      | channels, media, tags, media_tags, posts, post_history, app_settings              |
-| 2      | `0002_channel_external_id.sql` | `channels.external_id` + índice único parcial `(platform, external_id)` (DEC-028) |
+| Versão | Arquivo                          | Conteúdo                                                                          |
+| ------ | -------------------------------- | --------------------------------------------------------------------------------- |
+| 1      | `0001_initial_schema.sql`        | channels, media, tags, media_tags, posts, post_history, app_settings              |
+| 2      | `0002_channel_external_id.sql`   | `channels.external_id` + índice único parcial `(platform, external_id)` (DEC-028) |
+| 3      | `0003_post_platform_options.sql` | `posts.platform_options` (JSON) (DEC-029)                                         |
 
 ## Tabelas futuras (não criar antes da necessidade)
 

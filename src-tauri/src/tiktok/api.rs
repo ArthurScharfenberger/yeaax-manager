@@ -15,7 +15,7 @@ const REQUEST_TIMEOUT: Duration = Duration::from_secs(20);
 const MAX_DISPLAY_NAME_CHARS: usize = 100;
 const MAX_AVATAR_URL_LENGTH: usize = 2048;
 
-static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(|| {
+pub(super) static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(|| {
     reqwest::Client::builder()
         .timeout(REQUEST_TIMEOUT)
         .build()
@@ -65,7 +65,7 @@ pub fn user_info_fields(scopes: &[String]) -> &'static str {
     }
 }
 
-fn map_api_error(code: &str) -> CommandError {
+pub(super) fn map_api_error(code: &str) -> CommandError {
     match code {
         "access_token_invalid" => CommandError::new(
             "TIKTOK_AUTH_EXPIRED",

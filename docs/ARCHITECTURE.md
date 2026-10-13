@@ -122,7 +122,8 @@ src/
 │   ├── channels/           Página, diálogo de novo canal, channelService (+ channelConnector, channelRules,
 │   │                       verificação das contas ao abrir — useConnectionCheck)
 │   ├── media/              Biblioteca, detalhes, tags, mediaService, mediaRules
-│   ├── posts/              Compositor, detalhes, fila, postService, postRules, PostDialogsProvider
+│   ├── posts/              Compositor (PostComposerForm + TikTokPostOptions), detalhes, fila, postService,
+│   │                       postRules, tiktokOptionsRules (diretrizes do TikTok — DEC-029), PostDialogsProvider
 │   ├── scheduling/         Calendário semanal, agenda do dashboard, calendarLayout
 │   ├── automation/         Auto Schedule (config + prévia de horários)
 │   ├── ai/                 Página de legendas + sugestões do dashboard

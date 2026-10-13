@@ -6,6 +6,7 @@ import type {
   AnalyticsResult,
   ConnectRequest,
   ConnectResult,
+  CreatorInfo,
   ProviderCapabilities,
   PublicationStatusResult,
   PublishRequest,
@@ -86,6 +87,21 @@ export class MockSocialProvider implements SocialProvider {
       state: 'published',
       publishedAt: new Date().toISOString(),
       errorMessage: null,
+    };
+  }
+
+  /** Conta simulada do TikTok: todas as opções liberadas, até 10 minutos de vídeo. */
+  async getCreatorInfo(account: SocialAccountRef): Promise<CreatorInfo> {
+    await wait(this.latencyMs);
+    return {
+      nickname: account.username,
+      username: account.username,
+      avatarUrl: null,
+      privacyOptions: ['PUBLIC_TO_EVERYONE', 'MUTUAL_FOLLOW_FRIENDS', 'SELF_ONLY'],
+      commentDisabled: false,
+      duetDisabled: false,
+      stitchDisabled: false,
+      maxDurationSeconds: 600,
     };
   }
 

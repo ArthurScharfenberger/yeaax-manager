@@ -8,6 +8,8 @@ import type { Id } from '@/types';
 export const queryKeys = {
   channels: {
     all: ['channels'] as const,
+    /** `creator_info` do TikTok — sempre buscado de novo ao abrir o compositor (diretrizes). */
+    creatorInfo: (channelId: Id) => ['channels', 'creatorInfo', channelId] as const,
   },
   media: {
     all: ['media'] as const,

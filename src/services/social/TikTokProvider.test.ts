@@ -39,6 +39,19 @@ function fakeDesktop(account: TikTokAccount = ACCOUNT) {
       calls.push(`disconnect:${channelId}`);
       return Promise.resolve();
     },
+    tiktokCreatorInfo: (channelId) => {
+      calls.push(`creator:${channelId}`);
+      return Promise.resolve({
+        nickname: 'yeaax',
+        username: 'yeeax',
+        avatarUrl: 'https://evil.example/a.jpg',
+        privacyLevelOptions: ['FOLLOWER_OF_CREATOR', 'SELF_ONLY'],
+        commentDisabled: false,
+        duetDisabled: true,
+        stitchDisabled: true,
+        maxVideoPostDurationSec: 600,
+      });
+    },
   };
   return { desktop, calls };
 }
@@ -76,6 +89,23 @@ describe('TikTokProvider', () => {
     await provider.disconnect(REF);
     expect(calls).toEqual(['profile:channel-1', 'disconnect:channel-1']);
     await expect(provider.publish()).rejects.toMatchObject({ code: 'NOT_AVAILABLE' });
+  });
+});
+
+describe('TikTokProvider.getCreatorInfo', () => {
+  it('converte o creator_info e descarta avatar fora dos CDNs do TikTok', async () => {
+    const { desktop, calls } = fakeDesktop();
+    expect(await new TikTokProvider(desktop).getCreatorInfo(REF)).toEqual({
+      nickname: 'yeaax',
+      username: 'yeeax',
+      avatarUrl: null,
+      privacyOptions: ['FOLLOWER_OF_CREATOR', 'SELF_ONLY'],
+      commentDisabled: false,
+      duetDisabled: true,
+      stitchDisabled: true,
+      maxDurationSeconds: 600,
+    });
+    expect(calls).toEqual(['creator:channel-1']);
   });
 });
 

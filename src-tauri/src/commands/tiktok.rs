@@ -17,6 +17,7 @@ use tokio::sync::oneshot;
 use crate::error::{CommandError, CommandResult};
 use crate::tiktok::api::{self, TikTokProfile};
 use crate::tiktok::backend::{self, PublicConfig};
+use crate::tiktok::creator::{self, CreatorInfo};
 use crate::tiktok::listener::{CallbackListener, LOGIN_TIMEOUT};
 use crate::tiktok::loopback::CallbackOutcome;
 use crate::tiktok::pending::{PendingConnection, PendingRegistry};
@@ -262,6 +263,34 @@ pub async fn tiktok_get_profile(channel_id: String) -> CommandResult<TikTokAccou
     Ok(TikTokAccount::new(profile, stored.scopes))
 }
 
+/// `creator_info` da conta do canal (renova o token se preciso). Consultado sempre que o compositor abre.
+#[tauri::command]
+pub async fn tiktok_creator_info(channel_id: String) -> CommandResult<CreatorInfo> {
+    let stored = tokens::valid_access_token(&channel_id).await?;
+    creator::fetch(&stored.access_token).await
+}
+
+/// Políticas oficiais linkadas na declaração antes de publicar (lista fixa: o webview só escolhe a chave).
+fn policy_url(policy: &str) -> Option<&'static str> {
+    match policy {
+        "music_usage" => {
+            Some("https://www.tiktok.com/legal/page/global/music-usage-confirmation/en")
+        }
+        "branded_content" => Some("https://www.tiktok.com/legal/page/global/bc-policy/en"),
+        _ => None,
+    }
+}
+
+/// Abre a política no navegador padrão do sistema (links clicados no webview navegariam o próprio app).
+#[tauri::command]
+pub async fn open_tiktok_policy(app: AppHandle, policy: String) -> CommandResult<()> {
+    let url = policy_url(&policy)
+        .ok_or_else(|| CommandError::new("INVALID_INPUT", "Política desconhecida."))?;
+    app.opener()
+        .open_url(url, None::<&str>)
+        .map_err(|_| CommandError::new("TIKTOK_ERROR", "Não foi possível abrir o navegador."))
+}
+
 /// Revoga (melhor esforço) e apaga as credenciais do canal.
 #[tauri::command]
 pub async fn tiktok_disconnect(channel_id: String) -> CommandResult<()> {
@@ -346,6 +375,17 @@ mod tests {
         for forbidden in ["token", "verifier", "state", "code"] {
             assert!(!text.contains(forbidden), "{forbidden} em {text}");
         }
+    }
+
+    #[test]
+    fn politicas_vem_de_lista_fixa() {
+        assert!(policy_url("music_usage")
+            .unwrap()
+            .starts_with("https://www.tiktok.com/legal/"));
+        assert!(policy_url("branded_content")
+            .unwrap()
+            .starts_with("https://www.tiktok.com/legal/"));
+        assert_eq!(policy_url("https://evil.example"), None);
     }
 
     #[test]

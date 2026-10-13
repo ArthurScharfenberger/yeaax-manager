@@ -53,8 +53,9 @@ O mesmo status aparece na UI (Configurações → Integrações), definido em `s
   4. [x] Conta conectada na UI (DEC-028): "Conectar TikTok" sem pedir @, `channels.external_id` (open_id), avatar
          real (CDN do TikTok na CSP), verificação ao abrir o app, "Sessão expirada" + "Reconectar", cancelar login,
          remover canal limpa o cofre.
-  5. [ ] Compositor TikTok (UX obrigatória — DEC-019): `creator_info`, nickname, privacidade sem padrão, toggles
-         desmarcados, divulgação comercial, aviso de música, prévia; `posts.platform_options`.
+  5. [x] Compositor TikTok (DEC-029): `creator_info` a cada abertura, nickname, privacidade sem padrão, interações
+         desmarcadas/bloqueadas, divulgação comercial com rótulos, duração máxima, prévia do vídeo, declaração com
+         links oficiais, consentimento registrado ao agendar; `posts.platform_options` (migration 0003).
   6. [ ] Publicação: init `FILE_UPLOAD` + chunks sequenciais com progresso, polling de status,
          `publication_attempts`, "Publicar agora".
   7. [ ] Tela de status/resultado e roteiro do vídeo do App Review.

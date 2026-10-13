@@ -18,6 +18,58 @@ Formato:
 
 ---
 
+## Sessão 2026-10-13 (8) — Etapa 5: compositor do TikTok (DEC-029)
+
+### Objetivo
+
+Implementar no compositor tudo que as Content Sharing Guidelines do TikTok exigem antes de publicar, guardando as
+escolhas e o consentimento por post. Sem publicação real ainda (etapa 6).
+
+### Alterações realizadas
+
+- Diretrizes e `creator_info` reconferidos na documentação oficial (API_NOTES).
+- Rust: `tiktok/creator.rs` (`creator_info`, erros `TIKTOK_CANNOT_POST`), comandos `tiktok_creator_info` e
+  `open_tiktok_policy` (URLs fixas). 58 testes, clippy limpo.
+- Banco: migration `0003_post_platform_options.sql`; `Post.platformOptions` (Zod, união por plataforma);
+  repositório serializa JSON e lê inválido como `null`.
+- Regras: `features/posts/tiktokOptionsRules.ts` (pendências, rótulo comercial, declaração, normalização,
+  `requiresPostOptions`); `postService` recusa agendar TikTok sem escolhas e grava `consentedAt`; `postPlanner`
+  manda posts TikTok com horário para revisão.
+- Providers: `SocialProvider.getCreatorInfo` (real no `TikTokProvider`, simulado no mock); `DesktopBridge` com
+  `tiktokCreatorInfo` e `openTikTokPolicy`.
+- UI: `PostComposerDialog` dividido (`PostComposerForm`, `composerState`, `TikTokPostOptions` com
+  `TikTokOptionsSection` e `TikTokDeclaration`); prévia do vídeo reaproveitada da Biblioteca (`MediaVideoPreview`);
+  hook `useCreatorInfo` sem cache. Validado no preview: seção aparece com a conta, privacidade sem padrão,
+  "Somente eu" bloqueado com conteúdo de marca, rótulo "Parceria paga", declaração correta, "Agendar" bloqueado
+  até completar, agendamento ok, sem erros no console.
+- Testes: 136 TS (regras, serviço, planner, repositório, provider).
+
+### Arquivos importantes
+
+`src/features/posts/tiktokOptionsRules.ts`, `src/features/posts/components/{PostComposerForm,TikTokPostOptions,composerState}.tsx`,
+`src-tauri/src/tiktok/creator.rs`, `src-tauri/migrations/0003_post_platform_options.sql`.
+
+### Decisões
+
+DEC-029.
+
+### Problemas encontrados
+
+- `react-refresh/only-export-components` → estado do formulário movido para `composerState.ts`.
+- O limite de uso interrompeu a sessão no meio; retomada sem perda.
+
+### Pendências
+
+- Usuário: validar no app com a conta real (`creator_info` real do `@yeeax`).
+- UI em pt-BR × revisores do TikTok: decidir legendas em inglês no vídeo do App Review.
+
+### Próximo passo
+
+Etapa 6 — publicação real pela Content Posting API (Direct Post `FILE_UPLOAD` em chunks, status, "Publicar
+agora"/agendador local), revalidando `creator_info` e escolhas antes de enviar.
+
+---
+
 ## Sessão 2026-10-13 (7) — Etapa 4: conta conectada na UI (DEC-028)
 
 ### Objetivo

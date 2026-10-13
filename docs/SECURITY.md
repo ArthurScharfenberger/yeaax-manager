@@ -150,4 +150,5 @@ registrada na revisão da DEC-024 (item 6) e mantida pela DEC-027:
 | CSP `img-src https://*.tiktokcdn.com https://*.tiktokcdn-us.com` | avatar real da conta (DEC-028); outras origens são descartadas no provider (`safeAvatarUrl`); o CDN vê o IP, como no próprio TikTok |
 | listener loopback `127.0.0.1`                                    | receber o redirect do Login Kit Desktop; porta do sistema, 1 uso, 5 min                                                             |
 | plugin `opener` (sem permissão no webview)                       | o Rust abre a URL oficial de autorização no navegador padrão                                                                        |
+| comando `open_tiktok_policy`                                     | abre só as 2 URLs fixas das políticas do TikTok (o webview envia a chave, nunca a URL) — DEC-029                                    |
 | rede do Rust: `api.yeaax.xyz`, `open.tiktokapis.com`             | troca/refresh/revoke (backend) e perfil (TikTok); a CSP do webview não muda                                                         |

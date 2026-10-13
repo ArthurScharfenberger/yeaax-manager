@@ -4,7 +4,7 @@ import { useServices } from '@/app/ServicesContext';
 import type { PostFilters } from '@/db/repositories';
 import { useInvalidate } from '@/hooks/useInvalidate';
 import { queryKeys } from '@/lib/queryKeys';
-import type { Id } from '@/types';
+import type { Channel, Id } from '@/types';
 
 import type { PostInput } from './postService';
 
@@ -32,6 +32,32 @@ export function usePostHistory(id: Id) {
   return useQuery({
     queryKey: queryKeys.posts.history(id),
     queryFn: () => posts.getHistory(id),
+  });
+}
+
+/**
+ * O que a conta do TikTok pode publicar agora (`creator_info`). As diretrizes exigem buscar de novo sempre que a
+ * tela de publicação abre — por isso sem cache (`staleTime: 0`, `gcTime: 0`) e sem novas tentativas automáticas.
+ */
+export function useCreatorInfo(channel: Channel | undefined) {
+  const { social } = useServices();
+  const provider = channel ? social[channel.platform] : null;
+  const supported = provider !== null && 'getCreatorInfo' in provider;
+  return useQuery({
+    queryKey: queryKeys.channels.creatorInfo(channel?.id ?? ''),
+    queryFn: () => {
+      if (!channel || !provider?.getCreatorInfo) throw new Error('creator_info indisponível');
+      return provider.getCreatorInfo({
+        channelId: channel.id,
+        platform: channel.platform,
+        username: channel.username,
+      });
+    },
+    enabled: supported && channel?.status === 'connected',
+    staleTime: 0,
+    gcTime: 0,
+    retry: false,
+    refetchOnWindowFocus: false,
   });
 }
 

@@ -1,4 +1,5 @@
 import type { RuntimeMode } from '@/lib/runtime';
+import type { TikTokPrivacyLevel } from '@/types';
 
 /**
  * Recursos do sistema operacional usados pelo app (diálogos, arquivos, ferramentas).
@@ -42,6 +43,10 @@ export interface DesktopBridge {
   tiktokGetProfile(channelId: string): Promise<TikTokAccount>;
   /** Revoga (melhor esforço) e apaga as credenciais do canal. */
   tiktokDisconnect(channelId: string): Promise<void>;
+  /** `creator_info` da conta do canal: o que ela pode publicar agora (privacidade, interações, duração). */
+  tiktokCreatorInfo(channelId: string): Promise<TikTokCreatorInfo>;
+  /** Abre no navegador do sistema uma política oficial do TikTok (lista fixa no Rust). */
+  openTikTokPolicy(policy: TikTokPolicy): Promise<void>;
   /** Pasta onde o banco local é salvo (`null` no modo preview). */
   getDataDirectory(): Promise<string | null>;
   /** Pasta dos arquivos de log (`null` no modo preview). */
@@ -72,6 +77,21 @@ export interface TikTokAccount {
   avatarUrl: string | null;
   scopes: string[];
 }
+
+export interface TikTokCreatorInfo {
+  nickname: string;
+  username: string | null;
+  avatarUrl: string | null;
+  privacyLevelOptions: TikTokPrivacyLevel[];
+  commentDisabled: boolean;
+  duetDisabled: boolean;
+  stitchDisabled: boolean;
+  maxVideoPostDurationSec: number | null;
+}
+
+/** Políticas linkadas na declaração antes de publicar (Content Sharing Guidelines). */
+export const TIKTOK_POLICIES = ['music_usage', 'branded_content'] as const;
+export type TikTokPolicy = (typeof TIKTOK_POLICIES)[number];
 
 export interface TikTokPendingConnection {
   /** Id opaco, de uso único, válido por 5 minutos dentro do processo do app. Não é credencial do TikTok. */

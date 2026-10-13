@@ -258,6 +258,7 @@ async function seed(repositories: Repositories, now: Date): Promise<void> {
           ? addMinutes(scheduledAt, 1).toISOString()
           : null,
       externalPostId: item.status === 'published' ? `mock_${item.key}` : null,
+      platformOptions: null,
       createdAt: createdAt.toISOString(),
       updatedAt: nowIso,
     };

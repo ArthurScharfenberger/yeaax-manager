@@ -22,6 +22,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); 
 
 ### Adicionado
 
+- **Compositor do TikTok** conforme as diretrizes de publicação: mostra a conta que vai publicar, privacidade sem
+  padrão (só as opções da conta), interações desmarcadas, divulgação de conteúdo comercial com os rótulos do
+  TikTok, checagem de duração, prévia do vídeo e declaração com links para as políticas oficiais. Agendar no
+  TikTok exige essas escolhas; o consentimento fica registrado no post.
+- Posts do TikTok criados pelo "Postar com IA" com horário vão para revisão até as escolhas serem feitas.
 - **Conectar TikTok direto**: sem digitar o @ — a conta vem do TikTok. Conectar a mesma conta de novo reconecta o
   canal existente. Avatar e nome reais na lista de canais.
 - **Contas verificadas ao abrir o app**: o token é renovado, o perfil atualizado e, se o acesso tiver sido revogado

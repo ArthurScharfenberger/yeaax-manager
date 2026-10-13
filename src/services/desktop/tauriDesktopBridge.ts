@@ -4,12 +4,14 @@ import { open } from '@tauri-apps/plugin-dialog';
 import { z } from 'zod';
 
 import { toAppError } from '@/lib/errors';
+import { tiktokPrivacyLevelSchema } from '@/types';
 
 import type {
   DesktopBridge,
   FfmpegStatus,
   MediaFileInfo,
   TikTokAccount,
+  TikTokCreatorInfo,
   TikTokPendingConnection,
 } from './DesktopBridge';
 
@@ -38,6 +40,26 @@ const tiktokAccountSchema = z.object({
   displayName: z.string().max(100),
   avatarUrl: z.url({ protocol: /^https$/ }).nullable(),
   scopes: z.array(z.string().max(64)),
+});
+
+const tiktokCreatorInfoSchema = z.object({
+  nickname: z.string().max(100),
+  username: z
+    .string()
+    .regex(/^[A-Za-z0-9._]{1,64}$/)
+    .nullable(),
+  avatarUrl: z.url({ protocol: /^https$/ }).nullable(),
+  // Valores desconhecidos de uma versão futura da API são ignorados, não quebram o compositor.
+  privacyLevelOptions: z.array(z.string()).transform((values) =>
+    values.flatMap((value) => {
+      const parsed = tiktokPrivacyLevelSchema.safeParse(value);
+      return parsed.success ? [parsed.data] : [];
+    }),
+  ),
+  commentDisabled: z.boolean(),
+  duetDisabled: z.boolean(),
+  stitchDisabled: z.boolean(),
+  maxVideoPostDurationSec: z.number().int().positive().nullable(),
 });
 
 const tiktokPendingSchema = z.object({
@@ -120,6 +142,13 @@ export function createTauriDesktopBridge(): DesktopBridge {
 
     async tiktokDisconnect(channelId) {
       await invokeCommand('tiktok_disconnect', z.null(), { channelId });
+    },
+
+    tiktokCreatorInfo: (channelId): Promise<TikTokCreatorInfo> =>
+      invokeCommand('tiktok_creator_info', tiktokCreatorInfoSchema, { channelId }),
+
+    async openTikTokPolicy(policy) {
+      await invokeCommand('open_tiktok_policy', z.null(), { policy });
     },
 
     getDataDirectory: () => appConfigDir(),
