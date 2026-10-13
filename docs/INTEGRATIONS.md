@@ -6,7 +6,7 @@ O mesmo status aparece na UI (Configurações → Integrações), definido em `s
 
 | Integração | Status        | Código                                                                     | Próximo passo                        |
 | ---------- | ------------- | -------------------------------------------------------------------------- | ------------------------------------ |
-| TikTok     | `MOCK`        | `src/services/social/TikTokProvider.ts`, `backend/` (planejado)            | **Prioridade atual:** OAuth Web real |
+| TikTok     | `MOCK`        | `src/services/social/TikTokProvider.ts`, `backend/`                        | **Prioridade atual:** OAuth Web real |
 | Instagram  | `MOCK`        | `src/services/social/InstagramProvider.ts`                                 | Fase 3: Instagram Graph API          |
 | OpenAI     | `IN_PROGRESS` | `src/services/ai/OpenAIProvider.ts`, `src-tauri/src/commands/ai.rs`        | Validar com a chave real do usuário  |
 | FFmpeg     | `NOT_STARTED` | `src/services/media/VideoProcessor.ts`, `src-tauri/src/commands/system.rs` | Fase 2: ffprobe + miniaturas         |
@@ -39,8 +39,8 @@ O mesmo status aparece na UI (Configurações → Integrações), definido em `s
   API e upload direto do Rust para `open.tiktokapis.com`. Ver ARCHITECTURE.md.
 - **Ordem de implementação:**
   1. [x] Documentação e decisões (DEC-023, DEC-024, DEC-025).
-  2. [ ] Backend `backend/`: `health`, `auth/tiktok/{config,callback,token,refresh,revoke}` + testes; deploy na
-         Vercel em `api.yeaax.xyz` (usuário).
+  2. [x] Backend `backend/`: `/health`, `/config`, `/auth/tiktok/{callback,token,refresh,revoke}` + 62 testes
+         (DEC-026). [ ] Deploy na Vercel em `api.yeaax.xyz` (usuário).
   3. [ ] Rust OAuth: `state`, listener loopback, navegador do sistema, troca via backend, tokens no cofre.
   4. [ ] Conta conectada: migration 0002 (`channels.external_id`), `connect/getProfile/disconnect` reais, botão
          "Conectar TikTok". Primeiro teste ponta a ponta no sandbox.

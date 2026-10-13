@@ -39,6 +39,9 @@ tokens*.json
 /media/
 /thumbnails/
 
+# --- Vercel (link local do projeto do backend) ---
+.vercel/
+
 # --- Temporários e logs ---
 logs/
 *.log

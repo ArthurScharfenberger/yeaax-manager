@@ -15,6 +15,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); 
 
 ### Adicionado
 
+- **Backend mínimo** (`backend/`, publicado separadamente em `api.yeaax.xyz`): `/health`, `/config`,
+  `/auth/tiktok/callback` (repasse seguro ao loopback do desktop), `/auth/tiktok/token`, `/refresh` e `/revoke`.
+  Sem estado, CORS fechado, validação Zod, rate limit, logs sem dados sensíveis, erros do TikTok normalizados,
+  62 testes (DEC-026).
+- Revisão de segurança da DEC-024 e registro da divergência sobre refresh tokens no desktop (SECURITY.md).
 - Miniaturas reais na biblioteca: capturadas pelo WebView2 durante a importação (sem FFmpeg) e gravadas em
   `%APPDATA%\com.socialmanager.desktop\thumbnails\`. Vídeos sem miniatura (importados antes ou com falha na
   captura) são processados automaticamente em segundo plano ao abrir o app.

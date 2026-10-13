@@ -36,14 +36,16 @@ Sem banco e sem estado: existe só porque o OAuth Web exige callback HTTPS e o `
       └────────HTTPS (token do usuário, upload do vídeo)────────►  open.tiktokapis.com
 ```
 
-| Rota (planejada)            | Função                                                                     |
+| Rota (implementada)         | Função                                                                     |
 | --------------------------- | -------------------------------------------------------------------------- |
 | `GET /health`               | verificação                                                                |
-| `GET /auth/tiktok/config`   | `client_key`, escopos e `redirect_uri` (dados públicos)                    |
+| `GET /config`               | `client_key`, escopos e `redirect_uri` (dados públicos)                    |
 | `GET /auth/tiktok/callback` | repassa `code`/`state` ao loopback `127.0.0.1:<porta>` do desktop (302)    |
 | `POST /auth/tiktok/token`   | troca `code` por tokens com o `client_secret`; devolve ao Rust, não guarda |
 | `POST /auth/tiktok/refresh` | renova o access token com o `client_secret`                                |
 | `POST /auth/tiktok/revoke`  | revoga o token ao desconectar                                              |
+
+Detalhes (validação, CORS fechado, rate limit, logs, deploy): [backend/README.md](../backend/README.md) e DEC-026.
 
 ### Fluxo OAuth do TikTok (DEC-024)
 

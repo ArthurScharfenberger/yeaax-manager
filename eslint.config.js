@@ -6,7 +6,15 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig([
-  globalIgnores(['dist', 'coverage', 'src-tauri/target', 'src-tauri/gen', 'node_modules']),
+  // `backend/` é um serviço separado, com lint próprio (backend/eslint.config.js).
+  globalIgnores([
+    'dist',
+    'coverage',
+    'src-tauri/target',
+    'src-tauri/gen',
+    'node_modules',
+    'backend',
+  ]),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

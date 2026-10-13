@@ -53,7 +53,8 @@ Marque `[x]` ao concluir (com a versão entre parênteses quando fizer sentido).
 
 - [x] Pesquisa de viabilidade das APIs oficiais (2026-10-07 — ver API_NOTES.md)
 - [x] Arquitetura da fase TikTok real: backend mínimo, OAuth Web com repasse ao loopback, nome "Yeaax Manager" (DEC-023/024/025, 2026-10-13)
-- [ ] Backend mínimo `backend/` em `api.yeaax.xyz` (Vercel): callback, token, refresh, revoke (DEC-023)
+- [x] Backend mínimo `backend/`: `/health`, `/config`, callback, token, refresh, revoke + testes (DEC-023/026, 2026-10-13)
+- [ ] Deploy do backend na Vercel em `api.yeaax.xyz`
 - [ ] Tokens no Credential Manager por conta (`tiktok_token:<open_id>`) — DEC-024
 - [ ] Compositor com campos por plataforma (UX obrigatória do TikTok, `share_to_feed`/capa no Instagram) + coluna `platform_options`
 - [ ] Validação de especificações por plataforma antes de agendar (duração, tamanho, formato)

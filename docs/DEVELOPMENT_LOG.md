@@ -18,6 +18,55 @@ Formato:
 
 ---
 
+## Sessão 2026-10-13 (3) — Etapa 2: revisão da DEC-024 e backend mínimo
+
+### Objetivo
+
+Revisar a segurança da DEC-024 contra a documentação atual do Login Kit e criar o `backend/` (Node + TypeScript)
+com `/health`, `/config`, `/auth/tiktok/{callback,token,refresh,revoke}`. Sem push.
+
+### Alterações realizadas
+
+- `backend/` como serviço separado: função única da Vercel (`api/index.ts`, export `fetch`) + rewrite em
+  `vercel.json`; roteamento em `src/app.ts`; `src/oauthState.ts` (formato do `state` e repasse só para
+  `127.0.0.1:<porta>`); `src/tiktok/oauthClient.ts` (token/refresh/revoke com o secret, timeout 10 s, erros
+  normalizados); `src/http.ts` (cabeçalhos de segurança, leitura de JSON com limite); `src/rateLimit.ts`;
+  `src/logger.ts` (JSON com redação); `src/config.ts` (env validado com Zod; só nomes de variáveis inválidas
+  vão para o log). 62 testes (Vitest, `fetch` injetado). `backend/.env.example` só com nomes/placeholders.
+- Raiz: ESLint ignora `backend/` (lint próprio), script `npm run backend:check`, `.vercel/` no `.gitignore`.
+- Revisão da DEC-024 (8 itens) em DECISIONS.md, incluindo a **divergência** sobre refresh tokens no Credential
+  Manager (também em SECURITY.md) e a comparação Web × Desktop+PKCE. DEC-026 (backend sem framework).
+- Docs: ARCHITECTURE (rotas implementadas), SECURITY, INTEGRATIONS, ROADMAP, TODO, CHANGELOG, README,
+  `backend/README.md` (rotas, segurança, deploy).
+
+### Arquivos importantes
+
+`backend/src/app.ts`, `backend/src/oauthState.ts`, `backend/src/tiktok/oauthClient.ts`,
+`backend/src/routes/tiktokAuth.ts`, `backend/README.md`, `docs/DECISIONS.md` (revisão da DEC-024, DEC-026).
+
+### Decisões
+
+DEC-026. DEC-024 mantida como Web; a troca para Desktop + PKCE ficou para o usuário decidir (recomendação técnica:
+Desktop + PKCE é o padrão para apps nativos — RFC 8252 — e o backend já aceita `codeVerifier`).
+
+### Problemas encontrados
+
+- Heredoc grande no Bash do Windows falhou ("unexpected EOF") → arquivos criados com a ferramenta de escrita.
+- Não foi possível validar o empacotamento na Vercel localmente (rewrite preservando o caminho e imports `.js`
+  apontando para `.ts`): conferir `/health` e `/config` logo após o primeiro deploy.
+
+### Pendências
+
+- Usuário: decidir Web × Desktop+PKCE; push; projeto Vercel (Root Directory `backend`), variáveis, domínio
+  `api.yeaax.xyz`; portal do TikTok (lista em `docs/TODO.md`).
+
+### Próximo passo
+
+Depois do deploy e da decisão: etapa 3 — OAuth no Rust (`state` CSPRNG, listener `127.0.0.1`, navegador do
+sistema via `tauri-plugin-opener`, troca pelo backend, tokens no Credential Manager `tiktok_token:<open_id>`).
+
+---
+
 ## Sessão 2026-10-13 (2) — Auditoria e arquitetura do TikTok real (etapa 1)
 
 ### Objetivo

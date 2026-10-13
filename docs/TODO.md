@@ -8,8 +8,12 @@ Repositório remoto configurado: [yeaax-manager](https://github.com/ArthurScharf
 
 Fase atual: **TikTok real** (ordem em `docs/INTEGRATIONS.md` → TikTok).
 
-- [ ] Etapa 2 — `backend/` (Node + TypeScript, Vercel Functions): `GET /health`, `GET /auth/tiktok/config`,
-      `GET /auth/tiktok/callback`, `POST /auth/tiktok/{token,refresh,revoke}`, testes e `backend/.env.example`.
+- [ ] **Decisão do usuário:** manter Login Kit **Web** (DEC-024) ou trocar para **Desktop + PKCE** (vantagens e
+      desvantagens na revisão da DEC-024, item 8). Precisa ser decidido antes da etapa 3.
+- [ ] Usuário — publicar o backend: push do repositório e projeto Vercel com Root Directory `backend`
+      (passo a passo em `backend/README.md`); conferir `https://api.yeaax.xyz/health` → `configured: true`.
+- [ ] Após o deploy: confirmar que o rewrite entrega o caminho original ao handler (`/health` e `/config`
+      respondendo) e que os imports `.js` → `.ts` foram empacotados (não testável sem a Vercel).
 - [ ] Usuário — TikTok Developer Portal: Login Kit **Web** com redirect
       `https://api.yeaax.xyz/auth/tiktok/callback`; Content Posting API com Direct Post; escopos `user.info.basic`,
       `user.info.profile`, `video.publish`, `video.upload`; termos/privacidade em `yeaax.xyz`; sandbox com a própria

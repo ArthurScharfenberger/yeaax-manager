@@ -12,7 +12,7 @@ Estas políticas valem desde já; a arquitetura foi desenhada para cumpri-las qu
 - **Client secrets das plataformas (TikTok; Instagram no futuro) ficam só no backend mínimo**, como variáveis de
   ambiente secretas da Vercel (DEC-023). Nunca no app desktop, no bundle, no banco, no `.env` da raiz ou em
   `VITE_*`. `backend/.env.example` lista os nomes com valores vazios.
-- O `client_key` do TikTok é público (vai na URL de autorização) e é servido por `GET /auth/tiktok/config`.
+- O `client_key` do TikTok é público (vai na URL de autorização) e é servido por `GET /config`.
 - A chave da OpenAI é do usuário e é lida **apenas pelo lado Rust** (DEC-022).
 - Chaves configuradas pelo usuário (hoje: API key da OpenAI) vão para o **Gerenciador de Credenciais do
   Windows** (`keyring-core` + `windows-native-keyring-store`, serviço `com.socialmanager.desktop`), nunca para o
@@ -39,12 +39,33 @@ Estas políticas valem desde já; a arquitetura foi desenhada para cumpri-las qu
   `expired`; nunca re-tentar autenticação de forma automática e silenciosa em loop.
 - Proibido: scraping, automação de navegador, captura de cookies, endpoints não oficiais, burla de autenticação.
 
-## Backend mínimo (`backend/`, DEC-023)
+### Divergência da recomendação do TikTok (refresh token no desktop)
 
-- Sem banco, sem sessão, sem estado; HTTPS obrigatório (Vercel). Só o processo Rust chama o backend (CORS
-  fechado: o webview não chama `api.yeaax.xyz`).
-- Entradas validadas com Zod; respostas de erro genéricas (sem ecoar o corpo do TikTok nem o secret).
-- Logs sem tokens, codes, secrets ou corpo de requisições; nunca logar `Authorization`.
+O TikTok recomenda que o **servidor** guarde o client secret **e o refresh token**. Aqui o client secret fica no
+servidor, mas o **refresh token fica no Credential Manager do Windows** do usuário — divergência consciente,
+registrada na revisão da DEC-024 (item 6):
+
+- **Motivo:** backend sem estado e local-first; guardar no servidor exigiria banco, contas e uma credencial do
+  desktop para o backend, que também ficaria no computador do usuário.
+- **Riscos:** malware rodando como o usuário pode ler o cofre; com um refresh token roubado (válido por até 365
+  dias), qualquer um obtém access tokens pela rota pública `/auth/tiktok/refresh`; computador perdido sem bloqueio.
+- **Mitigações:** escopos mínimos, rate limit, revogação ao desconectar, rotação do refresh token pelo TikTok,
+  revogação pelo usuário nas configurações do TikTok, tokens nunca no banco/logs/webview.
+- **Reavaliar** se o app tiver outros usuários além do dono ou se o backend ganhar estado (API/MCP).
+
+## Backend mínimo (`backend/`, DEC-023/DEC-026)
+
+- Sem banco, sem sessão, sem estado; HTTPS obrigatório (Vercel). Só o processo Rust chama as rotas `POST`.
+- **CORS fechado:** nenhuma resposta tem `Access-Control-Allow-*`; rotas `POST` recusam requisições com `Origin`
+  (navegadores) e exigem `Content-Type: application/json` (força preflight, que recebe `405`).
+- Entradas validadas com Zod (schemas estritos, corpo até 8 KB); erros com mensagens fixas — nunca ecoam a entrada
+  nem o corpo do TikTok. Erros do TikTok são normalizados (`INVALID_GRANT`, `UPSTREAM_*`).
+- **Rate limit** por IP em memória da instância (10–60/min por rota; melhor esforço) + regra recomendada no
+  Firewall da Vercel.
+- Logs JSON só com evento, método, caminho sem query, status e duração; nunca code, state, tokens, secret, IP ou
+  corpo (redação por nome de campo como defesa extra; testado).
+- Callback: só repassa para `http://127.0.0.1:<porta 1024–65535>/tiktok/callback`; `state` malformado → página
+  de erro sem redirect; `error_description` do TikTok é descartada.
 - Segredos só nas variáveis de ambiente do projeto Vercel; rotacionar o `client_secret` no portal do TikTok se
   houver suspeita de vazamento.
 - O vídeo nunca passa pelo backend.
@@ -107,4 +128,4 @@ Estas políticas valem desde já; a arquitetura foi desenhada para cumpri-las qu
 | `assetProtocol.scope: $APPDATA/thumbnails/*`   | exibir miniaturas geradas pelo app (DEC-018)                              |
 | comandos `save_thumbnail` / `delete_thumbnail` | gravar/remover miniaturas na pasta do app                                 |
 | `dragDropEnabled: false`                       | permite drag-and-drop HTML5 no calendário (DEC-010)                       |
-| listener loopback `127.0.0.1` (planejado)      | receber o `code` repassado pelo callback OAuth; porta aleatória, 1 uso    |
+| listener loopback `127.0.0.1` (etapa 3)        | receber o `code` repassado pelo callback OAuth; porta aleatória, 1 uso    |

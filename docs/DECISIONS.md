@@ -29,8 +29,9 @@ marque como _Substituída por DEC-XXX_.
 | DEC-021 | Logs em arquivo com tauri-plugin-log                                   | Ativa                                    |
 | DEC-022 | OpenAI via Rust com chave no Credential Manager; "Postar com IA"       | Ativa                                    |
 | DEC-023 | Backend mínimo `api.yeaax.xyz` (Vercel) só para segredos do app        | Ativa                                    |
-| DEC-024 | OAuth TikTok Web com callback HTTPS repassado ao loopback do desktop   | Ativa                                    |
+| DEC-024 | OAuth TikTok Web com callback HTTPS repassado ao loopback do desktop   | Ativa (Web × Desktop+PKCE em avaliação)  |
 | DEC-025 | Nome exibido "Yeaax Manager"; identificador interno mantido            | Ativa                                    |
+| DEC-026 | Backend sem framework: um handler `fetch` + Zod, rate limit em memória | Ativa                                    |
 
 ---
 
@@ -345,6 +346,57 @@ Instagram com token do painel enquanto não for revisto._
 - **Impactos:** novos comandos Rust de OAuth/publicação; nomes de segredo dinâmicos validados por padrão
   (`tiktok_token:[A-Za-z0-9_-]{1,64}`); coluna `channels.external_id` (open_id) em migration futura.
 
+### Revisão de segurança da DEC-024 (2026-10-13)
+
+Feita contra a documentação atual do Login Kit (Web e Desktop) e do gerenciamento de tokens do TikTok.
+
+1. **`state`:** gerado pelo desktop com 32 bytes do CSPRNG do sistema operacional, em base64url sem padding (43
+   caracteres), seguido de `.<porta>`. Fica só na memória da conexão pendente, vale **uma vez**, é comparado em
+   tempo constante e expira com o listener (5 min). O backend é stateless: valida apenas o formato
+   (`backend/src/oauthState.ts`); quem valida o valor é o desktop. Isso também impede _login CSRF_ (conectar a
+   conta de um atacante): o desktop só aceita o `state` que ele mesmo gerou.
+2. **Sem open redirect:** o destino é montado pelo backend com host `127.0.0.1` e caminho `/tiktok/callback`
+   fixos; só a porta vem do `state` e precisa ser decimal sem zero à esquerda entre 1024 e 65535. `state`
+   inválido → página de erro, sem redirect. Testes cobrem injeção de host, caminho, URL completa e portas
+   privilegiadas. Um terceiro pode, no máximo, fazer o navegador da vítima abrir uma URL no próprio loopback dela
+   — o mesmo que qualquer site pode fazer —, e o desktop a recusa por causa do `state`.
+3. **Listener loopback (etapa 3):** bind só em `127.0.0.1` (nunca `0.0.0.0` nem `localhost`, que pode resolver
+   para IPv6), porta escolhida pelo sistema, aceita apenas `GET /tiktok/callback`, encerra após o primeiro
+   `state` válido ou após 5 min, responde uma página local sem recursos externos.
+4. **Authorization code:** de uso único e curta duração (TikTok); o desktop o troca **uma única vez** e logo em
+   seguida; nunca é registrado (backend: redação + testes; desktop: idem). Limitação inerente ao fluxo Web: o code
+   aparece na URL do callback e do loopback no navegador — mitigado por `Referrer-Policy: no-referrer`, páginas
+   sem recursos externos e uso único.
+5. **Client secret:** só nas variáveis de ambiente da Vercel; nunca em respostas nem logs (testado).
+6. **Tokens — divergência explícita da recomendação do TikTok.** A documentação do Login Kit diz que o servidor é
+   responsável por guardar com segurança o client secret **e o refresh token** (gestão server-side). Nesta
+   arquitetura, o refresh token fica no **Credential Manager do Windows** do usuário (DPAPI, escopo do usuário),
+   não no servidor.
+   - **Motivo:** backend sem estado e local-first (DEC-023). Guardar no servidor exigiria banco, contas de usuário
+     e uma credencial para o desktop se autenticar no backend — que ficaria igualmente no computador do usuário,
+     só mudando o problema de lugar.
+   - **Riscos:** (a) malware rodando como o usuário pode ler o cofre e roubar o refresh token (365 dias); (b) o
+     refresh exige o client secret, mas a rota pública `/auth/tiktok/refresh` aceita qualquer refresh token
+     válido — quem roubar o token consegue access tokens por ela; (c) perda do computador sem bloqueio de sessão.
+   - **Mitigações:** escopo mínimo; rate limit; revogação ao desconectar; o TikTok rotaciona o refresh token (o
+     antigo deixa de valer); o usuário pode revogar o acesso nas configurações do TikTok; tokens nunca no banco,
+     em logs ou no webview.
+   - **Endurecimento possível (não implementado):** o backend devolver o refresh token cifrado (AES-GCM com chave
+     só na Vercel) para o desktop guardar um blob opaco — o token em claro nunca fica no disco e a rotação da chave
+     invalida todos de uma vez. Não impede o uso do blob roubado pela rota de refresh, por isso foi adiado.
+7. **PKCE:** o fluxo Web não documenta PKCE (`code_verifier` é "required for mobile and desktop app only"). O
+   backend já aceita `codeVerifier` opcional; testar no sandbox se o fluxo Web aceita `code_challenge` (lembrando
+   que o desafio do TikTok é SHA-256 em **hex**) e, se aceitar, usar sempre como defesa extra.
+8. **Alternativa em avaliação — Login Kit Desktop + PKCE** (decisão do usuário pendente; a DEC-024 continua Web):
+   - Vantagens: é o padrão para apps nativos (RFC 8252: loopback + PKCE); o code fica amarrado ao `code_verifier`
+     que só o desktop tem, então interceptar o code não basta; elimina o repasse e a rota pública de callback; o
+     login não depende do backend estar no ar para o redirect.
+   - Desvantagens: o TikTok exige o client secret na troca e no refresh mesmo para Desktop, então o backend
+     continua necessário (`/config`, `token`, `refresh`, `revoke`); redirect em `127.0.0.1` em vez do domínio;
+     desafio PKCE fora do padrão (hex); não reaproveita o callback HTTPS (útil para clientes Web futuros e
+     exigido pelo Instagram).
+   - Custo de troca: baixo — o backend já aceita `codeVerifier`; a rota de callback ficaria sem uso.
+
 ## DEC-025 — Nome exibido "Yeaax Manager"; identificador interno mantido
 
 - **Data:** 2026-10-13
@@ -355,3 +407,19 @@ Instagram com token do painel enquanto não for revisto._
   (`%APPDATA%`) e o cofre, e o usuário perderia banco, miniaturas e chaves.
 - **Alternativas:** renomear tudo com migração de pasta (risco sem benefício agora).
 - **Impactos:** o instalador NSIS passa a usar o novo nome; caminhos de dados permanecem os mesmos.
+
+## DEC-026 — Backend sem framework: um handler `fetch` + Zod, rate limit em memória
+
+- **Data:** 2026-10-13
+- **Decisão:** o `backend/` é uma única Vercel Function (`api/index.ts`, export Web standard `fetch`) com
+  roteamento interno por caminho (`src/app.ts`) e rewrite de todas as rotas em `vercel.json` — formato recomendado
+  pela Vercel. Dependência de runtime: só `zod`. Dev: `typescript`, `vitest`, `eslint`/`typescript-eslint`,
+  `@types/node`, `globals` (mesmas versões da raiz). `fetch`, logger, relógio e rate limiter são injetados
+  (testes sem rede). Rate limit por IP em janela fixa **em memória da instância** (melhor esforço), complementado
+  por regra no Firewall da Vercel. TypeScript `NodeNext` com imports `.js`; Node 24.x.
+- **Motivo:** seis rotas não justificam framework (Hono/Express); menos dependências para auditar; o handler Web
+  standard roda igual nos testes e na Vercel.
+- **Alternativas:** Hono (bom, mas desnecessário agora — reavaliar quando houver API/MCP); Express (servidor
+  tradicional, pior encaixe em funções); rate limit com Redis/KV (introduziria estado e custo).
+- **Impactos:** `backend/` com `package.json`, lint e testes próprios (`npm run backend:check` na raiz); o ESLint da
+  raiz ignora `backend/`; Prettier da raiz cobre os dois.

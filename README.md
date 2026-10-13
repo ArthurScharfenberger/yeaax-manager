@@ -6,7 +6,7 @@ Repositório: [yeaax-manager](https://github.com/ArthurScharfenberger/yeaax-mana
 Central pessoal **local-first** para organizar, preparar, agendar e (futuramente) publicar e analisar
 conteúdo em múltiplos canais do **TikTok** e do **Instagram**. Aplicativo desktop que roda inteiramente no
 seu computador — sem Docker e sem nuvem para os seus dados. Um **backend mínimo e sem estado** em
-`https://api.yeaax.xyz` (pasta `backend/`, projeto Vercel separado — em construção) existe só para o callback OAuth e
+`https://api.yeaax.xyz` (pasta [`backend/`](backend/README.md), projeto Vercel separado) existe só para o callback OAuth e
 o client secret das plataformas (DEC-023).
 
 > Objetivo de longo prazo: um _Content Automation Engine_ — você adiciona conteúdo à biblioteca e o
@@ -105,7 +105,7 @@ src/
   types/        entidades e enums do domínio (Zod)
   utils/        funções puras (datas, formatação)
 src-tauri/      app Rust: comandos, migrations SQL, permissões (capabilities)
-backend/        serviço separado (Vercel, api.yeaax.xyz): OAuth e client secrets — planejado (DEC-023)
+backend/        serviço separado (Vercel, api.yeaax.xyz): OAuth e client secrets (DEC-023) — ver backend/README.md
 docs/           documentação viva do projeto
 ```
 
