@@ -18,9 +18,6 @@ Fase atual: **TikTok real** (ordem em `docs/INTEGRATIONS.md` → TikTok).
       conta como target user (conta **privada** para os testes).
 - [ ] Usuário — Vercel/DNS: projeto separado com Root Directory `backend`, domínio `api.yeaax.xyz` (CNAME) e
       variáveis secretas `TIKTOK_CLIENT_KEY` e `TIKTOK_CLIENT_SECRET` (opcional `TIKTOK_SCOPES`).
-- [ ] Confirmar a persistência `Local` no cofre: Desconectar e Conectar o canal TikTok de novo (o item é regravado)
-      e conferir no Gerenciador de Credenciais / `cmdkey /list:tiktok_token*`.
-- [ ] Usuário: confirmar que o @ real da conta é `yeeax` (foi o devolvido pelo TikTok; nome de exibição "yeaax").
 - [ ] Etapa 4 — UI da conta conectada: botão "Conectar TikTok" sem pedir @, `channels.external_id` (open_id),
       avatar (liberar o CDN do TikTok na CSP, com justificativa), canal `expired` quando o refresh falhar,
       botão para cancelar o login em andamento (`tiktokCancelConnect`).

@@ -59,7 +59,8 @@ Nenhuma nova; complemento da DEC-027 (validação real e endurecimento).
 
 ### Pendências
 
-- Confirmar a persistência `Local` (reconectar e conferir o cofre) e o @ `yeeax`.
+- Nenhuma da etapa 3. Confirmado depois: credencial regravada com "Persistência de máquina local"; conta continua
+  conectada após fechar e reabrir o app; Sincronizar ok; `@yeeax` é a conta principal do usuário.
 
 ### Próximo passo
 
