@@ -4,29 +4,33 @@ Toda decisão arquitetural relevante entra aqui **antes** ou **junto** do códig
 **Data · Decisão · Motivo · Alternativas consideradas · Impactos.** Decisões substituídas não são apagadas:
 marque como _Substituída por DEC-XXX_.
 
-| Id      | Decisão                                                                | Status     |
-| ------- | ---------------------------------------------------------------------- | ---------- |
-| DEC-001 | SQLite local via `tauri-plugin-sql`                                    | Ativa      |
-| DEC-002 | Tauri 2 + React + TypeScript + Vite                                    | Ativa      |
-| DEC-003 | Regras de negócio em TypeScript; Rust só para sistema                  | Ativa      |
-| DEC-004 | Tailwind CSS 4 + componentes próprios + lucide-react                   | Ativa      |
-| DEC-005 | TanStack Query; sem Redux; Zustand só com necessidade real             | Ativa      |
-| DEC-006 | Mídia referenciada pelo caminho original, sem cópia                    | Ativa      |
-| DEC-007 | Enums validados na aplicação, sem `CHECK` no SQLite                    | Ativa      |
-| DEC-008 | Sem transações entre chamadas ao banco (pool do plugin)                | Ativa      |
-| DEC-009 | Modo preview no navegador com SQLite WASM (só em dev)                  | Ativa      |
-| DEC-010 | Drag-and-drop HTML5 no calendário (`dragDropEnabled: false`)           | Ativa      |
-| DEC-011 | React Router com HashRouter                                            | Ativa      |
-| DEC-012 | Integrações como interfaces + mocks; só APIs oficiais                  | Ativa      |
-| DEC-013 | Dados de demonstração com prefixo `demo-`, seed único e removível      | Ativa      |
-| DEC-014 | Testes com Vitest + `node:sqlite` usando as migrations reais           | Ativa      |
-| DEC-015 | Node 24 LTS e TypeScript 6.0 (não 7.x)                                 | Ativa      |
-| DEC-016 | Asset protocol com escopo vazio e autorização por arquivo              | Ativa      |
-| DEC-017 | Metadados de vídeo via `<video preload="metadata">` até o ffprobe      | Provisória |
-| DEC-018 | Miniaturas capturadas pelo WebView2 e gravadas pelo Rust               | Provisória |
-| DEC-019 | Publicação sempre com consentimento por post; Auto Schedule só sugere  | Ativa      |
-| DEC-020 | Credenciais do próprio usuário ("traga seu app") no Credential Manager | Ativa      |
-| DEC-021 | Logs em arquivo com tauri-plugin-log                                   | Ativa      |
+| Id      | Decisão                                                                | Status                                   |
+| ------- | ---------------------------------------------------------------------- | ---------------------------------------- |
+| DEC-001 | SQLite local via `tauri-plugin-sql`                                    | Ativa                                    |
+| DEC-002 | Tauri 2 + React + TypeScript + Vite                                    | Ativa                                    |
+| DEC-003 | Regras de negócio em TypeScript; Rust só para sistema                  | Ativa                                    |
+| DEC-004 | Tailwind CSS 4 + componentes próprios + lucide-react                   | Ativa                                    |
+| DEC-005 | TanStack Query; sem Redux; Zustand só com necessidade real             | Ativa                                    |
+| DEC-006 | Mídia referenciada pelo caminho original, sem cópia                    | Ativa                                    |
+| DEC-007 | Enums validados na aplicação, sem `CHECK` no SQLite                    | Ativa                                    |
+| DEC-008 | Sem transações entre chamadas ao banco (pool do plugin)                | Ativa                                    |
+| DEC-009 | Modo preview no navegador com SQLite WASM (só em dev)                  | Ativa                                    |
+| DEC-010 | Drag-and-drop HTML5 no calendário (`dragDropEnabled: false`)           | Ativa                                    |
+| DEC-011 | React Router com HashRouter                                            | Ativa                                    |
+| DEC-012 | Integrações como interfaces + mocks; só APIs oficiais                  | Ativa                                    |
+| DEC-013 | Dados de demonstração com prefixo `demo-`, seed único e removível      | Ativa                                    |
+| DEC-014 | Testes com Vitest + `node:sqlite` usando as migrations reais           | Ativa                                    |
+| DEC-015 | Node 24 LTS e TypeScript 6.0 (não 7.x)                                 | Ativa                                    |
+| DEC-016 | Asset protocol com escopo vazio e autorização por arquivo              | Ativa                                    |
+| DEC-017 | Metadados de vídeo via `<video preload="metadata">` até o ffprobe      | Provisória                               |
+| DEC-018 | Miniaturas capturadas pelo WebView2 e gravadas pelo Rust               | Provisória                               |
+| DEC-019 | Publicação sempre com consentimento por post; Auto Schedule só sugere  | Ativa                                    |
+| DEC-020 | Credenciais do próprio usuário ("traga seu app") no Credential Manager | Substituída parcialmente por DEC-023/024 |
+| DEC-021 | Logs em arquivo com tauri-plugin-log                                   | Ativa                                    |
+| DEC-022 | OpenAI via Rust com chave no Credential Manager; "Postar com IA"       | Ativa                                    |
+| DEC-023 | Backend mínimo `api.yeaax.xyz` (Vercel) só para segredos do app        | Ativa                                    |
+| DEC-024 | OAuth TikTok Web com callback HTTPS repassado ao loopback do desktop   | Ativa                                    |
+| DEC-025 | Nome exibido "Yeaax Manager"; identificador interno mantido            | Ativa                                    |
 
 ---
 
@@ -235,6 +239,10 @@ marque como _Substituída por DEC-XXX_.
 
 ## DEC-020 — Credenciais do próprio usuário no Credential Manager
 
+_Substituída parcialmente por DEC-023 e DEC-024 (2026-10-13): o app do TikTok passa a ser o app oficial "Yeaax
+Manager", com o client secret no backend mínimo. Continua valendo: tokens só no Credential Manager do desktop;
+Instagram com token do painel enquanto não for revisto._
+
 - **Data:** 2026-10-07
 - **Decisão:** o usuário registra **seus próprios apps de desenvolvedor** (TikTok for Developers e Meta). Client
   key/secret e tokens são informados em Configurações e guardados pelo lado Rust no **Credential Manager do
@@ -284,3 +292,66 @@ marque como _Substituída por DEC-XXX_.
   OpenAI escolhida pela saída estruturada garantida).
 - **Impactos:** novas dependências Rust (`reqwest`, `keyring-core`, `windows-native-keyring-store`); comandos
   `secret_set/has/delete` e `ai_chat_completion`; custo por post estimado em frações de centavo.
+
+## DEC-023 — Backend mínimo em `api.yeaax.xyz` só para segredos do app
+
+- **Data:** 2026-10-13
+- **Decisão:**
+  1. Existe um **backend mínimo**, Node.js + TypeScript, na pasta `backend/` deste repositório, tratado como
+     **serviço separado** do app desktop: `package.json`, testes e deploy próprios, publicado como um **projeto
+     Vercel separado** (Vercel Functions) no domínio `https://api.yeaax.xyz`. O site institucional continua em
+     `https://yeaax.xyz` (termos, privacidade, página do projeto).
+  2. O backend só faz o que **exige** um servidor público: callback OAuth HTTPS, troca de `code` por token, refresh
+     e revogação (todos usam o `client_secret`) e, no futuro, webhooks e a API/MCP.
+  3. **Sem banco e sem estado**: o backend não guarda tokens, sessões nem dados do usuário. Os tokens são devolvidos
+     por HTTPS ao processo Rust do desktop, que os guarda no Credential Manager (DEC-022/024).
+  4. O vídeo **nunca** passa pelo backend: o upload vai do desktop direto para a API da plataforma.
+  5. Segredos (`TIKTOK_CLIENT_SECRET` etc.) só existem nas variáveis de ambiente da Vercel; `backend/.env.example`
+     com valores vazios documenta os nomes. O app desktop não tem nenhum segredo de app.
+- **Motivo:** o TikTok exige `client_secret` na troca do código e no refresh, inclusive para desktop, e diz que ele
+  deve ficar num servidor; embutir no binário o tornaria extraível. O usuário quer callback HTTPS no domínio
+  próprio (exigência prática do Login Kit Web e do App Review). Manter o servidor sem estado preserva o local-first.
+- **Alternativas:** secret no binário (extraível — viola SECURITY.md); cada usuário registrar o próprio app
+  (DEC-020 — inviável para um app oficial revisado pelo TikTok); backend com banco e contas de usuário (vira SaaS,
+  fora do escopo); Cloudflare Workers (equivalente; Vercel escolhida porque o site já está lá).
+- **Impactos:** princípio "sem servidor" ajustado em PROJECT.md para "backend mínimo e sem estado"; nova pasta
+  `backend/`; o desktop passa a depender do backend para **conectar e renovar** contas (publicar com token válido
+  não depende dele). O plano Hobby da Vercel é para uso não comercial — rever se o projeto virar produto.
+
+## DEC-024 — OAuth TikTok (Login Kit Web) com callback HTTPS repassado ao loopback do desktop
+
+- **Data:** 2026-10-13
+- **Decisão:**
+  1. Login Kit configurado como **Web**, redirect `https://api.yeaax.xyz/auth/tiktok/callback`.
+  2. Fluxo: o Rust gera um `state` aleatório (CSPRNG) e abre um listener em `127.0.0.1:<porta aleatória>`; abre o
+     navegador do sistema na URL de autorização com `state = <aleatório>.<porta>`. O TikTok redireciona para o
+     callback HTTPS; o backend **não troca nada**: valida o formato do `state` e responde `302` para
+     `http://127.0.0.1:<porta>/tiktok/callback?code=…&state=…` (host fixo, porta numérica 1024–65535 — sem open
+     redirect). O Rust confere o `state`, envia o `code` ao backend (`POST /auth/tiktok/token`), recebe os tokens
+     na resposta HTTPS e grava no Credential Manager (`tiktok_token:<open_id>`). O listener expira em poucos minutos.
+  3. O frontend nunca vê `code` nem tokens: só recebe o perfil (`ConnectResult`).
+  4. Todas as chamadas autenticadas (`/v2/user/info/`, `creator_info`, init, upload em chunks, status) são feitas
+     pelo **Rust direto para `open.tiktokapis.com`**; o backend só entra em token/refresh/revoke.
+  5. Escopos: `user.info.basic`, `user.info.profile` (para o @), `video.publish`, `video.upload`.
+- **Motivo:** o Login Kit Web exige redirect HTTPS estático, então o callback não pode ir direto ao desktop; repassar
+  só o `code` (de uso único e curta duração) mantém os tokens fora do navegador e do servidor.
+- **Alternativas:** Login Kit Desktop com redirect `127.0.0.1` direto (dispensa o repasse, mas o usuário optou por
+  Web e callback no domínio); backend trocar o code e o desktop buscar os tokens por polling (exigiria estado no
+  servidor); entregar tokens ao desktop via URL (vazaria no histórico do navegador).
+- **Riscos:** o fluxo Web não documenta PKCE (`code_verifier` é "required for mobile and desktop app only") — a
+  proteção vem do `state` verificado pelo desktop e do `code` de uso único entregue só ao loopback; se o TikTok
+  aceitar PKCE no fluxo Web (testar no sandbox), usar como defesa extra, lembrando que o desafio do TikTok é SHA-256
+  em **hex**. Sem auditoria, só posts `SELF_ONLY` em conta privada.
+- **Impactos:** novos comandos Rust de OAuth/publicação; nomes de segredo dinâmicos validados por padrão
+  (`tiktok_token:[A-Za-z0-9_-]{1,64}`); coluna `channels.external_id` (open_id) em migration futura.
+
+## DEC-025 — Nome exibido "Yeaax Manager"; identificador interno mantido
+
+- **Data:** 2026-10-13
+- **Decisão:** o nome exibido passa a ser **Yeaax Manager** (janela, sidebar, `productName`, títulos, docs). O
+  identificador `com.socialmanager.desktop`, o nome do crate/binário, o arquivo `social-manager.db`, o serviço do
+  Credential Manager e o nome do arquivo de log **não mudam**.
+- **Motivo:** o app registrado no TikTok se chama "Yeaax Manager"; mudar o identificador trocaria a pasta de dados
+  (`%APPDATA%`) e o cofre, e o usuário perderia banco, miniaturas e chaves.
+- **Alternativas:** renomear tudo com migração de pasta (risco sem benefício agora).
+- **Impactos:** o instalador NSIS passa a usar o novo nome; caminhos de dados permanecem os mesmos.

@@ -22,7 +22,38 @@
 
 - **Regras de negócio vivem no TypeScript.** O Rust cuida apenas do que exige o sistema operacional:
   banco (via plugin), diálogos, inspeção de arquivos, processos externos e, no futuro, credenciais e OAuth.
-- **Tudo é local.** Nenhuma chamada de rede é feita nesta versão.
+- **Local-first.** Dados, vídeos e tokens ficam no computador. Chamadas de rede saem só do Rust: OpenAI
+  (DEC-022), APIs das plataformas e o backend mínimo (DEC-023).
+
+### Backend mínimo (`backend/` → `https://api.yeaax.xyz`)
+
+Serviço **separado** do app desktop (projeto Vercel próprio, `package.json` próprio), mas no mesmo repositório.
+Sem banco e sem estado: existe só porque o OAuth Web exige callback HTTPS e o `client_secret` não pode ir no app.
+
+```
+ Desktop (Rust)  ──HTTPS──►  api.yeaax.xyz (Vercel Functions)  ──►  TikTok OAuth (token/refresh/revoke)
+      │                         └─ futuro: Meta/Instagram, webhooks, API/MCP
+      └────────HTTPS (token do usuário, upload do vídeo)────────►  open.tiktokapis.com
+```
+
+| Rota (planejada)            | Função                                                                     |
+| --------------------------- | -------------------------------------------------------------------------- |
+| `GET /health`               | verificação                                                                |
+| `GET /auth/tiktok/config`   | `client_key`, escopos e `redirect_uri` (dados públicos)                    |
+| `GET /auth/tiktok/callback` | repassa `code`/`state` ao loopback `127.0.0.1:<porta>` do desktop (302)    |
+| `POST /auth/tiktok/token`   | troca `code` por tokens com o `client_secret`; devolve ao Rust, não guarda |
+| `POST /auth/tiktok/refresh` | renova o access token com o `client_secret`                                |
+| `POST /auth/tiktok/revoke`  | revoga o token ao desconectar                                              |
+
+### Fluxo OAuth do TikTok (DEC-024)
+
+1. Rust gera `state` (CSPRNG) e abre listener em `127.0.0.1:<porta aleatória>`; abre o navegador do sistema em
+   `tiktok.com/v2/auth/authorize/` com `redirect_uri=https://api.yeaax.xyz/auth/tiktok/callback` e
+   `state=<aleatório>.<porta>`.
+2. Usuário autoriza → TikTok → callback HTTPS → `302` para `http://127.0.0.1:<porta>/tiktok/callback`.
+3. Rust confere o `state`, chama `POST /auth/tiktok/token`, grava os tokens no Credential Manager
+   (`tiktok_token:<open_id>`) e busca o perfil em `/v2/user/info/`.
+4. O frontend recebe apenas o perfil (`ConnectResult`) e cria/atualiza o canal.
 
 ## Camadas e dependências
 
@@ -110,6 +141,8 @@ src-tauri/
 ├── migrations/*.sql        Schema (fonte única para Rust, preview e testes)
 ├── capabilities/default.json  Permissões mínimas da janela
 └── tauri.conf.json         Janela, CSP, asset protocol, bundle
+
+backend/                    Serviço separado (Vercel, api.yeaax.xyz) — OAuth e client secrets, sem estado (DEC-023)
 ```
 
 ## Fluxo de dados (exemplo: agendar um post)
@@ -136,12 +169,12 @@ O modo preview existe apenas em desenvolvimento: o build de produção não incl
 
 ## Providers (integrações)
 
-| Interface        | Implementação atual                                                                                                          | Futuro                                                        |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| `SocialProvider` | `TikTokProvider` / `InstagramProvider` (ambos `extends MockSocialProvider`)                                                  | APIs oficiais via comandos Rust; tokens no Credential Manager |
-| `AIProvider`     | `OpenAIProvider` (o Rust faz a chamada com a chave do cofre) e `MockAIProvider` (regras locais), escolhidos pelo `AIService` | outros provedores compatíveis                                 |
-| `VideoProcessor` | `getStatus` real (detecção), demais operações lançam `NOT_AVAILABLE`                                                         | FFmpeg/ffprobe como jobs no Rust                              |
-| `DesktopBridge`  | `tauriDesktopBridge` / `previewDesktopBridge`                                                                                | + credenciais, notificações                                   |
+| Interface        | Implementação atual                                                                                                          | Futuro                                                                                         |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `SocialProvider` | `TikTokProvider` / `InstagramProvider` (ambos `extends MockSocialProvider`)                                                  | APIs oficiais via comandos Rust; tokens no Credential Manager; secret no backend (DEC-023/024) |
+| `AIProvider`     | `OpenAIProvider` (o Rust faz a chamada com a chave do cofre) e `MockAIProvider` (regras locais), escolhidos pelo `AIService` | outros provedores compatíveis                                                                  |
+| `VideoProcessor` | `getStatus` real (detecção), demais operações lançam `NOT_AVAILABLE`                                                         | FFmpeg/ffprobe como jobs no Rust                                                               |
+| `DesktopBridge`  | `tauriDesktopBridge` / `previewDesktopBridge`                                                                                | + credenciais, notificações                                                                    |
 
 O registro (`createSocialProviders`, `createAIProvider`) é o único ponto que conhece as classes concretas.
 

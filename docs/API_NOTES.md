@@ -37,6 +37,33 @@ públicos. Ver decisões DEC-019 e DEC-020.
 
 ## TikTok
 
+### Verificação de 2026-10-13 (fase TikTok real)
+
+- Fontes: [Login Kit Web](https://developers.tiktok.com/doc/login-kit-web),
+  [Login Kit Desktop](https://developers.tiktok.com/doc/login-kit-desktop),
+  [Token management](https://developers.tiktok.com/doc/oauth-user-access-token-management),
+  [Sandbox](https://developers.tiktok.com/doc/add-a-sandbox), [Scopes](https://developers.tiktok.com/doc/tiktok-api-scopes)
+- **Redirect Web:** até 10 URIs, < 512 caracteres, absolutos, `https`, **estáticos** (sem query) e sem fragmento.
+  Callback escolhido: `https://api.yeaax.xyz/auth/tiktok/callback`.
+- **Redirect Desktop** (alternativa não usada): só `localhost`/`127.0.0.1`, porta obrigatória (aceita `*`); PKCE
+  obrigatório, só `S256`, e o `code_challenge` é o SHA-256 **em hex** (não base64url como no RFC 7636).
+- **Autorização:** `https://www.tiktok.com/v2/auth/authorize/` com `client_key`, `scope` (separado por vírgula),
+  `response_type=code`, `redirect_uri`, `state`, `disable_auto_auth` (opcional). Callback recebe `code`, `scopes`,
+  `state` ou `error`/`error_description`.
+- **Token:** `POST https://open.tiktokapis.com/v2/oauth/token/` (`application/x-www-form-urlencoded`) com
+  `client_key`, `client_secret`, `code` (decodificado), `grant_type=authorization_code`, `redirect_uri`;
+  `code_verifier` "required for mobile and desktop app only". Resposta: `open_id`, `scope`, `access_token`,
+  `expires_in` (86400), `refresh_token`, `refresh_expires_in` (31536000), `token_type=Bearer`.
+- **Refresh:** mesmo endpoint, `grant_type=refresh_token` + `client_secret`; se vier refresh token diferente, usar o novo.
+- **Revoke:** `POST /v2/oauth/revoke/` com `client_key`, `client_secret`, `token`; corpo vazio no sucesso.
+- **Sandbox:** até 5 por app, até 10 contas próprias como target users (aceitam os termos; podem levar 1 h para
+  aparecer); sem App Review; **não** permite publicar vídeo público. Configuração pode ser importada para o draft
+  de produção.
+- **Escopos:** `user.info.basic` (open_id, avatar, nome de exibição); `user.info.profile` (link do perfil, bio,
+  verificado e o `username` — **confirmar o campo** na resposta de `/v2/user/info/`); `video.publish` (Direct Post +
+  status); `video.upload` (rascunho + status).
+- Impacto: DEC-023 (secret no backend) e DEC-024 (callback HTTPS repassado ao loopback).
+
 ### Content Posting API — modos e auditoria
 
 - Data: 2026-10-07 · Fontes: [Get started](https://developers.tiktok.com/doc/content-posting-api-get-started),
@@ -157,6 +184,8 @@ públicos. Ver decisões DEC-019 e DEC-020.
 ## Pendências de verificação
 
 - [ ] TikTok: restrições de app não auditado valem para o modo Upload (rascunho)? Testar no sandbox.
+- [ ] TikTok: o fluxo Web aceita `code_challenge`/`code_verifier` (defesa extra)? Testar no sandbox.
+- [ ] TikTok: nome exato do campo do @ (`username`) em `/v2/user/info/` com `user.info.profile`.
 - [ ] TikTok: requisitos e prazo da auditoria para um app pessoal (URLs de termos/privacidade, vídeo de demonstração).
 - [ ] TikTok: aplicar o logo do próprio criador (FFmpeg) é aceito pelas diretrizes?
 - [ ] Instagram: validade do token gerado no painel e confirmação oficial da exigência de HTTPS no redirect.

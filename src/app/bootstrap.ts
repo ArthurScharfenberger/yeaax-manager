@@ -19,7 +19,7 @@ async function createDbClient(mode: RuntimeMode): Promise<DbClient> {
 
   throw new AppError(
     'NOT_AVAILABLE',
-    'Esta interface precisa ser aberta pelo aplicativo desktop do Social Manager.',
+    'Esta interface precisa ser aberta pelo aplicativo desktop do Yeaax Manager.',
   );
 }
 
@@ -34,7 +34,7 @@ async function bootstrap(): Promise<AppServices> {
   const services = createAppServices({ db, desktop, mode });
 
   await services.demo.seedIfNeeded();
-  logger.info('Social Manager iniciado', { version: APP_VERSION, mode });
+  logger.info('Yeaax Manager iniciado', { version: APP_VERSION, mode });
   return services;
 }
 

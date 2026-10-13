@@ -5,6 +5,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); 
 
 ## [Não lançado]
 
+### Alterado
+
+- Nome exibido do app passa a ser **Yeaax Manager** (janela, sidebar, instalador). Identificador interno, pasta de
+  dados, banco e cofre de credenciais continuam os mesmos (DEC-025).
+- `.env.example` da raiz não lista mais client secrets: eles ficarão só no backend mínimo (DEC-023).
+- Arquitetura da integração real do TikTok documentada: backend mínimo sem estado em `api.yeaax.xyz` e OAuth Web
+  com callback HTTPS repassado ao desktop (DEC-023, DEC-024).
+
 ### Adicionado
 
 - Miniaturas reais na biblioteca: capturadas pelo WebView2 durante a importação (sem FFmpeg) e gravadas em

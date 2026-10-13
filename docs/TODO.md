@@ -6,16 +6,25 @@ Repositório remoto configurado: [yeaax-manager](https://github.com/ArthurScharf
 
 ## Agora
 
+Fase atual: **TikTok real** (ordem em `docs/INTEGRATIONS.md` → TikTok).
+
+- [ ] Etapa 2 — `backend/` (Node + TypeScript, Vercel Functions): `GET /health`, `GET /auth/tiktok/config`,
+      `GET /auth/tiktok/callback`, `POST /auth/tiktok/{token,refresh,revoke}`, testes e `backend/.env.example`.
+- [ ] Usuário — TikTok Developer Portal: Login Kit **Web** com redirect
+      `https://api.yeaax.xyz/auth/tiktok/callback`; Content Posting API com Direct Post; escopos `user.info.basic`,
+      `user.info.profile`, `video.publish`, `video.upload`; termos/privacidade em `yeaax.xyz`; sandbox com a própria
+      conta como target user (conta **privada** para os testes).
+- [ ] Usuário — Vercel/DNS: projeto separado com Root Directory `backend`, domínio `api.yeaax.xyz` (CNAME) e
+      variáveis secretas (`TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`, `TIKTOK_REDIRECT_URI`, `TIKTOK_SCOPES`).
+- [ ] Etapas 3–7 — OAuth no Rust, conta conectada, compositor TikTok, publicação, status/demonstração.
 - [ ] Usuário: criar a chave em platform.openai.com, colar em Configurações → IA, "Testar conexão" e usar
       "Postar com IA" num vídeo real (validar qualidade das legendas e leitura da miniatura).
-- [ ] Instagram real (Fase 3): app na Meta, token do painel no cofre, publicação de Reels por upload resumável.
+- [ ] Instagram real — **depois do TikTok**: app na Meta, token do painel no cofre, Reels por upload resumável.
 - [ ] Validar no app desktop: página Posts, duplicar e o arquivo de log sendo criado (reiniciar o `app:dev`,
       pois o Rust mudou).
 - [ ] Confirmar no desktop a miniatura automática ao importar um vídeo novo e que as miniaturas continuam
       visíveis após reabrir o app (a captura em si já foi validada com o `white.mp4`).
 - [ ] Importar `.mov` e `.webm` reais (`.mp4`, preview e persistência já validados).
-- [ ] **Decisões do usuário (pesquisa de APIs):** (1) as contas do Instagram são profissionais (Business/Creator)?
-      (2) solicitar auditoria do app no TikTok (necessária para posts públicos) ou usar o modo rascunho?
 - [ ] Decidir a pasta das versões processadas pelo FFmpeg (miniaturas já ficam em `%APPDATA%\com.socialmanager.desktop\thumbnails\`).
 
 ## Próximo
@@ -30,6 +39,5 @@ Repositório remoto configurado: [yeaax-manager](https://github.com/ArthurScharf
 - [ ] Motor do Auto Schedule (Fase 2) usando `planDailySlots` e as regras salvas.
 - [ ] Ícone na bandeja do sistema e agendador local.
 - [ ] Hash de arquivo para detectar vídeos duplicados com nomes diferentes.
-- [ ] Credential Manager (crate `keyring`) antes de qualquer OAuth.
 - [ ] Tema escuro (tokens já centralizados em `src/styles/index.css`).
 - [ ] Atalhos de teclado (Ctrl+N novo post, Ctrl+K busca).

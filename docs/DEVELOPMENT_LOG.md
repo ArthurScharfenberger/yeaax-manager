@@ -18,6 +18,57 @@ Formato:
 
 ---
 
+## Sessão 2026-10-13 (2) — Auditoria e arquitetura do TikTok real (etapa 1)
+
+### Objetivo
+
+Início da fase "protótipo + mocks → app real + TikTok API + domínio + backend mínimo". Auditar o estado atual,
+propor a arquitetura e documentar as decisões antes de escrever código de integração.
+
+### Alterações realizadas
+
+- Auditoria: `npm run check` (96 testes) e `cargo test` (13 testes) verdes. TikTok 100% mock
+  (`TikTokProvider extends MockSocialProvider`); **não existe publicador** (`publish()` não é chamado); canal sem id
+  externo; posts sem opções por plataforma; cofre com lista fixa de um segredo.
+- Verificadas as páginas oficiais atuais do TikTok (Login Kit Web/Desktop, tokens, sandbox, escopos) →
+  `API_NOTES.md` ("Verificação de 2026-10-13").
+- Decisões novas: DEC-023 (backend mínimo sem estado em `api.yeaax.xyz`, pasta `backend/`, projeto Vercel
+  separado), DEC-024 (Login Kit Web; callback HTTPS repassa o `code` ao loopback do desktop; tokens só no
+  Credential Manager; chamadas de API e upload direto do Rust), DEC-025 (nome exibido "Yeaax Manager", identificador
+  mantido). DEC-020 marcada como substituída parcialmente. DEC-022 entrou no índice (faltava).
+- Docs atualizados: PROJECT (princípios "sem servidor" → backend mínimo), ARCHITECTURE (backend + fluxo OAuth),
+  SECURITY (secrets no backend, OAuth, backend), INTEGRATIONS (plano TikTok em 8 etapas), ROADMAP, TODO, CHANGELOG,
+  README, AGENTS (regra de secrets no backend).
+- Nome exibido trocado para "Yeaax Manager" (`productName`, título da janela, `APP_NAME`, `index.html`, mensagens).
+- `.env.example` da raiz sem client secrets.
+
+### Arquivos importantes
+
+`docs/DECISIONS.md`, `docs/ARCHITECTURE.md`, `docs/SECURITY.md`, `docs/INTEGRATIONS.md`, `docs/API_NOTES.md`,
+`.env.example`, `src-tauri/tauri.conf.json`, `src/lib/runtime.ts`.
+
+### Decisões
+
+DEC-023, DEC-024, DEC-025 (respostas do usuário: Login Kit Web; backend em `backend/` como serviço separado na
+Vercel; incluir `user.info.profile`; renomear só o nome exibido).
+
+### Problemas encontrados
+
+- O fluxo Web do TikTok não documenta PKCE e o PKCE do Desktop usa hex — a segurança do repasse vem do `state`
+  validado pelo desktop; testar PKCE no sandbox como defesa extra.
+- Sandbox não permite vídeo público; sem auditoria só `SELF_ONLY` em conta privada (suficiente para a demonstração).
+
+### Pendências
+
+- Usuário: configurar o portal do TikTok, o projeto Vercel e o DNS de `api.yeaax.xyz` (lista em `docs/TODO.md`).
+
+### Próximo passo
+
+Etapa 2: criar `backend/` (Node + TypeScript, Vercel Functions, Zod, Vitest) com `health`, `auth/tiktok/config`,
+`callback` (repasse para `127.0.0.1:<porta>` validado), `token`, `refresh`, `revoke` e `backend/.env.example`.
+
+---
+
 ## Sessão 2026-10-13 — Repositório no GitHub
 
 ### Objetivo

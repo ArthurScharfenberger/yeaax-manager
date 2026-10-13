@@ -50,7 +50,7 @@ const TONE_NAMES: Record<CaptionRequest['tone'], string> = {
   professional: 'profissional',
 };
 
-const PLAN_SYSTEM_PROMPT = `Você é o assistente de publicação do Social Manager, um app que gerencia canais do TikTok e do Instagram.
+const PLAN_SYSTEM_PROMPT = `Você é o assistente de publicação do Yeaax Manager, um app que gerencia canais do TikTok e do Instagram.
 Você recebe um vídeo (miniatura + metadados), a lista de canais disponíveis e um pedido do usuário. Monte um plano de publicação que cumpra o pedido.
 
 Regras:

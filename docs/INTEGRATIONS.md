@@ -4,12 +4,12 @@ Status possíveis: `NOT_STARTED` · `MOCK` · `IN_PROGRESS` · `ACTIVE` · `BLOC
 O mesmo status aparece na UI (Configurações → Integrações), definido em `src/lib/integrations.ts` —
 **mantenha os dois em sincronia.**
 
-| Integração | Status        | Código                                                                     | Próximo passo                           |
-| ---------- | ------------- | -------------------------------------------------------------------------- | --------------------------------------- |
-| TikTok     | `MOCK`        | `src/services/social/TikTokProvider.ts`                                    | Fase 3: Login Kit + Content Posting API |
-| Instagram  | `MOCK`        | `src/services/social/InstagramProvider.ts`                                 | Fase 3: Instagram Graph API             |
-| OpenAI     | `IN_PROGRESS` | `src/services/ai/OpenAIProvider.ts`, `src-tauri/src/commands/ai.rs`        | Validar com a chave real do usuário     |
-| FFmpeg     | `NOT_STARTED` | `src/services/media/VideoProcessor.ts`, `src-tauri/src/commands/system.rs` | Fase 2: ffprobe + miniaturas            |
+| Integração | Status        | Código                                                                     | Próximo passo                        |
+| ---------- | ------------- | -------------------------------------------------------------------------- | ------------------------------------ |
+| TikTok     | `MOCK`        | `src/services/social/TikTokProvider.ts`, `backend/` (planejado)            | **Prioridade atual:** OAuth Web real |
+| Instagram  | `MOCK`        | `src/services/social/InstagramProvider.ts`                                 | Fase 3: Instagram Graph API          |
+| OpenAI     | `IN_PROGRESS` | `src/services/ai/OpenAIProvider.ts`, `src-tauri/src/commands/ai.rs`        | Validar com a chave real do usuário  |
+| FFmpeg     | `NOT_STARTED` | `src/services/media/VideoProcessor.ts`, `src-tauri/src/commands/system.rs` | Fase 2: ffprobe + miniaturas         |
 
 ## Regras gerais (valem para todas)
 
@@ -18,29 +18,38 @@ O mesmo status aparece na UI (Configurações → Integrações), definido em `s
 - O domínio só conhece as interfaces (`SocialProvider`, `AIProvider`, `VideoProcessor`). Trocar mock por real
   não pode exigir mudanças em `features/`.
 - Segredos (client secret, API key) e tokens **nunca** chegam ao frontend: OAuth, armazenamento de tokens e
-  chamadas autenticadas ficam no lado Rust; tokens no Credential Manager (ver SECURITY.md).
+  chamadas autenticadas ficam no lado Rust; tokens no Credential Manager. Client secrets das plataformas ficam
+  só no backend mínimo `api.yeaax.xyz` (DEC-023; ver SECURITY.md).
 - Respostas externas são não confiáveis: validar com Zod antes de usar; nunca logar payloads com tokens.
 - Ao mudar o status de uma integração: atualizar esta tabela, `src/lib/integrations.ts`, CHANGELOG e API_NOTES.
 
 ---
 
-## TikTok — `MOCK`
+## TikTok — `MOCK` (prioridade atual)
 
 - **Contrato:** `SocialProvider` (connect, disconnect, getProfile, publish, getPublicationStatus, getAnalytics).
-- **Hoje:** `TikTokProvider extends MockSocialProvider` — latência simulada, nenhuma rede.
-- **Viabilidade (pesquisa de 2026-10-07, ver API_NOTES.md):** envio do arquivo local é suportado
-  (`FILE_UPLOAD` em chunks); login desktop com PKCE e redirect em `localhost` é suportado. **Bloqueio:** sem
-  auditoria do app, só posts privados (`SELF_ONLY`) e a conta precisa estar privada.
-- **Plano (Fase 3):**
-  1. Usuário registra o próprio app no TikTok for Developers (DEC-020); client key/secret no Credential Manager.
-  2. OAuth (Login Kit desktop) no Rust: navegador do sistema → callback em `http://127.0.0.1:<porta>` → troca do
-     code com PKCE. Access token 24 h, refresh 365 dias (renovação automática).
-  3. Compositor com a UX obrigatória do TikTok (privacidade sem padrão, interações, divulgação comercial,
-     confirmação de música, prévia) e consulta a `creator_info` antes de postar (DEC-019).
-  4. Publicação: _Direct Post_ (app auditado) ou _Upload_ para rascunhos (sem auditoria, se o sandbox confirmar);
-     upload sequencial em chunks de 5–64 MB; respeitar 6 req/min e as cotas diárias.
-  5. Analytics a partir dos endpoints oficiais disponíveis para o escopo concedido.
-- **Decisão do usuário pendente:** solicitar a auditoria do app (necessária para posts públicos) ou usar o modo rascunho.
+- **Hoje:** `TikTokProvider extends MockSocialProvider` — latência simulada, nenhuma rede. Ainda **não há
+  publicador**: `publish()` não é chamado por nenhum caso de uso.
+- **App:** "Yeaax Manager" no TikTok for Developers; Login Kit **Web**; produtos Login Kit + Content Posting API;
+  escopos `user.info.basic`, `user.info.profile`, `video.publish`, `video.upload`. Termos e privacidade em
+  `yeaax.xyz`. Sem auditoria: sandbox com até 10 contas próprias (target users), posts só `SELF_ONLY` em conta
+  privada — suficiente para o vídeo do App Review.
+- **Arquitetura (DEC-023/024):** callback `https://api.yeaax.xyz/auth/tiktok/callback` repassa o `code` ao loopback
+  do desktop; o backend troca/renova/revoga com o `client_secret`; tokens no Credential Manager; chamadas de
+  API e upload direto do Rust para `open.tiktokapis.com`. Ver ARCHITECTURE.md.
+- **Ordem de implementação:**
+  1. [x] Documentação e decisões (DEC-023, DEC-024, DEC-025).
+  2. [ ] Backend `backend/`: `health`, `auth/tiktok/{config,callback,token,refresh,revoke}` + testes; deploy na
+         Vercel em `api.yeaax.xyz` (usuário).
+  3. [ ] Rust OAuth: `state`, listener loopback, navegador do sistema, troca via backend, tokens no cofre.
+  4. [ ] Conta conectada: migration 0002 (`channels.external_id`), `connect/getProfile/disconnect` reais, botão
+         "Conectar TikTok". Primeiro teste ponta a ponta no sandbox.
+  5. [ ] Compositor TikTok (UX obrigatória — DEC-019): `creator_info`, nickname, privacidade sem padrão, toggles
+         desmarcados, divulgação comercial, aviso de música, prévia; `posts.platform_options`.
+  6. [ ] Publicação: init `FILE_UPLOAD` + chunks sequenciais com progresso, polling de status,
+         `publication_attempts`, "Publicar agora".
+  7. [ ] Tela de status/resultado e roteiro do vídeo do App Review.
+  8. [ ] App Review (usuário). Depois: agendador local e Instagram.
 
 ## Instagram — `MOCK`
 

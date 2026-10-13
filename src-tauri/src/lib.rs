@@ -1,4 +1,4 @@
-//! Núcleo desktop do Social Manager.
+//! Núcleo desktop do Yeaax Manager (nome exibido; identificador `com.socialmanager.desktop` — DEC-025).
 //!
 //! O Rust fica restrito a responsabilidades de sistema: banco SQLite (plugin SQL +
 //! migrations), diálogos nativos, inspeção de arquivos locais, detecção de ferramentas
@@ -56,5 +56,5 @@ pub fn run() {
             commands::ai::ai_chat_completion,
         ])
         .run(tauri::generate_context!())
-        .expect("falha ao iniciar o Social Manager");
+        .expect("falha ao iniciar o Yeaax Manager");
 }

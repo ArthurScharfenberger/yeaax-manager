@@ -48,7 +48,7 @@ export function App() {
   if (boot.status === 'error') {
     return (
       <ErrorScreen
-        title="Não foi possível iniciar o Social Manager"
+        title="Não foi possível iniciar o Yeaax Manager"
         error={boot.error}
         onRetry={() => {
           resetBootstrap();

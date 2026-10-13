@@ -52,12 +52,16 @@ Marque `[x]` ao concluir (com a versão entre parênteses quando fizer sentido).
 ## Fase 3 — integrações oficiais
 
 - [x] Pesquisa de viabilidade das APIs oficiais (2026-10-07 — ver API_NOTES.md)
-- [ ] Credenciais do próprio usuário + tokens no Credential Manager (crate `keyring`) — pré-requisito (DEC-020)
+- [x] Arquitetura da fase TikTok real: backend mínimo, OAuth Web com repasse ao loopback, nome "Yeaax Manager" (DEC-023/024/025, 2026-10-13)
+- [ ] Backend mínimo `backend/` em `api.yeaax.xyz` (Vercel): callback, token, refresh, revoke (DEC-023)
+- [ ] Tokens no Credential Manager por conta (`tiktok_token:<open_id>`) — DEC-024
 - [ ] Compositor com campos por plataforma (UX obrigatória do TikTok, `share_to_feed`/capa no Instagram) + coluna `platform_options`
 - [ ] Validação de especificações por plataforma antes de agendar (duração, tamanho, formato)
 - [ ] Instagram: token do painel + renovação automática + publicação de Reels por upload resumável
-- [ ] TikTok: Login Kit desktop (PKCE) + Content Posting API (Direct Post se auditado; senão rascunhos)
-- [ ] TikTok: auditoria do app (necessária para posts públicos) — decisão do usuário
+- [ ] TikTok: Login Kit **Web** com callback HTTPS + conta real conectada (perfil, @, avatar) — **prioridade**
+- [ ] TikTok: Content Posting API (Direct Post `SELF_ONLY` no sandbox; público após auditoria; rascunho como alternativa)
+- [ ] TikTok: fluxo demonstrável para o vídeo do App Review
+- [ ] TikTok: App Review/auditoria (necessária para posts públicos) — usuário decidiu solicitar
 - [ ] Publicação real + acompanhamento de status (`publication_attempts`)
 - [x] OpenAI: legendas, hashtags e "Postar com IA" com leitura da miniatura (não lançado)
 - [ ] Registro de execuções de IA e custos (`ai_executions`)

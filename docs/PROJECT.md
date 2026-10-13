@@ -1,13 +1,15 @@
-# Social Manager — Visão do projeto
+# Yeaax Manager — Visão do projeto
 
-> Nome provisório. Versão atual: **0.1.0** (fundação).
+> Nome exibido: **Yeaax Manager** (DEC-025; antes "Social Manager"). Versão atual: **0.1.0** (fundação).
+> Site: [yeaax.xyz](https://yeaax.xyz) · backend mínimo: `https://api.yeaax.xyz` (DEC-023).
 
 ## O que é
 
 Uma central pessoal para gerenciar vários canais/perfis de conteúdo no **TikTok** e no **Instagram**.
 Roda como aplicativo desktop no computador do usuário (Windows, inicialmente), com todos os dados
-armazenados localmente. Funciona enquanto o computador está ligado; serviços remotos são uma possibilidade
-de longo prazo, não da fase atual.
+armazenados localmente. Funciona enquanto o computador está ligado. Um **backend mínimo e sem estado**
+(`api.yeaax.xyz`) existe só para o que exige servidor público: callback OAuth HTTPS e uso do client secret das
+plataformas (DEC-023). Agendar com o computador desligado continua sendo longo prazo.
 
 O objetivo de longo prazo é um **Content Automation Engine**: o usuário adiciona conteúdo à biblioteca e o
 sistema ajuda a organizar, preparar (processamento local de vídeo), agendar, publicar e analisar.
@@ -39,9 +41,11 @@ O que já existe está em [ROADMAP.md](ROADMAP.md) (itens marcados) e no [README
 3. **Arquitetura modular** — features por domínio, integrações isoladas.
 4. **Baixo acoplamento** — dependências por interfaces (`SocialProvider`, `AIProvider`, `DesktopBridge`…).
 5. **TypeScript estrito** — sem `any`.
-6. **Nada de overengineering** — sem microserviços, Docker, servidores ou camadas especulativas.
+6. **Nada de overengineering** — sem microserviços, Docker ou camadas especulativas. Servidor só o backend
+   mínimo (DEC-023): sem banco, sem contas de usuário, sem guardar tokens.
 7. **Interface profissional** — sóbria, densa, funcional (ver [DESIGN.md](DESIGN.md)).
-8. **Local-first** — dados no computador do usuário; funciona sem Internet.
+8. **Local-first** — dados e tokens no computador do usuário; tudo que não envolve as plataformas funciona sem
+   Internet. O backend nunca recebe vídeos nem guarda dados.
 9. **Documentação continuamente atualizada** — parte da Definition of Done.
 10. **Preparação para crescimento** — contratos e pontos de extensão claros, sem implementar antes da hora.
 11. **Separação domínio / interface / integrações**.
@@ -51,13 +55,14 @@ O que já existe está em [ROADMAP.md](ROADMAP.md) (itens marcados) e no [README
 
 - Fundação técnica completa (Tauri 2, React, TypeScript strict, SQLite, lint, testes, documentação).
 - Fluxos locais reais: biblioteca, posts, calendário, configurações.
-- Integrações **simuladas** (mocks) com contratos prontos para a implementação real.
+- Integrações **simuladas** (mocks) com contratos prontos para a implementação real; OpenAI real (DEC-022).
+- Em andamento (fase atual): **TikTok real** — Login Kit Web, Content Posting API e fluxo demonstrável para o
+  App Review (DEC-024). Instagram depois.
 
 ## Fora de escopo (por enquanto)
 
-- Docker, Kubernetes, servidores próprios, infraestrutura empresarial, microserviços.
+- Docker, Kubernetes, infraestrutura empresarial, microserviços; transformar o app em SaaS (contas, banco remoto).
 - Funcionamento com o computador desligado (exigiria um serviço remoto — longo prazo).
-- OAuth real, publicação real, chamadas reais à OpenAI.
 - **Scraping, automação de navegador, endpoints não oficiais ou qualquer burla de autenticação** — nunca.
 - Download de conteúdo de terceiros. Importação por URL só "quando tecnicamente e legalmente permitido" (roadmap).
 
@@ -71,5 +76,6 @@ O que já existe está em [ROADMAP.md](ROADMAP.md) (itens marcados) e no [README
 | Post                    | Uma publicação planejada/realizada de uma mídia em um canal.                                    |
 | Histórico (PostHistory) | Registro de eventos de um post (criação, agendamento, falha…).                                  |
 | Provider                | Implementação de uma integração externa atrás de uma interface.                                 |
+| Backend mínimo          | Serviço em `backend/` publicado em `api.yeaax.xyz`: OAuth e client secrets, sem estado.         |
 | Modo preview            | A UI rodando no navegador (`npm run dev`) com SQLite WASM em memória.                           |
 | Dados de demonstração   | Registros fictícios (`demo-*`) criados na primeira execução.                                    |

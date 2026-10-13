@@ -1,10 +1,13 @@
-# Social Manager
+# Yeaax Manager
 
-Repositório: [yeaax-manager](https://github.com/ArthurScharfenberger/yeaax-manager).
+Repositório: [yeaax-manager](https://github.com/ArthurScharfenberger/yeaax-manager) · Site: [yeaax.xyz](https://yeaax.xyz).
+(Antes chamado "Social Manager"; o identificador interno `com.socialmanager.desktop` foi mantido — DEC-025.)
 
 Central pessoal **local-first** para organizar, preparar, agendar e (futuramente) publicar e analisar
 conteúdo em múltiplos canais do **TikTok** e do **Instagram**. Aplicativo desktop que roda inteiramente no
-seu computador — sem servidor, sem Docker, sem nuvem.
+seu computador — sem Docker e sem nuvem para os seus dados. Um **backend mínimo e sem estado** em
+`https://api.yeaax.xyz` (pasta `backend/`, projeto Vercel separado — em construção) existe só para o callback OAuth e
+o client secret das plataformas (DEC-023).
 
 > Objetivo de longo prazo: um _Content Automation Engine_ — você adiciona conteúdo à biblioteca e o
 > sistema ajuda a organizar, preparar, agendar, publicar e analisar.
@@ -13,7 +16,8 @@ seu computador — sem servidor, sem Docker, sem nuvem.
 
 **v0.1.0 — Fundação (MVP em andamento).** A interface e os fluxos locais funcionam com SQLite. As
 integrações externas (TikTok, Instagram, OpenAI, FFmpeg) estão **preparadas na arquitetura, mas
-simuladas** — nenhuma publicação real acontece ainda. Detalhes em [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md).
+simuladas** — nenhuma publicação real acontece ainda. A OpenAI já é real (chave do usuário). **Fase atual:**
+integração real do TikTok (Login Kit Web + Content Posting API). Detalhes em [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md).
 
 ## Funcionalidades atuais
 
@@ -101,6 +105,7 @@ src/
   types/        entidades e enums do domínio (Zod)
   utils/        funções puras (datas, formatação)
 src-tauri/      app Rust: comandos, migrations SQL, permissões (capabilities)
+backend/        serviço separado (Vercel, api.yeaax.xyz): OAuth e client secrets — planejado (DEC-023)
 docs/           documentação viva do projeto
 ```
 

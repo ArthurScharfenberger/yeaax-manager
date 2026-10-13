@@ -9,7 +9,11 @@ Estas políticas valem desde já; a arquitetura foi desenhada para cumpri-las qu
   estão no `.gitignore`. Use `.env.example` (valores vazios) como referência.
 - **Nunca use o prefixo `VITE_` em segredos.** Variáveis `VITE_*` são embutidas no bundle do frontend e ficam
   visíveis para qualquer um. O Vite só expõe `VITE_*` e `TAURI_ENV_*` (`vite.config.ts → envPrefix`).
-- Client secrets (TikTok, Instagram) e a chave da OpenAI serão lidos **apenas pelo lado Rust**.
+- **Client secrets das plataformas (TikTok; Instagram no futuro) ficam só no backend mínimo**, como variáveis de
+  ambiente secretas da Vercel (DEC-023). Nunca no app desktop, no bundle, no banco, no `.env` da raiz ou em
+  `VITE_*`. `backend/.env.example` lista os nomes com valores vazios.
+- O `client_key` do TikTok é público (vai na URL de autorização) e é servido por `GET /auth/tiktok/config`.
+- A chave da OpenAI é do usuário e é lida **apenas pelo lado Rust** (DEC-022).
 - Chaves configuradas pelo usuário (hoje: API key da OpenAI) vão para o **Gerenciador de Credenciais do
   Windows** (`keyring-core` + `windows-native-keyring-store`, serviço `com.socialmanager.desktop`), nunca para o
   SQLite ou arquivos de configuração em texto plano (DEC-022).
@@ -18,16 +22,32 @@ Estas políticas valem desde já; a arquitetura foi desenhada para cumpri-las qu
   com um endpoint fixo (`api.openai.com/v1/chat/completions`) e nunca ecoa a resposta de erro 401.
 - A interface mostra apenas "configurada / não configurada"; o campo de chave é `password` e é limpo após salvar.
 
-## Tokens e OAuth (Fase 3)
+## Tokens e OAuth (DEC-024)
 
-- Fluxo OAuth executado no Rust: abre o navegador padrão do sistema, recebe o callback em loopback local
-  (`127.0.0.1`), troca o `code` por tokens com PKCE quando suportado, valida `state`.
-- Access/refresh tokens armazenados no Credential Manager, indexados pelo id do canal. O banco guarda apenas
-  status do canal e metadados públicos (usuário, nome, avatar).
-- O frontend **nunca recebe tokens**: `SocialProvider.connect()` devolve só o perfil (`ConnectResult` não tem
-  campo de token por design).
-- Token expirado → canal `expired`; nunca re-tentar autenticação de forma automática e silenciosa em loop.
+- Fluxo executado no **Rust**: abre o navegador padrão do sistema; o TikTok redireciona para o callback HTTPS
+  `https://api.yeaax.xyz/auth/tiktok/callback`, que só **repassa** `code` e `state` para o listener loopback
+  `http://127.0.0.1:<porta>` do desktop. O Rust valida o `state` (aleatório, CSPRNG, de uso único) e troca o `code`
+  pelo backend. O listener aceita uma única requisição e expira em poucos minutos.
+- O callback só redireciona para host fixo `127.0.0.1` e porta numérica 1024–65535 tirada do `state` — nunca para
+  URL arbitrária (sem open redirect).
+- Access/refresh tokens: **somente** no Credential Manager do Windows, um item por conta
+  (`tiktok_token:<open_id>`, JSON com tokens, expirações e escopos). O banco guarda apenas status e metadados
+  públicos (open_id, @, nome, avatar). Nenhum comando devolve tokens ao webview.
+- O backend **não guarda** tokens, codes nem logs com eles; devolve os tokens na resposta HTTPS ao Rust e esquece.
+- O frontend **nunca recebe tokens nem o `code`**: `SocialProvider.connect()` devolve só o perfil.
+- Refresh token rotativo: o novo substitui o anterior antes de qualquer outra ação. Refresh falhou → canal
+  `expired`; nunca re-tentar autenticação de forma automática e silenciosa em loop.
 - Proibido: scraping, automação de navegador, captura de cookies, endpoints não oficiais, burla de autenticação.
+
+## Backend mínimo (`backend/`, DEC-023)
+
+- Sem banco, sem sessão, sem estado; HTTPS obrigatório (Vercel). Só o processo Rust chama o backend (CORS
+  fechado: o webview não chama `api.yeaax.xyz`).
+- Entradas validadas com Zod; respostas de erro genéricas (sem ecoar o corpo do TikTok nem o secret).
+- Logs sem tokens, codes, secrets ou corpo de requisições; nunca logar `Authorization`.
+- Segredos só nas variáveis de ambiente do projeto Vercel; rotacionar o `client_secret` no portal do TikTok se
+  houver suspeita de vazamento.
+- O vídeo nunca passa pelo backend.
 
 ## Logs
 
@@ -87,3 +107,4 @@ Estas políticas valem desde já; a arquitetura foi desenhada para cumpri-las qu
 | `assetProtocol.scope: $APPDATA/thumbnails/*`   | exibir miniaturas geradas pelo app (DEC-018)                              |
 | comandos `save_thumbnail` / `delete_thumbnail` | gravar/remover miniaturas na pasta do app                                 |
 | `dragDropEnabled: false`                       | permite drag-and-drop HTML5 no calendário (DEC-010)                       |
+| listener loopback `127.0.0.1` (planejado)      | receber o `code` repassado pelo callback OAuth; porta aleatória, 1 uso    |

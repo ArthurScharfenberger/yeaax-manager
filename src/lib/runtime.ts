@@ -10,5 +10,5 @@ export function detectRuntimeMode(): RuntimeMode {
   return isTauri() ? 'desktop' : 'preview';
 }
 
-export const APP_NAME = 'Social Manager';
+export const APP_NAME = 'Yeaax Manager';
 export const APP_VERSION = __APP_VERSION__;
