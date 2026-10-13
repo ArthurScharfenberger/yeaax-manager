@@ -8,19 +8,19 @@ Repositório remoto configurado: [yeaax-manager](https://github.com/ArthurScharf
 
 Fase atual: **TikTok real** (ordem em `docs/INTEGRATIONS.md` → TikTok).
 
-- [ ] **Decisão do usuário:** manter Login Kit **Web** (DEC-024) ou trocar para **Desktop + PKCE** (vantagens e
-      desvantagens na revisão da DEC-024, item 8). Precisa ser decidido antes da etapa 3.
 - [ ] Usuário — publicar o backend: push do repositório e projeto Vercel com Root Directory `backend`
       (passo a passo em `backend/README.md`); conferir `https://api.yeaax.xyz/health` → `configured: true`.
 - [ ] Após o deploy: confirmar que o rewrite entrega o caminho original ao handler (`/health` e `/config`
       respondendo) e que os imports `.js` → `.ts` foram empacotados (não testável sem a Vercel).
-- [ ] Usuário — TikTok Developer Portal: Login Kit **Web** com redirect
-      `https://api.yeaax.xyz/auth/tiktok/callback`; Content Posting API com Direct Post; escopos `user.info.basic`,
+- [ ] Usuário — TikTok Developer Portal: Login Kit na plataforma **Desktop** com redirect URI
+      `http://127.0.0.1:*/tiktok/callback`; Content Posting API com Direct Post; escopos `user.info.basic`,
       `user.info.profile`, `video.publish`, `video.upload`; termos/privacidade em `yeaax.xyz`; sandbox com a própria
       conta como target user (conta **privada** para os testes).
 - [ ] Usuário — Vercel/DNS: projeto separado com Root Directory `backend`, domínio `api.yeaax.xyz` (CNAME) e
-      variáveis secretas (`TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`, `TIKTOK_REDIRECT_URI`, `TIKTOK_SCOPES`).
-- [ ] Etapas 3–7 — OAuth no Rust, conta conectada, compositor TikTok, publicação, status/demonstração.
+      variáveis secretas `TIKTOK_CLIENT_KEY` e `TIKTOK_CLIENT_SECRET` (opcional `TIKTOK_SCOPES`).
+- [ ] Etapa 3 — listener loopback, navegador do sistema (`tauri-plugin-opener`), troca via backend, tokens no
+      cofre e comando `tiktok_connect` (PKCE e validação do callback já prontos em `src-tauri/src/tiktok/`).
+- [ ] Etapas 4–7 — conta conectada, compositor TikTok, publicação, status/demonstração.
 - [ ] Usuário: criar a chave em platform.openai.com, colar em Configurações → IA, "Testar conexão" e usar
       "Postar com IA" num vídeo real (validar qualidade das legendas e leitura da miniatura).
 - [ ] Instagram real — **depois do TikTok**: app na Meta, token do painel no cofre, Reels por upload resumável.

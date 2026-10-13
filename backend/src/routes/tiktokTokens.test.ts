@@ -1,14 +1,22 @@
 import { describe, expect, it } from 'vitest';
 
 import { TIKTOK_REVOKE_URL, TIKTOK_TOKEN_URL } from '../tiktok/oauthClient.js';
-import { createTestApp, postJson, TEST_SECRET, tokenResponse } from '../testing.js';
+import {
+  createTestApp,
+  postJson,
+  TEST_REDIRECT_URI,
+  TEST_SECRET,
+  TEST_VERIFIER,
+  tokenResponse,
+} from '../testing.js';
 
 const CODE = 'auth-code-123';
+const EXCHANGE = { code: CODE, codeVerifier: TEST_VERIFIER, redirectUri: TEST_REDIRECT_URI };
 
 describe('POST /auth/tiktok/token', () => {
-  it('troca o code com o client secret e devolve os tokens em camelCase', async () => {
+  it('troca code + code_verifier + redirect URI loopback com o client secret', async () => {
     const app = createTestApp({ fetch: () => tokenResponse() });
-    const response = await app.handle(postJson('/auth/tiktok/token', { code: CODE }));
+    const response = await app.handle(postJson('/auth/tiktok/token', EXCHANGE));
 
     expect(response.status).toBe(200);
     expect(response.headers.get('cache-control')).toBe('no-store');
@@ -29,32 +37,47 @@ describe('POST /auth/tiktok/token', () => {
       client_secret: TEST_SECRET,
       code: CODE,
       grant_type: 'authorization_code',
-      redirect_uri: 'https://api.yeaax.xyz/auth/tiktok/callback',
+      redirect_uri: TEST_REDIRECT_URI,
+      code_verifier: TEST_VERIFIER,
     });
-  });
-
-  it('envia code_verifier quando o desktop usa PKCE', async () => {
-    const app = createTestApp({ fetch: () => tokenResponse() });
-    const verifier = 'v'.repeat(43);
-    await app.handle(postJson('/auth/tiktok/token', { code: CODE, codeVerifier: verifier }));
-    expect(app.calls[0]!.form.get('code_verifier')).toBe(verifier);
   });
 
   it('nunca registra code, tokens ou secret nos logs', async () => {
     const app = createTestApp({ fetch: () => tokenResponse() });
-    await app.handle(postJson('/auth/tiktok/token', { code: CODE }));
+    await app.handle(postJson('/auth/tiktok/token', EXCHANGE));
     const logs = app.logs.join('\n');
-    for (const value of [CODE, TEST_SECRET, 'act.secret-access', 'rft.secret-refresh']) {
+    for (const value of [
+      CODE,
+      TEST_VERIFIER,
+      TEST_SECRET,
+      'act.secret-access',
+      'rft.secret-refresh',
+    ]) {
       expect(logs).not.toContain(value);
     }
   });
 
   it.each([
-    ['sem code', {}],
-    ['code com espaço', { code: 'a b' }],
-    ['campo extra', { code: CODE, redirect_uri: 'https://evil.example' }],
-    ['code_verifier inválido', { code: CODE, codeVerifier: 'curto' }],
-    ['code não string', { code: 42 }],
+    ['sem code', { codeVerifier: TEST_VERIFIER, redirectUri: TEST_REDIRECT_URI }],
+    ['code com espaço', { ...EXCHANGE, code: 'a b' }],
+    ['code não string', { ...EXCHANGE, code: 42 }],
+    ['campo extra', { ...EXCHANGE, client_secret: 'x' }],
+    // PKCE é obrigatório no Login Kit Desktop.
+    ['sem code_verifier', { code: CODE, redirectUri: TEST_REDIRECT_URI }],
+    ['code_verifier curto (42)', { ...EXCHANGE, codeVerifier: 'a'.repeat(42) }],
+    ['code_verifier longo (129)', { ...EXCHANGE, codeVerifier: 'a'.repeat(129) }],
+    ['code_verifier com caractere reservado', { ...EXCHANGE, codeVerifier: 'a'.repeat(42) + '+' }],
+    // Redirect só loopback 127.0.0.1, caminho fixo, porta 1024–65535.
+    ['sem redirect', { code: CODE, codeVerifier: TEST_VERIFIER }],
+    ['redirect com curinga', { ...EXCHANGE, redirectUri: 'http://127.0.0.1:*/tiktok/callback' }],
+    ['redirect localhost', { ...EXCHANGE, redirectUri: 'http://localhost:53682/tiktok/callback' }],
+    [
+      'redirect https externo',
+      { ...EXCHANGE, redirectUri: 'https://evil.example/tiktok/callback' },
+    ],
+    ['redirect outro caminho', { ...EXCHANGE, redirectUri: 'http://127.0.0.1:53682/outro' }],
+    ['redirect com query', { ...EXCHANGE, redirectUri: `${TEST_REDIRECT_URI}?x=1` }],
+    ['redirect porta 80', { ...EXCHANGE, redirectUri: 'http://127.0.0.1:80/tiktok/callback' }],
   ])('400 para corpo inválido (%s) sem chamar o TikTok', async (_label, body) => {
     const app = createTestApp();
     const response = await app.handle(postJson('/auth/tiktok/token', body));
@@ -74,14 +97,16 @@ describe('POST /auth/tiktok/token', () => {
       body: 'code=x',
     });
     expect((await app.handle(form)).status).toBe(415);
-    const big = await app.handle(postJson('/auth/tiktok/token', { code: 'x'.repeat(9000) }));
+    const big = await app.handle(
+      postJson('/auth/tiktok/token', { ...EXCHANGE, code: 'x'.repeat(9000) }),
+    );
     expect(big.status).toBe(413);
   });
 
   it('recusa chamadas de navegador (Origin) e não envia cabeçalhos CORS', async () => {
     const app = createTestApp({ fetch: () => tokenResponse() });
     const response = await app.handle(
-      postJson('/auth/tiktok/token', { code: CODE }, { origin: 'https://evil.example' }),
+      postJson('/auth/tiktok/token', EXCHANGE, { origin: 'https://evil.example' }),
     );
     expect(response.status).toBe(403);
     expect(response.headers.get('access-control-allow-origin')).toBeNull();
@@ -115,7 +140,7 @@ describe('POST /auth/tiktok/token', () => {
             status: upstreamStatus,
           }),
       });
-      const response = await app.handle(postJson('/auth/tiktok/token', { code: CODE }));
+      const response = await app.handle(postJson('/auth/tiktok/token', EXCHANGE));
       expect(response.status).toBe(status);
       const text = await response.text();
       expect(JSON.parse(text)).toMatchObject({ error: { code } });
@@ -131,14 +156,14 @@ describe('POST /auth/tiktok/token', () => {
         throw new TypeError('fetch failed');
       },
     });
-    const response = await app.handle(postJson('/auth/tiktok/token', { code: CODE }));
+    const response = await app.handle(postJson('/auth/tiktok/token', EXCHANGE));
     expect(response.status).toBe(503);
     expect(await response.json()).toMatchObject({ error: { code: 'UPSTREAM_UNAVAILABLE' } });
   });
 
   it('503 NOT_CONFIGURED sem as variáveis, registrando só os nomes', async () => {
     const app = createTestApp({ env: { TIKTOK_CLIENT_KEY: 'awtestclientkey' } });
-    const response = await app.handle(postJson('/auth/tiktok/token', { code: CODE }));
+    const response = await app.handle(postJson('/auth/tiktok/token', EXCHANGE));
     expect(response.status).toBe(503);
     expect(app.logs.join('\n')).toContain('TIKTOK_CLIENT_SECRET');
   });
@@ -146,7 +171,7 @@ describe('POST /auth/tiktok/token', () => {
   it('limita 10 trocas por minuto por IP', async () => {
     const app = createTestApp({ fetch: () => tokenResponse() });
     const send = (ip: string) =>
-      app.handle(postJson('/auth/tiktok/token', { code: CODE }, { 'x-forwarded-for': ip }));
+      app.handle(postJson('/auth/tiktok/token', EXCHANGE, { 'x-forwarded-for': ip }));
     for (let i = 0; i < 10; i += 1) expect((await send('1.1.1.1')).status).toBe(200);
     const limited = await send('1.1.1.1');
     expect(limited.status).toBe(429);

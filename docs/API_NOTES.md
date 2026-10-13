@@ -44,15 +44,25 @@ públicos. Ver decisões DEC-019 e DEC-020.
   [Token management](https://developers.tiktok.com/doc/oauth-user-access-token-management),
   [Sandbox](https://developers.tiktok.com/doc/add-a-sandbox), [Scopes](https://developers.tiktok.com/doc/tiktok-api-scopes)
 - **Redirect Web:** até 10 URIs, < 512 caracteres, absolutos, `https`, **estáticos** (sem query) e sem fragmento.
-  Callback escolhido: `https://api.yeaax.xyz/auth/tiktok/callback`.
-- **Redirect Desktop** (alternativa não usada): só `localhost`/`127.0.0.1`, porta obrigatória (aceita `*`); PKCE
-  obrigatório, só `S256`, e o `code_challenge` é o SHA-256 **em hex** (não base64url como no RFC 7636).
+  (Não usado desde a DEC-027.)
+- **Redirect Desktop (usado — DEC-027):** "Only `localhost` or loopback IP `127.0.0.1` are allowed host names";
+  absoluto, `http` ou `https`, estático (sem query/fragmento), < 512 caracteres, até 10 URIs; porta obrigatória e
+  "wildcard port number (\*) is supported" — recomendado para porta aleatória. Exemplos oficiais:
+  `http://localhost:3455/callback/`, `http://127.0.0.1:*/callback/`. Cadastrado: `http://127.0.0.1:*/tiktok/callback`.
+- **PKCE Desktop:** obrigatório; verifier de 43–128 caracteres `[A-Za-z0-9-._~]`, novo a cada autorização;
+  `code_challenge_method=S256` (único aceito); **`code_challenge` = SHA-256 do verifier em hexadecimal** ("You must
+  use hex encoding of SHA256"; exemplo oficial com `CryptoJS.SHA256(v).toString(CryptoJS.enc.Hex)`). O exemplo
+  oficial usa `Math.random()` — não seguir: usamos o CSPRNG do sistema. O exemplo Express da página põe o verifier no
+  lugar do challenge na URL — erro da página.
+- **Callback Desktop:** parâmetros em `application/x-www-form-urlencoded`: `code`, `scopes`, `state` ou
+  `error`/`error_description`. O `code` é decodificado uma vez antes da troca ("code (URL-decoded)").
 - **Autorização:** `https://www.tiktok.com/v2/auth/authorize/` com `client_key`, `scope` (separado por vírgula),
   `response_type=code`, `redirect_uri`, `state`, `disable_auto_auth` (opcional). Callback recebe `code`, `scopes`,
   `state` ou `error`/`error_description`.
 - **Token:** `POST https://open.tiktokapis.com/v2/oauth/token/` (`application/x-www-form-urlencoded`) com
-  `client_key`, `client_secret`, `code` (decodificado), `grant_type=authorization_code`, `redirect_uri`;
-  `code_verifier` "required for mobile and desktop app only". Resposta: `open_id`, `scope`, `access_token`,
+  `client_key`, `client_secret`, `code` (decodificado), `grant_type=authorization_code`, `redirect_uri` (igual ao
+  usado na autorização — com a porta real, não o `*`) e `code_verifier` ("required for mobile and desktop app
+  only"). O secret é exigido mesmo no Desktop → backend obrigatório (DEC-023). Resposta: `open_id`, `scope`, `access_token`,
   `expires_in` (86400), `refresh_token`, `refresh_expires_in` (31536000), `token_type=Bearer`.
 - **Refresh:** mesmo endpoint, `grant_type=refresh_token` + `client_secret`; se vier refresh token diferente, usar o novo.
 - **Revoke:** `POST /v2/oauth/revoke/` com `client_key`, `client_secret`, `token`; corpo vazio no sucesso.
@@ -62,7 +72,7 @@ públicos. Ver decisões DEC-019 e DEC-020.
 - **Escopos:** `user.info.basic` (open_id, avatar, nome de exibição); `user.info.profile` (link do perfil, bio,
   verificado e o `username` — **confirmar o campo** na resposta de `/v2/user/info/`); `video.publish` (Direct Post +
   status); `video.upload` (rascunho + status).
-- Impacto: DEC-023 (secret no backend) e DEC-024 (callback HTTPS repassado ao loopback).
+- Impacto: DEC-023 (secret no backend) e DEC-027 (Login Kit Desktop + PKCE; substituiu a DEC-024).
 
 ### Content Posting API — modos e auditoria
 
@@ -184,7 +194,6 @@ públicos. Ver decisões DEC-019 e DEC-020.
 ## Pendências de verificação
 
 - [ ] TikTok: restrições de app não auditado valem para o modo Upload (rascunho)? Testar no sandbox.
-- [ ] TikTok: o fluxo Web aceita `code_challenge`/`code_verifier` (defesa extra)? Testar no sandbox.
 - [ ] TikTok: nome exato do campo do @ (`username`) em `/v2/user/info/` com `user.info.profile`.
 - [ ] TikTok: requisitos e prazo da auditoria para um app pessoal (URLs de termos/privacidade, vídeo de demonstração).
 - [ ] TikTok: aplicar o logo do próprio criador (FFmpeg) é aceito pelas diretrizes?

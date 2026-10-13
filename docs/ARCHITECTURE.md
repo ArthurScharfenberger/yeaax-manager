@@ -28,7 +28,7 @@
 ### Backend mínimo (`backend/` → `https://api.yeaax.xyz`)
 
 Serviço **separado** do app desktop (projeto Vercel próprio, `package.json` próprio), mas no mesmo repositório.
-Sem banco e sem estado: existe só porque o OAuth Web exige callback HTTPS e o `client_secret` não pode ir no app.
+Sem banco e sem estado: existe só porque o `client_secret` não pode ir no app (o TikTok o exige na troca e no refresh).
 
 ```
  Desktop (Rust)  ──HTTPS──►  api.yeaax.xyz (Vercel Functions)  ──►  TikTok OAuth (token/refresh/revoke)
@@ -36,26 +36,31 @@ Sem banco e sem estado: existe só porque o OAuth Web exige callback HTTPS e o `
       └────────HTTPS (token do usuário, upload do vídeo)────────►  open.tiktokapis.com
 ```
 
-| Rota (implementada)         | Função                                                                     |
-| --------------------------- | -------------------------------------------------------------------------- |
-| `GET /health`               | verificação                                                                |
-| `GET /config`               | `client_key`, escopos e `redirect_uri` (dados públicos)                    |
-| `GET /auth/tiktok/callback` | repassa `code`/`state` ao loopback `127.0.0.1:<porta>` do desktop (302)    |
-| `POST /auth/tiktok/token`   | troca `code` por tokens com o `client_secret`; devolve ao Rust, não guarda |
-| `POST /auth/tiktok/refresh` | renova o access token com o `client_secret`                                |
-| `POST /auth/tiktok/revoke`  | revoga o token ao desconectar                                              |
+| Rota (implementada)         | Função                                                                   |
+| --------------------------- | ------------------------------------------------------------------------ |
+| `GET /health`               | verificação                                                              |
+| `GET /config`               | `client_key`, escopos, formato do redirect loopback e do PKCE (públicos) |
+| `POST /auth/tiktok/token`   | troca `code` + `code_verifier` por tokens com o `client_secret`          |
+| `POST /auth/tiktok/refresh` | renova o access token com o `client_secret`                              |
+| `POST /auth/tiktok/revoke`  | revoga o token ao desconectar                                            |
 
 Detalhes (validação, CORS fechado, rate limit, logs, deploy): [backend/README.md](../backend/README.md) e DEC-026.
 
-### Fluxo OAuth do TikTok (DEC-024)
+### Fluxo OAuth do TikTok (Login Kit Desktop + PKCE — DEC-027)
 
-1. Rust gera `state` (CSPRNG) e abre listener em `127.0.0.1:<porta aleatória>`; abre o navegador do sistema em
-   `tiktok.com/v2/auth/authorize/` com `redirect_uri=https://api.yeaax.xyz/auth/tiktok/callback` e
-   `state=<aleatório>.<porta>`.
-2. Usuário autoriza → TikTok → callback HTTPS → `302` para `http://127.0.0.1:<porta>/tiktok/callback`.
-3. Rust confere o `state`, chama `POST /auth/tiktok/token`, grava os tokens no Credential Manager
-   (`tiktok_token:<open_id>`) e busca o perfil em `/v2/user/info/`.
-4. O frontend recebe apenas o perfil (`ConnectResult`) e cria/atualiza o canal.
+1. Rust gera `state` e `code_verifier` (CSPRNG, novos a cada login), calcula
+   `code_challenge = hex(SHA-256(code_verifier))` e abre um listener em `127.0.0.1:<porta escolhida pelo sistema>`.
+2. Abre o navegador do sistema em `https://www.tiktok.com/v2/auth/authorize/` com `client_key`, `scope`,
+   `response_type=code`, `redirect_uri=http://127.0.0.1:<porta>/tiktok/callback`, `state`, `code_challenge` e
+   `code_challenge_method=S256`.
+3. Usuário autoriza → o TikTok redireciona **direto** para `http://127.0.0.1:<porta>/tiktok/callback?code&scopes&state`
+   (sem passar pelo backend).
+4. Rust valida `Host`, caminho e `state` (tempo constante, uso único) e fecha o listener.
+5. Rust chama `POST https://api.yeaax.xyz/auth/tiktok/token` com `{ code, codeVerifier, redirectUri }`; o backend
+   acrescenta o `client_secret`, chama `/v2/oauth/token/` e devolve os tokens (não guarda nada).
+6. Rust grava os tokens no Credential Manager (`tiktok_token:<open_id>`) e busca o perfil em `/v2/user/info/`
+   direto no TikTok.
+7. O frontend recebe apenas o perfil (`ConnectResult`) e cria/atualiza o canal.
 
 ## Camadas e dependências
 

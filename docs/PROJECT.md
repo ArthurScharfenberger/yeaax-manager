@@ -8,7 +8,7 @@
 Uma central pessoal para gerenciar vários canais/perfis de conteúdo no **TikTok** e no **Instagram**.
 Roda como aplicativo desktop no computador do usuário (Windows, inicialmente), com todos os dados
 armazenados localmente. Funciona enquanto o computador está ligado. Um **backend mínimo e sem estado**
-(`api.yeaax.xyz`) existe só para o que exige servidor público: callback OAuth HTTPS e uso do client secret das
+(`api.yeaax.xyz`) existe só para o que exige servidor: uso do client secret das
 plataformas (DEC-023). Agendar com o computador desligado continua sendo longo prazo.
 
 O objetivo de longo prazo é um **Content Automation Engine**: o usuário adiciona conteúdo à biblioteca e o
@@ -56,8 +56,8 @@ O que já existe está em [ROADMAP.md](ROADMAP.md) (itens marcados) e no [README
 - Fundação técnica completa (Tauri 2, React, TypeScript strict, SQLite, lint, testes, documentação).
 - Fluxos locais reais: biblioteca, posts, calendário, configurações.
 - Integrações **simuladas** (mocks) com contratos prontos para a implementação real; OpenAI real (DEC-022).
-- Em andamento (fase atual): **TikTok real** — Login Kit Web, Content Posting API e fluxo demonstrável para o
-  App Review (DEC-024). Instagram depois.
+- Em andamento (fase atual): **TikTok real** — Login Kit Desktop + PKCE, Content Posting API e fluxo demonstrável
+  para o App Review (DEC-027). Instagram depois.
 
 ## Fora de escopo (por enquanto)
 

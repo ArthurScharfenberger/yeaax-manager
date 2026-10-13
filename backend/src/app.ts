@@ -3,13 +3,7 @@ import { ApiError } from './errors.js';
 import { clientIp, errorResponse, jsonResponse, withSecurityHeaders } from './http.js';
 import type { Logger } from './logger.js';
 import type { RateLimiter, RateLimitRule } from './rateLimit.js';
-import {
-  publicConfig,
-  tiktokCallback,
-  tiktokRefresh,
-  tiktokRevoke,
-  tiktokToken,
-} from './routes/tiktokAuth.js';
+import { publicConfig, tiktokRefresh, tiktokRevoke, tiktokToken } from './routes/tiktokAuth.js';
 import { createTikTokOAuthClient } from './tiktok/oauthClient.js';
 import { SERVICE_NAME, SERVICE_VERSION } from './version.js';
 
@@ -73,12 +67,6 @@ const ROUTES: Readonly<Record<string, Route>> = {
     serverToServer: false,
     rateLimit: { limit: 60, windowMs: MINUTE },
     handle: (context) => publicConfig(requireConfig(context)),
-  },
-  '/auth/tiktok/callback': {
-    method: 'GET',
-    serverToServer: false,
-    rateLimit: { limit: 30, windowMs: MINUTE },
-    handle: ({ request, deps }) => tiktokCallback(request, deps.logger),
   },
   '/auth/tiktok/token': {
     method: 'POST',
@@ -149,7 +137,7 @@ export function createApp(deps: AppDeps): (request: Request) => Promise<Response
         response = errorResponse(new ApiError(500, 'INTERNAL', 'Erro interno.'));
       }
     }
-    // Só método, caminho (sem query — o callback carrega o code), status e duração.
+    // Só método, caminho (sem query), status e duração.
     deps.logger.info('request', {
       method: request.method,
       path: ROUTES[path] ? path : 'unknown',

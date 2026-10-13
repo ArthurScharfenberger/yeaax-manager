@@ -4,12 +4,12 @@ Status possíveis: `NOT_STARTED` · `MOCK` · `IN_PROGRESS` · `ACTIVE` · `BLOC
 O mesmo status aparece na UI (Configurações → Integrações), definido em `src/lib/integrations.ts` —
 **mantenha os dois em sincronia.**
 
-| Integração | Status        | Código                                                                     | Próximo passo                        |
-| ---------- | ------------- | -------------------------------------------------------------------------- | ------------------------------------ |
-| TikTok     | `MOCK`        | `src/services/social/TikTokProvider.ts`, `backend/`                        | **Prioridade atual:** OAuth Web real |
-| Instagram  | `MOCK`        | `src/services/social/InstagramProvider.ts`                                 | Fase 3: Instagram Graph API          |
-| OpenAI     | `IN_PROGRESS` | `src/services/ai/OpenAIProvider.ts`, `src-tauri/src/commands/ai.rs`        | Validar com a chave real do usuário  |
-| FFmpeg     | `NOT_STARTED` | `src/services/media/VideoProcessor.ts`, `src-tauri/src/commands/system.rs` | Fase 2: ffprobe + miniaturas         |
+| Integração | Status        | Código                                                                     | Próximo passo                            |
+| ---------- | ------------- | -------------------------------------------------------------------------- | ---------------------------------------- |
+| TikTok     | `MOCK`        | `src/services/social/TikTokProvider.ts`, `backend/`                        | **Prioridade atual:** OAuth Desktop real |
+| Instagram  | `MOCK`        | `src/services/social/InstagramProvider.ts`                                 | Fase 3: Instagram Graph API              |
+| OpenAI     | `IN_PROGRESS` | `src/services/ai/OpenAIProvider.ts`, `src-tauri/src/commands/ai.rs`        | Validar com a chave real do usuário      |
+| FFmpeg     | `NOT_STARTED` | `src/services/media/VideoProcessor.ts`, `src-tauri/src/commands/system.rs` | Fase 2: ffprobe + miniaturas             |
 
 ## Regras gerais (valem para todas)
 
@@ -30,18 +30,20 @@ O mesmo status aparece na UI (Configurações → Integrações), definido em `s
 - **Contrato:** `SocialProvider` (connect, disconnect, getProfile, publish, getPublicationStatus, getAnalytics).
 - **Hoje:** `TikTokProvider extends MockSocialProvider` — latência simulada, nenhuma rede. Ainda **não há
   publicador**: `publish()` não é chamado por nenhum caso de uso.
-- **App:** "Yeaax Manager" no TikTok for Developers; Login Kit **Web**; produtos Login Kit + Content Posting API;
+- **App:** "Yeaax Manager" no TikTok for Developers; Login Kit **Desktop** (PKCE, redirect `http://127.0.0.1:*/tiktok/callback`);
+  produtos Login Kit + Content Posting API;
   escopos `user.info.basic`, `user.info.profile`, `video.publish`, `video.upload`. Termos e privacidade em
   `yeaax.xyz`. Sem auditoria: sandbox com até 10 contas próprias (target users), posts só `SELF_ONLY` em conta
   privada — suficiente para o vídeo do App Review.
-- **Arquitetura (DEC-023/024):** callback `https://api.yeaax.xyz/auth/tiktok/callback` repassa o `code` ao loopback
-  do desktop; o backend troca/renova/revoga com o `client_secret`; tokens no Credential Manager; chamadas de
-  API e upload direto do Rust para `open.tiktokapis.com`. Ver ARCHITECTURE.md.
+- **Arquitetura (DEC-023/027):** o TikTok redireciona direto ao listener loopback do desktop; o desktop envia
+  `code` + `code_verifier` ao backend, que troca/renova/revoga com o `client_secret`; tokens no Credential
+  Manager; chamadas de API e upload direto do Rust para `open.tiktokapis.com`. Ver ARCHITECTURE.md.
 - **Ordem de implementação:**
-  1. [x] Documentação e decisões (DEC-023, DEC-024, DEC-025).
-  2. [x] Backend `backend/`: `/health`, `/config`, `/auth/tiktok/{callback,token,refresh,revoke}` + 62 testes
-         (DEC-026). [ ] Deploy na Vercel em `api.yeaax.xyz` (usuário).
-  3. [ ] Rust OAuth: `state`, listener loopback, navegador do sistema, troca via backend, tokens no cofre.
+  1. [x] Documentação e decisões (DEC-023, DEC-025, DEC-027; DEC-024 substituída).
+  2. [x] Backend `backend/`: `/health`, `/config`, `/auth/tiktok/{token,refresh,revoke}` + testes (DEC-026/027).
+         [ ] Deploy na Vercel em `api.yeaax.xyz` (usuário).
+  3. [ ] Rust OAuth. [x] PKCE (`tiktok/pkce.rs`) e validação do callback local (`tiktok/loopback.rs`) com testes.
+         [ ] Listener, navegador do sistema, troca via backend, tokens no cofre, comando `tiktok_connect`.
   4. [ ] Conta conectada: migration 0002 (`channels.external_id`), `connect/getProfile/disconnect` reais, botão
          "Conectar TikTok". Primeiro teste ponta a ponta no sandbox.
   5. [ ] Compositor TikTok (UX obrigatória — DEC-019): `creator_info`, nickname, privacidade sem padrão, toggles

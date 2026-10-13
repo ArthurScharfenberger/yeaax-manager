@@ -6,7 +6,7 @@ Repositório: [yeaax-manager](https://github.com/ArthurScharfenberger/yeaax-mana
 Central pessoal **local-first** para organizar, preparar, agendar e (futuramente) publicar e analisar
 conteúdo em múltiplos canais do **TikTok** e do **Instagram**. Aplicativo desktop que roda inteiramente no
 seu computador — sem Docker e sem nuvem para os seus dados. Um **backend mínimo e sem estado** em
-`https://api.yeaax.xyz` (pasta [`backend/`](backend/README.md), projeto Vercel separado) existe só para o callback OAuth e
+`https://api.yeaax.xyz` (pasta [`backend/`](backend/README.md), projeto Vercel separado) existe só para a troca/renovação de tokens OAuth e
 o client secret das plataformas (DEC-023).
 
 > Objetivo de longo prazo: um _Content Automation Engine_ — você adiciona conteúdo à biblioteca e o
@@ -17,7 +17,7 @@ o client secret das plataformas (DEC-023).
 **v0.1.0 — Fundação (MVP em andamento).** A interface e os fluxos locais funcionam com SQLite. As
 integrações externas (TikTok, Instagram, OpenAI, FFmpeg) estão **preparadas na arquitetura, mas
 simuladas** — nenhuma publicação real acontece ainda. A OpenAI já é real (chave do usuário). **Fase atual:**
-integração real do TikTok (Login Kit Web + Content Posting API). Detalhes em [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md).
+integração real do TikTok (Login Kit Desktop + PKCE + Content Posting API). Detalhes em [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md).
 
 ## Funcionalidades atuais
 

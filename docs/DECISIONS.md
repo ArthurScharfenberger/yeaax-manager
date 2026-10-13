@@ -29,9 +29,10 @@ marque como _Substituída por DEC-XXX_.
 | DEC-021 | Logs em arquivo com tauri-plugin-log                                   | Ativa                                    |
 | DEC-022 | OpenAI via Rust com chave no Credential Manager; "Postar com IA"       | Ativa                                    |
 | DEC-023 | Backend mínimo `api.yeaax.xyz` (Vercel) só para segredos do app        | Ativa                                    |
-| DEC-024 | OAuth TikTok Web com callback HTTPS repassado ao loopback do desktop   | Ativa (Web × Desktop+PKCE em avaliação)  |
+| DEC-024 | OAuth TikTok Web com callback HTTPS repassado ao loopback do desktop   | Substituída por DEC-027                  |
 | DEC-025 | Nome exibido "Yeaax Manager"; identificador interno mantido            | Ativa                                    |
 | DEC-026 | Backend sem framework: um handler `fetch` + Zod, rate limit em memória | Ativa                                    |
+| DEC-027 | OAuth TikTok com Login Kit Desktop + PKCE (loopback direto)            | Ativa                                    |
 
 ---
 
@@ -321,6 +322,10 @@ Instagram com token do painel enquanto não for revisto._
 
 ## DEC-024 — OAuth TikTok (Login Kit Web) com callback HTTPS repassado ao loopback do desktop
 
+_Substituída por DEC-027 (2026-10-13): o login passou a ser Login Kit Desktop + PKCE, com redirect direto ao
+loopback. A rota `/auth/tiktok/callback` foi removida. Continuam valendo os itens 5 e 6 da revisão abaixo
+(secret só no backend; divergência sobre refresh tokens no desktop)._
+
 - **Data:** 2026-10-13
 - **Decisão:**
   1. Login Kit configurado como **Web**, redirect `https://api.yeaax.xyz/auth/tiktok/callback`.
@@ -423,3 +428,34 @@ Feita contra a documentação atual do Login Kit (Web e Desktop) e do gerenciame
   tradicional, pior encaixe em funções); rate limit com Redis/KV (introduziria estado e custo).
 - **Impactos:** `backend/` com `package.json`, lint e testes próprios (`npm run backend:check` na raiz); o ESLint da
   raiz ignora `backend/`; Prettier da raiz cobre os dois.
+
+## DEC-027 — OAuth TikTok com Login Kit Desktop + PKCE (loopback direto)
+
+- **Data:** 2026-10-13
+- **Decisão (do usuário, substitui a DEC-024):**
+  1. No portal do TikTok, Login Kit na plataforma **Desktop**, redirect URI `http://127.0.0.1:*/tiktok/callback`
+     (sintaxe confirmada na documentação oficial: "URIs must have a port number, and wildcard port number (\*) is
+     supported"; exemplo oficial `http://127.0.0.1:*/callback/`; só `localhost`/`127.0.0.1`; sem query/fragmento).
+  2. A cada login o desktop gera `state` (43 caracteres) e `code_verifier` (64 caracteres, RFC 7636) com o CSPRNG do
+     sistema, calcula `code_challenge` e manda `code_challenge_method=S256`. **Peculiaridade do TikTok:** o
+     `code_challenge` é o SHA-256 do verifier em **hexadecimal** ("You must use hex encoding of SHA256"), não
+     base64url como no RFC 7636 — coberto por teste com o vetor do RFC (`src-tauri/src/tiktok/pkce.rs`).
+  3. O TikTok redireciona **direto** para `http://127.0.0.1:<porta>/tiktok/callback`; o listener aceita só `GET`
+     no caminho exato, `Host` loopback com a porta certa, `state` igual (tempo constante, uso único) e encerra em
+     5 min (`src-tauri/src/tiktok/loopback.rs`).
+  4. O desktop envia `{ code, codeVerifier, redirectUri }` ao backend (`POST /auth/tiktok/token`). O backend exige
+     PKCE, aceita só redirect URI loopback no formato exato e acrescenta o `client_secret` — que continua
+     **exclusivamente** no backend. A `redirect_uri` da troca é a usada na autorização, com a porta real.
+  5. Backend mantido em `api.yeaax.xyz` para token, refresh, revoke, client secret e futuras APIs/MCP/Instagram.
+     **Removida** a rota `GET /auth/tiktok/callback` (não participa mais do login; sem uso futuro previsto — o
+     Instagram terá rota própria se precisar) e a variável `TIKTOK_REDIRECT_URI`.
+  6. O vídeo continua indo direto do desktop para o TikTok.
+- **Motivo:** o cliente é um app desktop e o TikTok tem fluxo oficial para Desktop com loopback + PKCE (padrão
+  RFC 8252 para apps nativos): o code fica amarrado ao `code_verifier` que só o desktop conhece, então interceptar
+  o code não basta; elimina a rota pública de repasse e a dependência do backend no redirect.
+- **Alternativas:** manter Web com repasse (DEC-024 — mais superfície pública, PKCE não documentado no Web).
+- **Riscos:** o desafio hex é fora do padrão (testado); o refresh token continua no desktop (divergência mantida —
+  ver revisão da DEC-024, item 6, e SECURITY.md); outro processo local poderia ocupar a mesma porta — mitigado pela
+  porta escolhida pelo sistema no bind e pelo `state`.
+- **Impactos:** novas dependências Rust `getrandom` 0.3, `sha2` 0.10 e `url` 2 (já presentes na árvore via Tauri);
+  backend: `POST /auth/tiktok/token` exige `codeVerifier` e `redirectUri`; `/config` informa redirect e PKCE.

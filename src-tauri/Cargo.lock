@@ -3805,15 +3805,18 @@ dependencies = [
 name = "social-manager"
 version = "0.1.0"
 dependencies = [
+ "getrandom 0.3.4",
  "keyring-core",
  "reqwest",
  "serde",
  "serde_json",
+ "sha2",
  "tauri",
  "tauri-build",
  "tauri-plugin-dialog",
  "tauri-plugin-log",
  "tauri-plugin-sql",
+ "url",
  "windows-native-keyring-store",
 ]
 

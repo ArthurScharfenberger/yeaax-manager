@@ -23,8 +23,13 @@ describe('rotas públicas', () => {
       tiktok: {
         clientKey: 'awtestclientkey',
         authorizeUrl: 'https://www.tiktok.com/v2/auth/authorize/',
-        redirectUri: 'https://api.yeaax.xyz/auth/tiktok/callback',
         scopes: ['user.info.basic', 'user.info.profile', 'video.publish', 'video.upload'],
+        redirect: {
+          registered: 'http://127.0.0.1:*/tiktok/callback',
+          host: '127.0.0.1',
+          path: '/tiktok/callback',
+        },
+        pkce: { method: 'S256', challengeEncoding: 'hex' },
       },
     });
     expect(response.headers.get('cache-control')).toBe('public, max-age=300');
@@ -33,6 +38,8 @@ describe('rotas públicas', () => {
   it('rota desconhecida e método errado', async () => {
     const app = createTestApp();
     expect((await app.handle(get('/nada'))).status).toBe(404);
+    // O callback público do fluxo Web foi removido (DEC-027): o TikTok redireciona direto ao desktop.
+    expect((await app.handle(get('/auth/tiktok/callback?code=x&state=y'))).status).toBe(404);
     const wrong = await app.handle(new Request('https://api.yeaax.xyz/health', { method: 'POST' }));
     expect(wrong.status).toBe(405);
     expect(wrong.headers.get('allow')).toBe('GET');
@@ -56,9 +63,7 @@ describe('loadConfig', () => {
   });
 
   it.each([
-    ['redirect http', { TIKTOK_REDIRECT_URI: 'http://api.yeaax.xyz/auth/tiktok/callback' }],
-    ['redirect com query', { TIKTOK_REDIRECT_URI: 'https://api.yeaax.xyz/cb?x=1' }],
-    ['redirect com fragmento', { TIKTOK_REDIRECT_URI: 'https://api.yeaax.xyz/cb#x' }],
+    ['client key ausente', { TIKTOK_CLIENT_KEY: '' }],
     ['escopo desconhecido', { TIKTOK_SCOPES: 'user.info.basic,admin' }],
     ['sem user.info.basic', { TIKTOK_SCOPES: 'video.publish' }],
     ['secret com espaço', { TIKTOK_CLIENT_SECRET: 'abc def ghi' }],

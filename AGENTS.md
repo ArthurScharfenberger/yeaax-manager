@@ -48,7 +48,7 @@ Se tocar na interface, leia `docs/DESIGN.md`. Se tocar no banco, leia `docs/DATA
 - **Nunca** coloque segredos, tokens ou credenciais no código, no banco, em `VITE_*` ou em logs.
 - **Client secrets das plataformas só no backend** (`backend/`, variáveis de ambiente da Vercel — DEC-023).
   O `backend/` é um serviço separado (package.json e deploy próprios): o app desktop não importa código dele.
-  Tokens de usuário só no Credential Manager do desktop; o backend não guarda estado (DEC-024).
+  Tokens de usuário só no Credential Manager do desktop; o backend não guarda estado (DEC-027).
 - **Nunca** use scraping, automação de navegador, endpoints não oficiais ou burla de autenticação.
 - Dados vindos de APIs (e do lado Rust) são não confiáveis: valide com Zod.
 - Nova permissão Tauri (`capabilities/`) ou ampliação de CSP/asset scope exige justificativa no SECURITY.md.

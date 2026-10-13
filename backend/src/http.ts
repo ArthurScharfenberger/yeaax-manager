@@ -1,10 +1,9 @@
 import { ApiError } from './errors.js';
 
-/** Aplicados a todas as respostas. A API não serve conteúdo para navegadores além da página de erro. */
+/** Aplicados a todas as respostas. A API não serve conteúdo para navegadores. */
 export const SECURITY_HEADERS: Readonly<Record<string, string>> = {
   'cache-control': 'no-store',
-  'content-security-policy':
-    "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'",
+  'content-security-policy': "default-src 'none'; frame-ancestors 'none'",
   'referrer-policy': 'no-referrer',
   'x-content-type-options': 'nosniff',
   'x-frame-options': 'DENY',
@@ -30,38 +29,6 @@ export function errorResponse(error: ApiError): Response {
     { error: { code: error.code, message: error.message } },
     error.headers,
   );
-}
-
-const HTML_ESCAPES: Record<string, string> = {
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  '"': '&quot;',
-  "'": '&#39;',
-};
-
-export function escapeHtml(value: string): string {
-  return value.replace(/[&<>"']/g, (char) => HTML_ESCAPES[char] ?? char);
-}
-
-/** Página mínima para o navegador (callback com link inválido). Só texto fixo, escapado. */
-export function htmlResponse(status: number, title: string, message: string): Response {
-  const body = `<!doctype html>
-<html lang="pt-BR">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escapeHtml(title)}</title></head>
-<body style="font-family: system-ui, sans-serif; max-width: 32rem; margin: 4rem auto; padding: 0 1rem; color: #1f2937">
-<h1 style="font-size: 1.25rem">${escapeHtml(title)}</h1>
-<p>${escapeHtml(message)}</p>
-</body>
-</html>`;
-  return new Response(body, {
-    status,
-    headers: { 'content-type': 'text/html; charset=utf-8' },
-  });
-}
-
-export function redirectResponse(location: string): Response {
-  return new Response(null, { status: 302, headers: { location } });
 }
 
 /** Devolve uma cópia da resposta com os cabeçalhos de segurança (sem sobrescrever os definidos). */

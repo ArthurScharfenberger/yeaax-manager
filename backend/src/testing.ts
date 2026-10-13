@@ -9,11 +9,11 @@ export const TEST_SECRET = 'test-client-secret-value';
 export const TEST_ENV: Env = {
   TIKTOK_CLIENT_KEY: 'awtestclientkey',
   TIKTOK_CLIENT_SECRET: TEST_SECRET,
-  TIKTOK_REDIRECT_URI: 'https://api.yeaax.xyz/auth/tiktok/callback',
 };
 
-export const VALID_NONCE = 'A'.repeat(21) + '_' + 'b'.repeat(20) + '-';
-export const VALID_STATE = `${VALID_NONCE}.53682`;
+/** Verifier PKCE de exemplo (64 caracteres "unreserved") e a redirect URI loopback usada no login. */
+export const TEST_VERIFIER = 'aB3-_' + 'x'.repeat(59);
+export const TEST_REDIRECT_URI = 'http://127.0.0.1:53682/tiktok/callback';
 
 export interface FetchCall {
   url: string;

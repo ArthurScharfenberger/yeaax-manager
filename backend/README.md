@@ -1,7 +1,8 @@
 # Yeaax Manager API (backend mínimo)
 
 Serviço **separado** do app desktop, publicado como projeto próprio na Vercel em `https://api.yeaax.xyz`.
-Existe só para o que exige servidor público: callback OAuth HTTPS e uso do `client_secret` (DEC-023, DEC-024).
+Existe só para o que exige servidor: uso do `client_secret` na troca, renovação e revogação de tokens (DEC-023,
+DEC-027). O redirect do OAuth **não** passa por aqui: vai direto ao loopback do desktop (Login Kit Desktop + PKCE).
 
 - **Sem estado:** sem banco, sem sessão, não guarda tokens nem codes.
 - **Nenhuma mídia** passa por aqui: o upload vai do desktop direto para o TikTok.
@@ -9,14 +10,13 @@ Existe só para o que exige servidor público: callback OAuth HTTPS e uso do `cl
 
 ## Rotas
 
-| Rota                        | Quem chama              | Função                                                                     | Rate limit (por IP/instância) |
-| --------------------------- | ----------------------- | -------------------------------------------------------------------------- | ----------------------------- |
-| `GET /health`               | monitoramento           | `{ status, service, version, configured }`                                 | —                             |
-| `GET /config`               | desktop (Rust)          | `client_key`, URL de autorização, `redirect_uri`, escopos (dados públicos) | 60/min                        |
-| `GET /auth/tiktok/callback` | navegador (vindo do TT) | valida o formato do `state` e repassa `code`/`state`/`scopes` ao loopback  | 30/min                        |
-| `POST /auth/tiktok/token`   | desktop (Rust)          | `{ code, codeVerifier? }` → tokens (usa o secret)                          | 10/min                        |
-| `POST /auth/tiktok/refresh` | desktop (Rust)          | `{ refreshToken }` → tokens novos (usa o secret)                           | 30/min                        |
-| `POST /auth/tiktok/revoke`  | desktop (Rust)          | `{ accessToken }` → `204` (usa o secret)                                   | 10/min                        |
+| Rota                        | Quem chama     | Função                                                                   | Rate limit (por IP/instância) |
+| --------------------------- | -------------- | ------------------------------------------------------------------------ | ----------------------------- |
+| `GET /health`               | monitoramento  | `{ status, service, version, configured }`                               | —                             |
+| `GET /config`               | desktop (Rust) | `client_key`, URL de autorização, escopos, redirect loopback, PKCE (hex) | 60/min                        |
+| `POST /auth/tiktok/token`   | desktop (Rust) | `{ code, codeVerifier, redirectUri }` → tokens (usa o secret)            | 10/min                        |
+| `POST /auth/tiktok/refresh` | desktop (Rust) | `{ refreshToken }` → tokens novos (usa o secret)                         | 30/min                        |
+| `POST /auth/tiktok/revoke`  | desktop (Rust) | `{ accessToken }` → `204` (usa o secret)                                 | 10/min                        |
 
 Erros sempre em `{ "error": { "code": "...", "message": "..." } }` com mensagens fixas — o corpo do TikTok nunca
 é repassado. Códigos: `INVALID_INPUT`, `INVALID_JSON`, `UNSUPPORTED_MEDIA_TYPE`, `PAYLOAD_TOO_LARGE`,
@@ -26,8 +26,9 @@ Erros sempre em `{ "error": { "code": "...", "message": "..." } }` com mensagens
 
 ## Segurança
 
-- **Callback sem open redirect:** destino fixo `http://127.0.0.1:<porta>/tiktok/callback`; só a porta vem do
-  `state` (`<nonce de 43 caracteres base64url>.<porta 1024–65535>`). `state` inválido → página de erro, sem redirect.
+- **PKCE obrigatório** na troca (`codeVerifier` 43–128 caracteres "unreserved") e `redirectUri` aceita só no
+  formato `http://127.0.0.1:<1024–65535>/tiktok/callback` (`src/loopback.ts`) — a mesma usada na autorização,
+  como o TikTok exige. Não existe rota de callback nem redirect: não há open redirect possível.
 - **CORS fechado:** nenhuma resposta tem `Access-Control-Allow-*`; rotas `POST` recusam qualquer requisição com
   `Origin` (navegadores) e exigem `Content-Type: application/json` (corpo até 8 KB, schema estrito com Zod).
 - **Logs** (JSON no stdout): só evento, método, caminho sem query, status e duração. Nunca code, state, tokens,
@@ -58,8 +59,8 @@ Na raiz: `npm run backend:check`. A formatação (Prettier) é verificada pelo `
 
 1. Vercel → **Add New → Project** → importar o repositório `yeaax-manager`.
 2. **Root Directory:** `backend` · **Framework Preset:** Other · sem build/output command · Node.js **24.x**.
-3. Environment Variables (Production): `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`, `TIKTOK_REDIRECT_URI`
-   (opcional: `TIKTOK_SCOPES`).
+3. Environment Variables (Production): `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET` (opcional: `TIKTOK_SCOPES`).
+   `TIKTOK_REDIRECT_URI` não é mais usada — se já foi cadastrada, pode remover.
 4. Settings → **Domains** → `api.yeaax.xyz` (a Vercel mostra o registro DNS, normalmente `CNAME api →`
    valor indicado pela Vercel; automático se o domínio já usa o DNS da Vercel).
 5. Conferir: `https://api.yeaax.xyz/health` → `"configured": true`; `https://api.yeaax.xyz/config` → dados públicos.

@@ -22,14 +22,21 @@ Estas políticas valem desde já; a arquitetura foi desenhada para cumpri-las qu
   com um endpoint fixo (`api.openai.com/v1/chat/completions`) e nunca ecoa a resposta de erro 401.
 - A interface mostra apenas "configurada / não configurada"; o campo de chave é `password` e é limpo após salvar.
 
-## Tokens e OAuth (DEC-024)
+## Tokens e OAuth (Login Kit Desktop + PKCE — DEC-027)
 
-- Fluxo executado no **Rust**: abre o navegador padrão do sistema; o TikTok redireciona para o callback HTTPS
-  `https://api.yeaax.xyz/auth/tiktok/callback`, que só **repassa** `code` e `state` para o listener loopback
-  `http://127.0.0.1:<porta>` do desktop. O Rust valida o `state` (aleatório, CSPRNG, de uso único) e troca o `code`
-  pelo backend. O listener aceita uma única requisição e expira em poucos minutos.
-- O callback só redireciona para host fixo `127.0.0.1` e porta numérica 1024–65535 tirada do `state` — nunca para
-  URL arbitrária (sem open redirect).
+- Fluxo no **Rust**, sem passar pelo backend no redirect: o desktop gera `state` e `code_verifier` novos a cada
+  login (CSPRNG do sistema; 43 e 64 caracteres), calcula `code_challenge` (SHA-256 em **hex**, exigência do
+  TikTok), abre um listener em `127.0.0.1` numa porta escolhida pelo sistema e abre o navegador padrão na
+  autorização oficial. O TikTok redireciona **direto** para `http://127.0.0.1:<porta>/tiktok/callback`.
+- **Listener loopback** (`src-tauri/src/tiktok/loopback.rs`): bind só em `127.0.0.1` (nunca `0.0.0.0` nem
+  `localhost`); aceita só `GET` no caminho exato `/tiktok/callback`; exige `Host: 127.0.0.1:<porta>` (bloqueia DNS
+  rebinding); recusa parâmetros repetidos e cabeçalhos > 8 KB; confere o `state` em tempo constante **antes** de
+  olhar `code`/`error`; descarta `error_description`; encerra no primeiro callback válido ou em 5 min (uso único).
+- **Troca do code:** o Rust envia `code` + `code_verifier` + a redirect URI usada ao backend
+  (`POST /auth/tiktok/token`), que acrescenta o `client_secret`. O code é trocado uma única vez, imediatamente.
+  O backend só aceita redirect URI no formato `http://127.0.0.1:<1024–65535>/tiktok/callback` e exige PKCE.
+- `state`, `code_verifier` e `code` ficam só na memória da tentativa de login e **nunca** vão para logs, banco ou
+  webview.
 - Access/refresh tokens: **somente** no Credential Manager do Windows, um item por conta
   (`tiktok_token:<open_id>`, JSON com tokens, expirações e escopos). O banco guarda apenas status e metadados
   públicos (open_id, @, nome, avatar). Nenhum comando devolve tokens ao webview.
@@ -43,7 +50,7 @@ Estas políticas valem desde já; a arquitetura foi desenhada para cumpri-las qu
 
 O TikTok recomenda que o **servidor** guarde o client secret **e o refresh token**. Aqui o client secret fica no
 servidor, mas o **refresh token fica no Credential Manager do Windows** do usuário — divergência consciente,
-registrada na revisão da DEC-024 (item 6):
+registrada na revisão da DEC-024 (item 6) e mantida pela DEC-027:
 
 - **Motivo:** backend sem estado e local-first; guardar no servidor exigiria banco, contas e uma credencial do
   desktop para o backend, que também ficaria no computador do usuário.
@@ -64,8 +71,7 @@ registrada na revisão da DEC-024 (item 6):
   Firewall da Vercel.
 - Logs JSON só com evento, método, caminho sem query, status e duração; nunca code, state, tokens, secret, IP ou
   corpo (redação por nome de campo como defesa extra; testado).
-- Callback: só repassa para `http://127.0.0.1:<porta 1024–65535>/tiktok/callback`; `state` malformado → página
-  de erro sem redirect; `error_description` do TikTok é descartada.
+- Não há rota pública de callback (DEC-027): o redirect do OAuth vai direto ao loopback do desktop.
 - Segredos só nas variáveis de ambiente do projeto Vercel; rotacionar o `client_secret` no portal do TikTok se
   houver suspeita de vazamento.
 - O vídeo nunca passa pelo backend.
@@ -128,4 +134,4 @@ registrada na revisão da DEC-024 (item 6):
 | `assetProtocol.scope: $APPDATA/thumbnails/*`   | exibir miniaturas geradas pelo app (DEC-018)                              |
 | comandos `save_thumbnail` / `delete_thumbnail` | gravar/remover miniaturas na pasta do app                                 |
 | `dragDropEnabled: false`                       | permite drag-and-drop HTML5 no calendário (DEC-010)                       |
-| listener loopback `127.0.0.1` (etapa 3)        | receber o `code` repassado pelo callback OAuth; porta aleatória, 1 uso    |
+| listener loopback `127.0.0.1` (etapa 3)        | receber o redirect do Login Kit Desktop; porta do sistema, 1 uso, 5 min   |

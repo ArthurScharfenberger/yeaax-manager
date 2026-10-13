@@ -19,25 +19,18 @@ const scopesSchema = z
   .pipe(z.array(z.enum(KNOWN_TIKTOK_SCOPES)).min(1))
   .refine((scopes) => scopes.includes('user.info.basic'), 'user.info.basic é obrigatório');
 
-const redirectUriSchema = z.url({ protocol: /^https$/ }).refine((value) => {
-  const url = new URL(value);
-  return url.search === '' && url.hash === '' && !value.includes('#') && value.length < 512;
-}, 'redirect URI precisa ser estático (sem query/fragmento) e ter menos de 512 caracteres');
-
 const envSchema = z.object({
   TIKTOK_CLIENT_KEY: z
     .string()
     .trim()
     .regex(/^[A-Za-z0-9_-]{4,128}$/),
   TIKTOK_CLIENT_SECRET: z.string().trim().min(8).max(512).regex(/^\S+$/),
-  TIKTOK_REDIRECT_URI: redirectUriSchema,
   TIKTOK_SCOPES: scopesSchema,
 });
 
 export interface TikTokConfig {
   clientKey: string;
   clientSecret: string;
-  redirectUri: string;
   scopes: readonly string[];
 }
 
@@ -57,7 +50,6 @@ export function loadConfig(env: Env): ConfigResult {
   const result = envSchema.safeParse({
     TIKTOK_CLIENT_KEY: env.TIKTOK_CLIENT_KEY,
     TIKTOK_CLIENT_SECRET: env.TIKTOK_CLIENT_SECRET,
-    TIKTOK_REDIRECT_URI: env.TIKTOK_REDIRECT_URI,
     // Variável vazia ou ausente usa o conjunto padrão.
     TIKTOK_SCOPES: scopes ? scopes : DEFAULT_TIKTOK_SCOPES,
   });
@@ -72,7 +64,6 @@ export function loadConfig(env: Env): ConfigResult {
       tiktok: {
         clientKey: data.TIKTOK_CLIENT_KEY,
         clientSecret: data.TIKTOK_CLIENT_SECRET,
-        redirectUri: data.TIKTOK_REDIRECT_URI,
         scopes: data.TIKTOK_SCOPES,
       },
     },

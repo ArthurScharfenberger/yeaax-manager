@@ -15,8 +15,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); 
 
 ### Adicionado
 
+- Login do TikTok passa a ser **Login Kit Desktop + PKCE** (DEC-027): núcleo no Rust com geração de `state` e
+  `code_verifier` pelo CSPRNG do sistema, `code_challenge` SHA-256 em hex (formato exigido pelo TikTok) e validação
+  estrita do callback local em `127.0.0.1` (16 testes novos).
 - **Backend mínimo** (`backend/`, publicado separadamente em `api.yeaax.xyz`): `/health`, `/config`,
-  `/auth/tiktok/callback` (repasse seguro ao loopback do desktop), `/auth/tiktok/token`, `/refresh` e `/revoke`.
+  `/auth/tiktok/token` (exige PKCE e redirect loopback), `/refresh` e `/revoke`. A rota de callback do fluxo Web foi
+  removida com a DEC-027.
   Sem estado, CORS fechado, validação Zod, rate limit, logs sem dados sensíveis, erros do TikTok normalizados,
   62 testes (DEC-026).
 - Revisão de segurança da DEC-024 e registro da divergência sobre refresh tokens no desktop (SECURITY.md).

@@ -8,6 +8,7 @@
 mod commands;
 mod error;
 mod migrations;
+mod tiktok;
 
 use tauri_plugin_log::{log::LevelFilter, RotationStrategy, Target, TargetKind};
 

@@ -18,6 +18,54 @@ Formato:
 
 ---
 
+## Sessão 2026-10-13 (4) — Login Kit Desktop + PKCE (DEC-027)
+
+### Objetivo
+
+Trocar o login do TikTok de Web (callback HTTPS + repasse) para **Desktop + PKCE** com redirect direto ao loopback,
+a pedido do usuário, antes da etapa 3. Confirmar na documentação oficial a sintaxe do redirect e o formato do
+`code_challenge`.
+
+### Alterações realizadas
+
+- Documentação oficial confirmada (2026-10-13): redirect `http://127.0.0.1:*/tiktok/callback` é válido (porta
+  curinga suportada e recomendada); `code_challenge` = SHA-256 do verifier em **hex** (não base64url); `S256`.
+- Backend: removidos `GET /auth/tiktok/callback`, `oauthState.ts` e a variável `TIKTOK_REDIRECT_URI`;
+  `POST /auth/tiktok/token` exige `{ code, codeVerifier, redirectUri }` com redirect só no formato loopback
+  (`src/loopback.ts`); `/config` informa redirect e PKCE. 61 testes.
+- Rust: `src-tauri/src/tiktok/pkce.rs` (state/verifier via `getrandom`, challenge hex, comparação em tempo
+  constante) e `tiktok/loopback.rs` (validação pura do callback: GET, caminho exato, Host, state antes de
+  code/error, parâmetros repetidos, tamanho). 16 testes novos (29 no total). Ainda não ligados a comandos.
+- Docs: DEC-027 (DEC-024 marcada como substituída), SECURITY, ARCHITECTURE, INTEGRATIONS, API_NOTES, ROADMAP,
+  TODO, CHANGELOG, README, PROJECT, AGENTS, `backend/README.md`, `backend/.env.example`.
+
+### Arquivos importantes
+
+`src-tauri/src/tiktok/{mod,pkce,loopback}.rs`, `src-tauri/Cargo.toml`, `backend/src/loopback.ts`,
+`backend/src/routes/tiktokAuth.ts`, `docs/DECISIONS.md` (DEC-027).
+
+### Decisões
+
+DEC-027. Dependências Rust novas: `getrandom` 0.3, `sha2` 0.10, `url` 2 (já estavam na árvore via Tauri).
+
+### Problemas encontrados
+
+- Heredocs longos no Bash do Windows voltaram a falhar ("unexpected EOF") → scripts de edição gravados em arquivo
+  no scratchpad e executados com `python -I`.
+
+### Pendências
+
+- Usuário: portal do TikTok como **Desktop** com `http://127.0.0.1:*/tiktok/callback`; push e deploy do backend
+  (sem `TIKTOK_REDIRECT_URI`).
+
+### Próximo passo
+
+Etapa 3 (após aprovação da lista de arquivos): comando `tiktok_connect` — `/config` do backend, listener
+`127.0.0.1:0` com timeout de 5 min, `tauri-plugin-opener` para abrir a autorização, troca via backend, tokens no
+Credential Manager, perfil via `/v2/user/info/`.
+
+---
+
 ## Sessão 2026-10-13 (3) — Etapa 2: revisão da DEC-024 e backend mínimo
 
 ### Objetivo

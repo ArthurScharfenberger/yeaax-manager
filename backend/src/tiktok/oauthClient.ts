@@ -37,10 +37,17 @@ export interface TokenSet {
   tokenType: string;
 }
 
+/** Dados do Login Kit Desktop: code recebido no loopback + PKCE + redirect URI usada na autorização. */
+export interface CodeExchange {
+  code: string;
+  codeVerifier: string;
+  redirectUri: string;
+}
+
 export type OAuthOperation = 'exchange' | 'refresh' | 'revoke';
 
 export interface TikTokOAuthClient {
-  exchangeCode(code: string, codeVerifier?: string): Promise<TokenSet>;
+  exchangeCode(request: CodeExchange): Promise<TokenSet>;
   refresh(refreshToken: string): Promise<TokenSet>;
   revoke(accessToken: string): Promise<void>;
 }
@@ -172,14 +179,14 @@ export function createTikTokOAuthClient({ config, fetch, logger }: Deps): TikTok
   const credentials = { client_key: config.clientKey, client_secret: config.clientSecret };
 
   return {
-    async exchangeCode(code, codeVerifier) {
-      const form: Record<string, string> = {
+    async exchangeCode({ code, codeVerifier, redirectUri }) {
+      const form = {
         ...credentials,
         code,
         grant_type: 'authorization_code',
-        redirect_uri: config.redirectUri,
+        redirect_uri: redirectUri,
+        code_verifier: codeVerifier,
       };
-      if (codeVerifier) form.code_verifier = codeVerifier;
       const tokens = toTokenSet('exchange', await post('exchange', TIKTOK_TOKEN_URL, form));
       logger.info('tiktok.oauth.exchanged', { scopes: tokens.scopes });
       return tokens;
