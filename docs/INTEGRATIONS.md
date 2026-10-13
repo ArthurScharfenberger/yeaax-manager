@@ -50,8 +50,9 @@ O mesmo status aparece na UI (Configurações → Integrações), definido em `s
   3. [x] Rust OAuth: PKCE, listener `127.0.0.1` de uso único, navegador do sistema (`tauri-plugin-opener`), troca
          via backend, tokens no cofre por canal, refresh com trava, perfil (`/v2/user/info/`), comandos `tiktok_*`;
          `TikTokProvider` real no desktop; conexão transacional. [x] Teste real no sandbox validado em 2026-10-13.
-  4. [ ] Conta conectada na UI: botão "Conectar TikTok" sem pedir @, `channels.external_id` (open_id), avatar
-         (liberar o CDN do TikTok na CSP), status `expired` quando o refresh falhar.
+  4. [x] Conta conectada na UI (DEC-028): "Conectar TikTok" sem pedir @, `channels.external_id` (open_id), avatar
+         real (CDN do TikTok na CSP), verificação ao abrir o app, "Sessão expirada" + "Reconectar", cancelar login,
+         remover canal limpa o cofre.
   5. [ ] Compositor TikTok (UX obrigatória — DEC-019): `creator_info`, nickname, privacidade sem padrão, toggles
          desmarcados, divulgação comercial, aviso de música, prévia; `posts.platform_options`.
   6. [ ] Publicação: init `FILE_UPLOAD` + chunks sequenciais com progresso, polling de status,

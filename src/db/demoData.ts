@@ -198,6 +198,7 @@ async function seed(repositories: Repositories, now: Date): Promise<void> {
       id: channelId(channel.key),
       platform: channel.platform,
       username: channel.username,
+      externalId: null,
       displayName: channel.displayName,
       avatarUrl: null,
       status: channel.status,

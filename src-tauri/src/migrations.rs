@@ -11,10 +11,18 @@ pub const DATABASE_URL: &str = "sqlite:social-manager.db";
 ///
 /// Regra: nunca edite uma migration já distribuída — adicione uma nova versão.
 pub fn all() -> Vec<Migration> {
-    vec![Migration {
-        version: 1,
-        description: "initial_schema",
-        sql: include_str!("../migrations/0001_initial_schema.sql"),
-        kind: MigrationKind::Up,
-    }]
+    vec![
+        Migration {
+            version: 1,
+            description: "initial_schema",
+            sql: include_str!("../migrations/0001_initial_schema.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 2,
+            description: "channel_external_id",
+            sql: include_str!("../migrations/0002_channel_external_id.sql"),
+            kind: MigrationKind::Up,
+        },
+    ]
 }

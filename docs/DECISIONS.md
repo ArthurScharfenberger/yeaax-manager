@@ -4,35 +4,36 @@ Toda decisão arquitetural relevante entra aqui **antes** ou **junto** do códig
 **Data · Decisão · Motivo · Alternativas consideradas · Impactos.** Decisões substituídas não são apagadas:
 marque como _Substituída por DEC-XXX_.
 
-| Id      | Decisão                                                                | Status                                   |
-| ------- | ---------------------------------------------------------------------- | ---------------------------------------- |
-| DEC-001 | SQLite local via `tauri-plugin-sql`                                    | Ativa                                    |
-| DEC-002 | Tauri 2 + React + TypeScript + Vite                                    | Ativa                                    |
-| DEC-003 | Regras de negócio em TypeScript; Rust só para sistema                  | Ativa                                    |
-| DEC-004 | Tailwind CSS 4 + componentes próprios + lucide-react                   | Ativa                                    |
-| DEC-005 | TanStack Query; sem Redux; Zustand só com necessidade real             | Ativa                                    |
-| DEC-006 | Mídia referenciada pelo caminho original, sem cópia                    | Ativa                                    |
-| DEC-007 | Enums validados na aplicação, sem `CHECK` no SQLite                    | Ativa                                    |
-| DEC-008 | Sem transações entre chamadas ao banco (pool do plugin)                | Ativa                                    |
-| DEC-009 | Modo preview no navegador com SQLite WASM (só em dev)                  | Ativa                                    |
-| DEC-010 | Drag-and-drop HTML5 no calendário (`dragDropEnabled: false`)           | Ativa                                    |
-| DEC-011 | React Router com HashRouter                                            | Ativa                                    |
-| DEC-012 | Integrações como interfaces + mocks; só APIs oficiais                  | Ativa                                    |
-| DEC-013 | Dados de demonstração com prefixo `demo-`, seed único e removível      | Ativa                                    |
-| DEC-014 | Testes com Vitest + `node:sqlite` usando as migrations reais           | Ativa                                    |
-| DEC-015 | Node 24 LTS e TypeScript 6.0 (não 7.x)                                 | Ativa                                    |
-| DEC-016 | Asset protocol com escopo vazio e autorização por arquivo              | Ativa                                    |
-| DEC-017 | Metadados de vídeo via `<video preload="metadata">` até o ffprobe      | Provisória                               |
-| DEC-018 | Miniaturas capturadas pelo WebView2 e gravadas pelo Rust               | Provisória                               |
-| DEC-019 | Publicação sempre com consentimento por post; Auto Schedule só sugere  | Ativa                                    |
-| DEC-020 | Credenciais do próprio usuário ("traga seu app") no Credential Manager | Substituída parcialmente por DEC-023/024 |
-| DEC-021 | Logs em arquivo com tauri-plugin-log                                   | Ativa                                    |
-| DEC-022 | OpenAI via Rust com chave no Credential Manager; "Postar com IA"       | Ativa                                    |
-| DEC-023 | Backend mínimo `api.yeaax.xyz` (Vercel) só para segredos do app        | Ativa                                    |
-| DEC-024 | OAuth TikTok Web com callback HTTPS repassado ao loopback do desktop   | Substituída por DEC-027                  |
-| DEC-025 | Nome exibido "Yeaax Manager"; identificador interno mantido            | Ativa                                    |
-| DEC-026 | Backend sem framework: um handler `fetch` + Zod, rate limit em memória | Ativa                                    |
-| DEC-027 | OAuth TikTok com Login Kit Desktop + PKCE (loopback direto)            | Ativa                                    |
+| Id      | Decisão                                                                        | Status                                   |
+| ------- | ------------------------------------------------------------------------------ | ---------------------------------------- |
+| DEC-001 | SQLite local via `tauri-plugin-sql`                                            | Ativa                                    |
+| DEC-002 | Tauri 2 + React + TypeScript + Vite                                            | Ativa                                    |
+| DEC-003 | Regras de negócio em TypeScript; Rust só para sistema                          | Ativa                                    |
+| DEC-004 | Tailwind CSS 4 + componentes próprios + lucide-react                           | Ativa                                    |
+| DEC-005 | TanStack Query; sem Redux; Zustand só com necessidade real                     | Ativa                                    |
+| DEC-006 | Mídia referenciada pelo caminho original, sem cópia                            | Ativa                                    |
+| DEC-007 | Enums validados na aplicação, sem `CHECK` no SQLite                            | Ativa                                    |
+| DEC-008 | Sem transações entre chamadas ao banco (pool do plugin)                        | Ativa                                    |
+| DEC-009 | Modo preview no navegador com SQLite WASM (só em dev)                          | Ativa                                    |
+| DEC-010 | Drag-and-drop HTML5 no calendário (`dragDropEnabled: false`)                   | Ativa                                    |
+| DEC-011 | React Router com HashRouter                                                    | Ativa                                    |
+| DEC-012 | Integrações como interfaces + mocks; só APIs oficiais                          | Ativa                                    |
+| DEC-013 | Dados de demonstração com prefixo `demo-`, seed único e removível              | Ativa                                    |
+| DEC-014 | Testes com Vitest + `node:sqlite` usando as migrations reais                   | Ativa                                    |
+| DEC-015 | Node 24 LTS e TypeScript 6.0 (não 7.x)                                         | Ativa                                    |
+| DEC-016 | Asset protocol com escopo vazio e autorização por arquivo                      | Ativa                                    |
+| DEC-017 | Metadados de vídeo via `<video preload="metadata">` até o ffprobe              | Provisória                               |
+| DEC-018 | Miniaturas capturadas pelo WebView2 e gravadas pelo Rust                       | Provisória                               |
+| DEC-019 | Publicação sempre com consentimento por post; Auto Schedule só sugere          | Ativa                                    |
+| DEC-020 | Credenciais do próprio usuário ("traga seu app") no Credential Manager         | Substituída parcialmente por DEC-023/024 |
+| DEC-021 | Logs em arquivo com tauri-plugin-log                                           | Ativa                                    |
+| DEC-022 | OpenAI via Rust com chave no Credential Manager; "Postar com IA"               | Ativa                                    |
+| DEC-023 | Backend mínimo `api.yeaax.xyz` (Vercel) só para segredos do app                | Ativa                                    |
+| DEC-024 | OAuth TikTok Web com callback HTTPS repassado ao loopback do desktop           | Substituída por DEC-027                  |
+| DEC-025 | Nome exibido "Yeaax Manager"; identificador interno mantido                    | Ativa                                    |
+| DEC-026 | Backend sem framework: um handler `fetch` + Zod, rate limit em memória         | Ativa                                    |
+| DEC-027 | OAuth TikTok com Login Kit Desktop + PKCE (loopback direto)                    | Ativa                                    |
+| DEC-028 | Conta identificada pelo open_id; verificação ao abrir; avatar do CDN do TikTok | Ativa                                    |
 
 ---
 
@@ -473,3 +474,34 @@ Feita contra a documentação atual do Login Kit (Web e Desktop) e do gerenciame
 - **Validação real (2026-10-13, sandbox):** autorização oficial, redirect `127.0.0.1:<porta>`, PKCE hex, troca
   pelo backend, perfil (`@yeeax`), credencial no cofre, sincronizar e desconectar com revogação — tudo funcionou
   sem ajustes no fluxo. Endurecimento feito em seguida: persistência `Local` no cofre e logs de bibliotecas em WARN.
+
+## DEC-028 — Conta identificada pelo open_id; verificação ao abrir; avatar do CDN do TikTok
+
+- **Data:** 2026-10-13 (etapa 4)
+- **Decisão:**
+  1. Migration `0002`: coluna `channels.external_id` (open_id do TikTok) com índice único parcial
+     `(platform, external_id) WHERE external_id IS NOT NULL`. A conta é reconhecida pelo open_id, não pelo @ (que
+     pode mudar); conectar a mesma conta de novo **reconecta** o canal existente em vez de duplicar. Canais antigos
+     sem open_id são reconhecidos pelo @ e recebem o open_id na próxima conexão ou verificação.
+  2. "Conectar TikTok" (login oficial) não pede o @: `channelService.connectAccount(platform)` cria ou reconecta.
+     O formulário com @ continua para os providers simulados (Instagram, preview). `ProviderCapabilities.officialLogin`
+     diz qual fluxo usar.
+  3. **Verificação ao abrir o app** (`useConnectionCheck` → `channelService.verifyConnections`): para cada canal
+     conectado por login oficial, renova o token se preciso e atualiza @, nome, avatar e open_id. Credencial
+     inválida (`TIKTOK_AUTH_EXPIRED`/`TIKTOK_NOT_CONNECTED` — `SESSION_LOST_ERROR_CODES`) → status `expired`
+     ("Sessão expirada", botão "Reconectar"). Erro de rede → nada muda (o app funciona offline). Sincronizar manual
+     segue a mesma regra.
+  4. Avatar: URL do perfil do TikTok exibida direto do CDN; a CSP ganha `img-src https://*.tiktokcdn.com
+https://*.tiktokcdn-us.com` e o provider descarta qualquer outra origem (`safeAvatarUrl`). `<img
+referrerPolicy="no-referrer">` com fallback para as iniciais se a URL (assinada, expira) falhar.
+  5. Cancelar login: botão "Cancelar login" no diálogo e na linha do canal (`SocialProvider.cancelConnect` →
+     `tiktok_cancel_connect`, que fecha a porta local).
+  6. Remover um canal de login oficial chama `disconnect` antes (revoga e apaga a credencial do cofre) — antes a
+     credencial ficava órfã.
+- **Motivo:** pedidos do usuário para a etapa 4 (login direto, perfil real, sessão expirada, cancelar) e para "voltar
+  conectado ao reabrir o app" — a persistência já existia (cofre + SQLite); faltava confirmar a credencial ao abrir.
+- **Alternativas:** baixar o avatar pelo Rust e guardar localmente (sem ampliar a CSP, mas mais código e mais um
+  comando; reavaliar se a CSP virar problema); identificar a conta só pelo @ (quebra quando o @ muda).
+- **Impactos:** ampliação de CSP justificada em SECURITY.md (o CDN do TikTok vê o IP ao carregar o avatar — o mesmo
+  que acontece no app/site do TikTok); `Channel.externalId` e `SocialProfile.externalId` nos tipos; nova lógica em
+  `features/channels/channelConnector.ts` e `channelRules.ts`.

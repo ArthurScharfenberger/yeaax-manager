@@ -33,6 +33,7 @@ export class MockSocialProvider implements SocialProvider {
     publishVideo: true,
     nativeScheduling: false,
     analytics: false,
+    officialLogin: false,
   };
 
   private readonly latencyMs: number;
@@ -48,6 +49,7 @@ export class MockSocialProvider implements SocialProvider {
     const username = request.usernameHint?.trim() || `${this.platform}_user`;
     return {
       profile: {
+        externalId: null,
         username,
         displayName: request.displayNameHint?.trim() || username,
         avatarUrl: null,
@@ -61,7 +63,12 @@ export class MockSocialProvider implements SocialProvider {
 
   async getProfile(account: SocialAccountRef): Promise<SocialProfile> {
     await wait(this.latencyMs);
-    return { username: account.username, displayName: account.username, avatarUrl: null };
+    return {
+      externalId: null,
+      username: account.username,
+      displayName: account.username,
+      avatarUrl: null,
+    };
   }
 
   async publish(request: PublishRequest): Promise<PublishResult> {

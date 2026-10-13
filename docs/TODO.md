@@ -18,10 +18,9 @@ Fase atual: **TikTok real** (ordem em `docs/INTEGRATIONS.md` → TikTok).
       conta como target user (conta **privada** para os testes).
 - [ ] Usuário — Vercel/DNS: projeto separado com Root Directory `backend`, domínio `api.yeaax.xyz` (CNAME) e
       variáveis secretas `TIKTOK_CLIENT_KEY` e `TIKTOK_CLIENT_SECRET` (opcional `TIKTOK_SCOPES`).
-- [ ] Etapa 4 — UI da conta conectada: botão "Conectar TikTok" sem pedir @, `channels.external_id` (open_id),
-      avatar (liberar o CDN do TikTok na CSP, com justificativa), canal `expired` quando o refresh falhar,
-      botão para cancelar o login em andamento (`tiktokCancelConnect`).
-- [ ] Etapas 5–7 — compositor TikTok, publicação, status/demonstração.
+- [ ] Validar a etapa 4 no app (usuário): avatar real aparece; "Adicionar canal → TikTok" conecta sem pedir @ e
+      reconecta o mesmo canal se a conta já existir; "Cancelar login" fecha a espera; reabrir o app mantém conectado.
+- [ ] Etapas 5–7 — compositor TikTok (UX obrigatória), publicação real, status/demonstração para o App Review.
 - [ ] Usuário: criar a chave em platform.openai.com, colar em Configurações → IA, "Testar conexão" e usar
       "Postar com IA" num vídeo real (validar qualidade das legendas e leitura da miniatura).
 - [ ] Instagram real — **depois do TikTok**: app na Meta, token do painel no cofre, Reels por upload resumável.

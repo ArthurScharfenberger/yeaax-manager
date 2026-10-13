@@ -1,7 +1,7 @@
 import { AppError } from '@/lib/errors';
 import type { IntegrationStatus } from '@/lib/integrations';
 import { PLATFORM_INFO, type PlatformLimits } from '@/lib/platforms';
-import type { DesktopBridge } from '@/services/desktop/DesktopBridge';
+import type { DesktopBridge, TikTokAccount } from '@/services/desktop/DesktopBridge';
 
 import type {
   AnalyticsResult,
@@ -15,6 +15,32 @@ import type {
 } from './SocialProvider';
 
 const PUBLISH_NOT_READY = 'A publicação no TikTok ainda não foi implementada (etapa 6).';
+
+/**
+ * Avatares só dos CDNs do TikTok — os mesmos liberados no `img-src` da CSP (src-tauri/tauri.conf.json, DEC-028).
+ * Outra origem vira `null` (iniciais), em vez de uma imagem bloqueada.
+ */
+const AVATAR_HOST = /(^|\.)tiktokcdn(-us)?\.com$/;
+
+export function safeAvatarUrl(url: string | null): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' && AVATAR_HOST.test(parsed.hostname) ? url : null;
+  } catch {
+    return null;
+  }
+}
+
+function toProfile(account: TikTokAccount, fallbackUsername: string): SocialProfile {
+  const username = account.username ?? fallbackUsername;
+  return {
+    externalId: account.openId,
+    username,
+    displayName: account.displayName || username,
+    avatarUrl: safeAvatarUrl(account.avatarUrl),
+  };
+}
 
 /**
  * Integração real com o TikTok — Login Kit Desktop + PKCE (DEC-027).
@@ -31,6 +57,7 @@ export class TikTokProvider implements SocialProvider {
     publishVideo: false,
     nativeScheduling: false,
     analytics: false,
+    officialLogin: true,
   };
 
   private readonly desktop: DesktopBridge;
@@ -50,12 +77,7 @@ export class TikTokProvider implements SocialProvider {
       );
     }
     return {
-      profile: {
-        username: account.username,
-        displayName: account.displayName || account.username,
-        // Imagens externas ficam bloqueadas pela CSP até a etapa 4 liberar o CDN do TikTok.
-        avatarUrl: null,
-      },
+      profile: toProfile(account, account.username),
       session: {
         commit: (channelId) => this.desktop.tiktokCommitConnection(connectionId, channelId),
         discard: () => this.desktop.tiktokDiscardConnection(connectionId),
@@ -63,17 +85,16 @@ export class TikTokProvider implements SocialProvider {
     };
   }
 
+  cancelConnect(): Promise<void> {
+    return this.desktop.tiktokCancelConnect();
+  }
+
   disconnect(account: SocialAccountRef): Promise<void> {
     return this.desktop.tiktokDisconnect(account.channelId);
   }
 
   async getProfile(account: SocialAccountRef): Promise<SocialProfile> {
-    const profile = await this.desktop.tiktokGetProfile(account.channelId);
-    return {
-      username: profile.username ?? account.username,
-      displayName: profile.displayName || account.username,
-      avatarUrl: null,
-    };
+    return toProfile(await this.desktop.tiktokGetProfile(account.channelId), account.username);
   }
 
   publish(): Promise<PublishResult> {

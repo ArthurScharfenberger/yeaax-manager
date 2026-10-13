@@ -15,6 +15,7 @@ interface ChannelRow {
   id: string;
   platform: string;
   username: string;
+  external_id: string | null;
   display_name: string;
   avatar_url: string | null;
   status: string;
@@ -24,6 +25,8 @@ interface ChannelRow {
 }
 
 export interface ChannelPatch {
+  username?: string;
+  externalId?: string | null;
   displayName?: string;
   avatarUrl?: string | null;
   status?: ChannelStatus;
@@ -32,6 +35,8 @@ export interface ChannelPatch {
 }
 
 const PATCH_COLUMNS: Record<keyof ChannelPatch, string> = {
+  username: 'username',
+  externalId: 'external_id',
   displayName: 'display_name',
   avatarUrl: 'avatar_url',
   status: 'status',
@@ -40,13 +45,14 @@ const PATCH_COLUMNS: Record<keyof ChannelPatch, string> = {
 };
 
 const COLUMNS =
-  'id, platform, username, display_name, avatar_url, status, last_synced_at, created_at, updated_at';
+  'id, platform, username, external_id, display_name, avatar_url, status, last_synced_at, created_at, updated_at';
 
 function toChannel(row: ChannelRow): Channel {
   return {
     id: row.id,
     platform: parseEnum(platformSchema, row.platform, 'channels.platform'),
     username: row.username,
+    externalId: row.external_id,
     displayName: row.display_name,
     avatarUrl: row.avatar_url,
     status: parseEnum(channelStatusSchema, row.status, 'channels.status'),
@@ -82,11 +88,22 @@ export function createChannelRepository(db: DbClient) {
       return row ? toChannel(row) : null;
     },
 
+    /** Conta já cadastrada pelo id da plataforma (open_id), independente do @ atual. */
+    async findByExternalId(platform: Platform, externalId: string): Promise<Channel | null> {
+      const rows = await db.select<ChannelRow>(
+        `SELECT ${COLUMNS} FROM channels WHERE platform = ? AND external_id = ?`,
+        [platform, externalId],
+      );
+      const row = rows[0];
+      return row ? toChannel(row) : null;
+    },
+
     async insert(channel: Channel): Promise<void> {
-      await db.execute(`INSERT INTO channels (${COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+      await db.execute(`INSERT INTO channels (${COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
         channel.id,
         channel.platform,
         channel.username,
+        channel.externalId,
         channel.displayName,
         channel.avatarUrl,
         channel.status,

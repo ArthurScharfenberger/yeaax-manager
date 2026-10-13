@@ -56,6 +56,7 @@ Estas políticas valem desde já; a arquitetura foi desenhada para cumpri-las qu
 - O frontend **nunca recebe tokens nem o `code`**: `SocialProvider.connect()` devolve só o perfil.
 - Refresh token rotativo: o novo substitui o anterior antes de qualquer outra ação. Refresh falhou → canal
   `expired`; nunca re-tentar autenticação de forma automática e silenciosa em loop.
+- Remover um canal de login oficial revoga e apaga a credencial do cofre antes de apagar o canal (nada órfão).
 - Proibido: scraping, automação de navegador, captura de cookies, endpoints não oficiais, burla de autenticação.
 
 ### Divergência da recomendação do TikTok (refresh token no desktop)
@@ -137,15 +138,16 @@ registrada na revisão da DEC-024 (item 6) e mantida pela DEC-027:
 
 ## Justificativas de permissões e exceções
 
-| Item                                                 | Motivo                                                                      |
-| ---------------------------------------------------- | --------------------------------------------------------------------------- |
-| `dialog:allow-open`                                  | seletor de vídeos na importação                                             |
-| `log:allow-log`                                      | gravar no arquivo de log as entradas do logger do frontend (já redigidas)   |
-| `sql:allow-execute`                                  | escrita no banco local                                                      |
-| `assetProtocol.enable`                               | preview/metadados de vídeos autorizados individualmente                     |
-| `assetProtocol.scope: $APPDATA/thumbnails/*`         | exibir miniaturas geradas pelo app (DEC-018)                                |
-| comandos `save_thumbnail` / `delete_thumbnail`       | gravar/remover miniaturas na pasta do app                                   |
-| `dragDropEnabled: false`                             | permite drag-and-drop HTML5 no calendário (DEC-010)                         |
-| listener loopback `127.0.0.1`                        | receber o redirect do Login Kit Desktop; porta do sistema, 1 uso, 5 min     |
-| plugin `opener` (sem permissão no webview)           | o Rust abre a URL oficial de autorização no navegador padrão                |
-| rede do Rust: `api.yeaax.xyz`, `open.tiktokapis.com` | troca/refresh/revoke (backend) e perfil (TikTok); a CSP do webview não muda |
+| Item                                                             | Motivo                                                                                                                              |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `dialog:allow-open`                                              | seletor de vídeos na importação                                                                                                     |
+| `log:allow-log`                                                  | gravar no arquivo de log as entradas do logger do frontend (já redigidas)                                                           |
+| `sql:allow-execute`                                              | escrita no banco local                                                                                                              |
+| `assetProtocol.enable`                                           | preview/metadados de vídeos autorizados individualmente                                                                             |
+| `assetProtocol.scope: $APPDATA/thumbnails/*`                     | exibir miniaturas geradas pelo app (DEC-018)                                                                                        |
+| comandos `save_thumbnail` / `delete_thumbnail`                   | gravar/remover miniaturas na pasta do app                                                                                           |
+| `dragDropEnabled: false`                                         | permite drag-and-drop HTML5 no calendário (DEC-010)                                                                                 |
+| CSP `img-src https://*.tiktokcdn.com https://*.tiktokcdn-us.com` | avatar real da conta (DEC-028); outras origens são descartadas no provider (`safeAvatarUrl`); o CDN vê o IP, como no próprio TikTok |
+| listener loopback `127.0.0.1`                                    | receber o redirect do Login Kit Desktop; porta do sistema, 1 uso, 5 min                                                             |
+| plugin `opener` (sem permissão no webview)                       | o Rust abre a URL oficial de autorização no navegador padrão                                                                        |
+| rede do Rust: `api.yeaax.xyz`, `open.tiktokapis.com`             | troca/refresh/revoke (backend) e perfil (TikTok); a CSP do webview não muda                                                         |

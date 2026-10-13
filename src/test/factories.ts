@@ -8,6 +8,7 @@ export function buildChannel(overrides: Partial<Channel> = {}): Channel {
     id: 'channel-1',
     platform: 'tiktok',
     username: 'yeaxx',
+    externalId: null,
     displayName: 'YEAXX Cars',
     avatarUrl: null,
     status: 'connected',

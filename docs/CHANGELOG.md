@@ -7,6 +7,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); 
 
 ### Segurança
 
+- Remover um canal do TikTok agora revoga e apaga a credencial guardada (antes ficava no cofre).
 - Credenciais (tokens do TikTok e chave da OpenAI) passam a ser gravadas no Gerenciador de Credenciais com
   persistência **local** (não acompanham perfis móveis de domínio).
 - Logs de bibliotecas de rede, TLS e cofre limitados a avisos (menos ruído e nenhuma descrição de itens do cofre).
@@ -21,6 +22,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); 
 
 ### Adicionado
 
+- **Conectar TikTok direto**: sem digitar o @ — a conta vem do TikTok. Conectar a mesma conta de novo reconecta o
+  canal existente. Avatar e nome reais na lista de canais.
+- **Contas verificadas ao abrir o app**: o token é renovado, o perfil atualizado e, se o acesso tiver sido revogado
+  ou vencido, o canal aparece como "Sessão expirada" com o botão "Reconectar". Sem internet, nada muda.
+- **Cancelar login** em andamento (no diálogo e na linha do canal).
 - **Conexão real com o TikTok no app desktop** (Login Kit Desktop + PKCE): "Conectar" abre a autorização oficial no
   navegador, o app recebe o retorno em `127.0.0.1`, troca o code pelo backend e guarda os tokens no Gerenciador de
   Credenciais. Conexão transacional (canal e credenciais gravados juntos ou nada muda), sincronização do perfil e

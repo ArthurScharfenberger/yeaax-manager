@@ -4,7 +4,7 @@ import type { DesktopBridge, TikTokAccount } from '@/services/desktop/DesktopBri
 import { createPreviewDesktopBridge } from '@/services/desktop/previewDesktopBridge';
 
 import { createSocialProviders } from './index';
-import { TikTokProvider } from './TikTokProvider';
+import { safeAvatarUrl, TikTokProvider } from './TikTokProvider';
 
 const ACCOUNT: TikTokAccount = {
   openId: 'open-1',
@@ -51,9 +51,10 @@ describe('TikTokProvider', () => {
     const result = await new TikTokProvider(desktop).connect();
 
     expect(result.profile).toEqual({
+      externalId: 'open-1',
       username: 'yeaxx',
       displayName: 'YEAXX Cars',
-      avatarUrl: null,
+      avatarUrl: 'https://p16.tiktokcdn.com/a.jpg',
     });
     await result.session?.commit('channel-1');
     await result.session?.discard();
@@ -84,5 +85,17 @@ describe('createSocialProviders', () => {
     const preview = createSocialProviders(createPreviewDesktopBridge());
     expect(preview.tiktok).not.toBeInstanceOf(TikTokProvider);
     expect(preview.tiktok.integrationStatus).toBe('MOCK');
+  });
+});
+
+describe('safeAvatarUrl', () => {
+  it('aceita só https dos CDNs do TikTok liberados na CSP', () => {
+    expect(safeAvatarUrl('https://p16-sign-va.tiktokcdn.com/a.jpg?x=1')).not.toBeNull();
+    expect(safeAvatarUrl('https://p19.tiktokcdn-us.com/a.jpg')).not.toBeNull();
+    expect(safeAvatarUrl('http://p16.tiktokcdn.com/a.jpg')).toBeNull();
+    expect(safeAvatarUrl('https://tiktokcdn.com.evil.example/a.jpg')).toBeNull();
+    expect(safeAvatarUrl('https://eviltiktokcdn.com/a.jpg')).toBeNull();
+    expect(safeAvatarUrl('lixo')).toBeNull();
+    expect(safeAvatarUrl(null)).toBeNull();
   });
 });

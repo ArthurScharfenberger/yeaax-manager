@@ -16,6 +16,8 @@ export interface Channel {
   platform: Platform;
   /** Usuário sem o `@` (ex.: `yeaxx`). */
   username: string;
+  /** Id da conta na plataforma (open_id do TikTok). `null` em canais simulados ou ainda não verificados. */
+  externalId: string | null;
   displayName: string;
   avatarUrl: string | null;
   status: ChannelStatus;

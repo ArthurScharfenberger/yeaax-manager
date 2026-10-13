@@ -32,16 +32,17 @@ app_settings (chave/valor, independente)
 
 ### `channels` — contas conectadas
 
-| Coluna                  | Tipo    | Notas                                                        |
-| ----------------------- | ------- | ------------------------------------------------------------ |
-| id                      | TEXT PK |                                                              |
-| platform                | TEXT    | `tiktok` \| `instagram`                                      |
-| username                | TEXT    | sem `@`; único por plataforma (`UNIQUE(platform, username)`) |
-| display_name            | TEXT    |                                                              |
-| avatar_url              | TEXT?   | URL externa (não confiável — exibir só como imagem)          |
-| status                  | TEXT    | `connected` \| `disconnected` \| `expired` \| `error`        |
-| last_synced_at          | TEXT?   | última sincronização com a plataforma                        |
-| created_at / updated_at | TEXT    |                                                              |
+| Coluna                  | Tipo    | Notas                                                                                               |
+| ----------------------- | ------- | --------------------------------------------------------------------------------------------------- |
+| id                      | TEXT PK |                                                                                                     |
+| platform                | TEXT    | `tiktok` \| `instagram`                                                                             |
+| username                | TEXT    | sem `@`; único por plataforma (`UNIQUE(platform, username)`)                                        |
+| external_id             | TEXT?   | id da conta na plataforma (open_id do TikTok) — migration 2; único por plataforma quando preenchido |
+| display_name            | TEXT    |                                                                                                     |
+| avatar_url              | TEXT?   | URL externa (não confiável — exibir só como imagem; só CDNs do TikTok liberados na CSP)             |
+| status                  | TEXT    | `connected` \| `disconnected` \| `expired` \| `error`                                               |
+| last_synced_at          | TEXT?   | última sincronização com a plataforma                                                               |
+| created_at / updated_at | TEXT    |                                                                                                     |
 
 > Tokens **não** ficam nesta tabela (nem em lugar nenhum do banco) — ver SECURITY.md.
 
@@ -115,9 +116,10 @@ Valores inválidos voltam ao padrão com aviso no log. **Nunca guarde segredos a
 - Mudança de enum: não exige migration (DEC-007), só atualizar o schema Zod em `src/types`.
 - Recriar tabela referenciada por FK com cascade (ex.: `posts`) apaga dados dependentes — evite; prefira `ALTER TABLE ADD COLUMN`.
 
-| Versão | Arquivo                   | Conteúdo                                                             |
-| ------ | ------------------------- | -------------------------------------------------------------------- |
-| 1      | `0001_initial_schema.sql` | channels, media, tags, media_tags, posts, post_history, app_settings |
+| Versão | Arquivo                        | Conteúdo                                                                          |
+| ------ | ------------------------------ | --------------------------------------------------------------------------------- |
+| 1      | `0001_initial_schema.sql`      | channels, media, tags, media_tags, posts, post_history, app_settings              |
+| 2      | `0002_channel_external_id.sql` | `channels.external_id` + índice único parcial `(platform, external_id)` (DEC-028) |
 
 ## Tabelas futuras (não criar antes da necessidade)
 

@@ -84,6 +84,19 @@ const UNEXPECTED_ERROR_CODES: ReadonlySet<ErrorCode> = new Set([
   'TIKTOK_ERROR',
 ]);
 
+/**
+ * A credencial da conta deixou de valer (expirou, foi revogada ou sumiu do cofre): o canal passa a "Sessão
+ * expirada" e o usuário precisa conectar de novo. Erros de rede não entram aqui.
+ */
+export const SESSION_LOST_ERROR_CODES: ReadonlySet<ErrorCode> = new Set([
+  'TIKTOK_AUTH_EXPIRED',
+  'TIKTOK_NOT_CONNECTED',
+]);
+
+export function isSessionLostError(error: unknown): boolean {
+  return isAppError(error) && SESSION_LOST_ERROR_CODES.has(error.code);
+}
+
 /** `true` para erros de validação/regra (ex.: agendar no passado), que não indicam bug. */
 export function isExpectedError(error: unknown): boolean {
   return isAppError(error) && !UNEXPECTED_ERROR_CODES.has(error.code);

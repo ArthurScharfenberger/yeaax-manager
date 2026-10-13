@@ -21,6 +21,8 @@ export interface SocialProvider {
 
   /** Inicia o fluxo de autorização e devolve o perfil autenticado. */
   connect(request: ConnectRequest): Promise<ConnectResult>;
+  /** Cancela uma autorização em andamento (só providers com login oficial). */
+  cancelConnect?(): Promise<void>;
   /** Revoga/descarta a autorização local da conta. */
   disconnect(account: SocialAccountRef): Promise<void>;
   getProfile(account: SocialAccountRef): Promise<SocialProfile>;
@@ -37,6 +39,11 @@ export interface ProviderCapabilities {
   /** A plataforma aceita agendamento nativo (senão o app agenda localmente). */
   nativeScheduling: boolean;
   analytics: boolean;
+  /**
+   * Conexão pelo login oficial da plataforma (abre o navegador; a conta vem da plataforma, não do que o usuário
+   * digita). `false` nos providers simulados.
+   */
+  officialLogin: boolean;
 }
 
 /** Referência a uma conta conectada, sem credenciais. */
@@ -47,6 +54,8 @@ export interface SocialAccountRef {
 }
 
 export interface SocialProfile {
+  /** Id estável da conta na plataforma (open_id do TikTok); `null` nos providers simulados. */
+  externalId: string | null;
   username: string;
   displayName: string;
   avatarUrl: string | null;

@@ -119,7 +119,8 @@ src/
 │   └── repositories/       channel, media, tag, post, postHistory, settings
 ├── features/               Um diretório por domínio
 │   ├── dashboard/          Página + métricas
-│   ├── channels/           Página, diálogo de novo canal, channelService
+│   ├── channels/           Página, diálogo de novo canal, channelService (+ channelConnector, channelRules,
+│   │                       verificação das contas ao abrir — useConnectionCheck)
 │   ├── media/              Biblioteca, detalhes, tags, mediaService, mediaRules
 │   ├── posts/              Compositor, detalhes, fila, postService, postRules, PostDialogsProvider
 │   ├── scheduling/         Calendário semanal, agenda do dashboard, calendarLayout

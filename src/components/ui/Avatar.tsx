@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 import { cn } from '@/utils/cn';
 
 interface AvatarProps {
@@ -18,12 +20,16 @@ function initials(name: string): string {
 }
 
 export function Avatar({ name, src, size = 'md', className }: AvatarProps) {
+  // URLs de avatar das plataformas expiram; se a imagem falhar, mostra as iniciais até a próxima sincronização.
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const sizeClass = size === 'sm' ? 'size-6 text-2xs' : 'size-8 text-xs';
-  if (src) {
+  if (src && src !== failedSrc) {
     return (
       <img
         src={src}
         alt=""
+        referrerPolicy="no-referrer"
+        onError={() => setFailedSrc(src)}
         className={cn(
           'shrink-0 rounded-full border border-line object-cover',
           sizeClass,

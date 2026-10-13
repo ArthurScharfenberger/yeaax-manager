@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router';
 
+import { useConnectionCheck } from '@/features/channels/hooks';
 import { useThumbnailBackfill } from '@/features/media/useThumbnailBackfill';
 import { PostDialogsProvider } from '@/features/posts/PostDialogsProvider';
 
@@ -7,6 +8,7 @@ import { Sidebar } from './Sidebar';
 
 export function AppLayout() {
   useThumbnailBackfill();
+  useConnectionCheck();
 
   return (
     <PostDialogsProvider>

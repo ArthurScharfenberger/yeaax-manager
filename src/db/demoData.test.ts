@@ -49,6 +49,7 @@ describe('demoData', () => {
       id: 'real-channel',
       platform: 'tiktok',
       username: 'meucanal',
+      externalId: null,
       displayName: 'Meu canal',
       avatarUrl: null,
       status: 'connected',

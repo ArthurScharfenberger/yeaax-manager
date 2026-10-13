@@ -18,6 +18,58 @@ Formato:
 
 ---
 
+## Sessão 2026-10-13 (7) — Etapa 4: conta conectada na UI (DEC-028)
+
+### Objetivo
+
+Transformar o login já validado em experiência de produto: "Conectar TikTok" sem @, open_id persistido, avatar e
+perfil reais, sessão expirada, cancelar login — e, a pedido do usuário, garantir que a conta "volte conectada" ao
+reabrir o app (verificação ao abrir).
+
+### Alterações realizadas
+
+- Migration `0002_channel_external_id.sql` (+ `migrations.rs`); `Channel.externalId`; repositório com
+  `findByExternalId` e patch de `username`/`externalId`.
+- Contratos: `SocialProfile.externalId`, `ProviderCapabilities.officialLogin`, `SocialProvider.cancelConnect?`.
+  `TikTokProvider` devolve open_id e avatar (só CDNs do TikTok — `safeAvatarUrl`); CSP `img-src` liberada para eles.
+- `features/channels/`: `channelConnector.ts` (connectNew, connectAccount, connect, cancelConnect — duas fases),
+  `channelRules.ts` (`isSameAccount`, `profilePatch`), `channelService` com `verifyConnections`, `sync` que marca
+  `expired`, `remove` que limpa o cofre. `errors.ts`: `SESSION_LOST_ERROR_CODES`/`isSessionLostError`.
+- UI: `AddChannelDialog` (login oficial sem @; "Aguardando autorização"; "Cancelar login"), linha do canal
+  ("Cancelar login" durante a conexão, "Reconectar" se expirado), `useConnectionCheck` no `AppLayout`, `Avatar`
+  com `referrerPolicy="no-referrer"` e fallback para iniciais.
+- Testes: 119 TS (conexão por login oficial, reconexão por open_id/@ legado, rollback, verificação ao abrir,
+  expirado, offline, remoção, regras, avatar, repositório + índice único), 53 Rust, clippy limpo.
+- Validado no app real: migration 0002 aplicada no banco do usuário; verificação ao abrir preencheu o open_id do
+  `@yeeax`. Preview segue simulado.
+
+### Arquivos importantes
+
+`src-tauri/migrations/0002_channel_external_id.sql`, `src/features/channels/{channelConnector,channelRules,channelService,hooks}.ts`,
+`src/features/channels/components/AddChannelDialog.tsx`, `src/services/social/TikTokProvider.ts`, `src-tauri/tauri.conf.json`.
+
+### Decisões
+
+DEC-028.
+
+### Problemas encontrados
+
+- Durante a edição, o recarregamento a quente do `tauri dev` carregou o `hooks.ts` novo com o serviço antigo
+  (`verifyConnections is not a function`) — some ao recarregar; não afeta builds de produção.
+- O usuário estava com o próprio `app:dev` aberto; a instância iniciada pelo agente falhou por porta ocupada
+  (sem efeito: o app dele recompilou sozinho com o Rust novo).
+
+### Pendências
+
+- Usuário: validar avatar, conectar sem @, cancelar login (ver TODO).
+
+### Próximo passo
+
+Etapa 5 — compositor TikTok com a UX obrigatória (creator_info, privacidade sem padrão, toggles, divulgação
+comercial, aviso de música, prévia) e, em seguida, publicação real pela Content Posting API.
+
+---
+
 ## Sessão 2026-10-13 (6) — Deploy do backend e validação real da etapa 3
 
 ### Objetivo

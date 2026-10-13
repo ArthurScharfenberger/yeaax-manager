@@ -15,13 +15,13 @@ import { LoadingBlock } from '@/components/ui/Spinner';
 import { Table, Td, Th, THead, Tr } from '@/components/ui/Table';
 import { useToast } from '@/components/ui/toastContext';
 import { useNow } from '@/hooks/useNow';
-import { getErrorMessage } from '@/lib/errors';
+import { getErrorMessage, isAppError } from '@/lib/errors';
 import { PLATFORM_INFO } from '@/lib/platforms';
 import { type Channel, type Platform, PLATFORMS } from '@/types';
 import { formatHandle, formatRelativeTime } from '@/utils/format';
 
 import { AddChannelDialog } from './components/AddChannelDialog';
-import { useChannelAction, useChannels } from './hooks';
+import { useCancelConnect, useChannelAction, useChannels } from './hooks';
 
 type PlatformFilter = 'all' | Platform;
 
@@ -33,6 +33,7 @@ const FILTER_OPTIONS = [
 export function ChannelsPage() {
   const channels = useChannels();
   const action = useChannelAction();
+  const cancelConnect = useCancelConnect();
   const toast = useToast();
   const now = useNow();
   const [filter, setFilter] = useState<PlatformFilter>('all');
@@ -53,12 +54,18 @@ export function ChannelsPage() {
       { id: channel.id, action: kind },
       {
         onSuccess: () => toast.success(messages[kind], formatHandle(channel.username)),
-        onError: (error) => toast.error(error),
+        onError: (error) => {
+          // Cancelar o login é escolha do usuário, não erro.
+          if (isAppError(error) && error.code === 'TIKTOK_LOGIN_CANCELLED') return;
+          toast.error(error);
+        },
       },
     );
   }
 
   const isBusy = (channel: Channel) => action.isPending && action.variables.id === channel.id;
+  const isConnecting = (channel: Channel) =>
+    isBusy(channel) && action.variables?.action === 'connect';
 
   return (
     <div className="flex h-full flex-col">
@@ -160,6 +167,11 @@ export function ChannelsPage() {
                             >
                               Desconectar
                             </Button>
+                          ) : isConnecting(channel) ? (
+                            // Login oficial aberto no navegador: dá para desistir sem esperar o timeout.
+                            <Button size="sm" onClick={() => void cancelConnect(channel.platform)}>
+                              Cancelar login
+                            </Button>
                           ) : (
                             <Button
                               size="sm"
@@ -167,7 +179,7 @@ export function ChannelsPage() {
                               loading={isBusy(channel)}
                               onClick={() => run(channel, 'connect')}
                             >
-                              Conectar
+                              {channel.status === 'expired' ? 'Reconectar' : 'Conectar'}
                             </Button>
                           )}
                           <ActionMenu
