@@ -5,6 +5,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); 
 
 ## [Não lançado]
 
+### Segurança
+
+- Credenciais (tokens do TikTok e chave da OpenAI) passam a ser gravadas no Gerenciador de Credenciais com
+  persistência **local** (não acompanham perfis móveis de domínio).
+- Logs de bibliotecas de rede, TLS e cofre limitados a avisos (menos ruído e nenhuma descrição de itens do cofre).
+
 ### Alterado
 
 - Nome exibido do app passa a ser **Yeaax Manager** (janela, sidebar, instalador). Identificador interno, pasta de

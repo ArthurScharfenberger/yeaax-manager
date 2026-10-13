@@ -18,6 +18,55 @@ Formato:
 
 ---
 
+## Sessão 2026-10-13 (6) — Deploy do backend e validação real da etapa 3
+
+### Objetivo
+
+Publicar o backend em `api.yeaax.xyz`, configurar o sandbox do TikTok e validar o login real ponta a ponta antes de
+qualquer mudança de banco/UI (pedido do usuário: etapa 3 só conclui com o teste real).
+
+### Alterações realizadas
+
+- Push de `d79e376..fe2d310`. Projeto Vercel separado (Root Directory `backend`, Production), variáveis
+  `TIKTOK_CLIENT_KEY`/`TIKTOK_CLIENT_SECRET` do **sandbox** (client key `sbaw…`), domínio `api.yeaax.xyz` (CNAME no
+  GoDaddy → `…vercel-dns-017.com`). Conferidos `/health` (`configured: true`, cabeçalhos de segurança), `/config` e uma
+  troca com code falso (`INVALID_GRANT`).
+- Sandbox do TikTok: Desktop, redirect `http://127.0.0.1:*/tiktok/callback`, escopos `user.info.basic`,
+  `user.info.profile`, `video.publish` (exigiu ligar Direct Post), `video.upload`; formulário do sandbox (ícone
+  1024×1024 gerado do `logo.svg` do site, termos `https://yeaax.xyz/terms.html`, privacidade
+  `https://yeaax.xyz/privacy.html`, site `https://yeaax.xyz`).
+- **Teste real (todos os itens OK):** autorização oficial "Yeaax Manager (Sandbox)"; redirect para
+  `127.0.0.1:62412`; sem erro de redirect_uri/PKCE; troca pelo backend; perfil real `@yeeax`; canal criado;
+  credencial `tiktok_token:<channel_id>` no Gerenciador de Credenciais; Sincronizar; Desconectar (revogação sem
+  aviso + item apagado); reconexão (porta 54248). Busca no log por padrões de token: nada.
+- Endurecimento: `secrets.rs` grava com persistência `Local`; `lib.rs` limita `keyring_core`, `reqwest`, `hyper*`,
+  `h2`, `rustls` a WARN no log.
+
+### Arquivos importantes
+
+`src-tauri/src/commands/secrets.rs`, `src-tauri/src/lib.rs`, `docs/SECURITY.md`, `docs/DECISIONS.md` (DEC-027).
+
+### Decisões
+
+Nenhuma nova; complemento da DEC-027 (validação real e endurecimento).
+
+### Problemas encontrados
+
+- Primeira importação na Vercel apontou para o repositório do site (`site yeeax`) — corrigido antes do deploy.
+- O sandbox tem formulário próprio (ícone, categoria, descrição, URLs) e só mostra `video.publish` com Direct Post ligado.
+- O `tauri dev` em execução não recompilou sozinho após a mudança no Rust feita pelo agente → reiniciar o app.
+- Dados de demonstração (@yeaxx…) conflitariam com o @ real; foram removidos pelo usuário antes do teste.
+
+### Pendências
+
+- Confirmar a persistência `Local` (reconectar e conferir o cofre) e o @ `yeeax`.
+
+### Próximo passo
+
+Etapa 4 (UI da conta conectada), quando o usuário liberar.
+
+---
+
 ## Sessão 2026-10-13 (5) — Etapa 3: `tiktok_connect` (Login Kit Desktop + PKCE)
 
 ### Objetivo

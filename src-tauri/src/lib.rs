@@ -32,6 +32,15 @@ fn log_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
         }))
         .target(Target::new(TargetKind::Stdout))
         .level(level)
+        // Bibliotecas de rede, TLS e cofre ficam em WARN: o DEBUG delas descreve conexões e itens do cofre, sem
+        // utilidade para o usuário (nunca trazem tokens, mas o log fica menor e mais seguro por padrão).
+        .level_for("keyring_core", LevelFilter::Warn)
+        .level_for("windows_native_keyring_store", LevelFilter::Warn)
+        .level_for("reqwest", LevelFilter::Warn)
+        .level_for("hyper", LevelFilter::Warn)
+        .level_for("hyper_util", LevelFilter::Warn)
+        .level_for("h2", LevelFilter::Warn)
+        .level_for("rustls", LevelFilter::Warn)
         .max_file_size(MAX_LOG_FILE_BYTES)
         .rotation_strategy(RotationStrategy::KeepSome(KEPT_LOG_FILES))
         .build()

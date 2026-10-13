@@ -470,3 +470,6 @@ Feita contra a documentação atual do Login Kit (Web e Desktop) e do gerenciame
   - Novas dependências Rust: `tokio` (já na árvore; listener, timeouts, trava) e `tauri-plugin-opener` 2 (abrir o
     navegador; usado só pelo Rust, sem permissão nova no webview). URL do backend fixa em release; override
     `YEAAX_API_BASE_URL` só em build de desenvolvimento.
+- **Validação real (2026-10-13, sandbox):** autorização oficial, redirect `127.0.0.1:<porta>`, PKCE hex, troca
+  pelo backend, perfil (`@yeeax`), credencial no cofre, sincronizar e desconectar com revogação — tudo funcionou
+  sem ajustes no fluxo. Endurecimento feito em seguida: persistência `Local` no cofre e logs de bibliotecas em WARN.

@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::LazyLock;
 
 use keyring_core::{Entry, Error as KeyringError};
@@ -43,9 +44,14 @@ fn validate_name(name: &str) -> CommandResult<()> {
     }
 }
 
+/// Persistência `Local` (CRED_PERSIST_LOCAL_MACHINE): o item fica só neste computador. O padrão da biblioteca é
+/// `Enterprise`, que acompanha perfis móveis de domínio para outras máquinas. Vale na próxima gravação de cada item.
+const PERSISTENCE: &str = "Local";
+
 fn raw_entry(name: &str) -> CommandResult<Entry> {
     STORE.as_ref().map_err(|_| store_error())?;
-    Entry::new(SERVICE, name).map_err(|_| store_error())
+    let modifiers = HashMap::from([("persistence", PERSISTENCE)]);
+    Entry::new_with_modifiers(SERVICE, name, &modifiers).map_err(|_| store_error())
 }
 
 fn entry(name: &str) -> CommandResult<Entry> {

@@ -62,7 +62,8 @@ Marque `[x]` ao concluir (com a versão entre parênteses quando fizer sentido).
 - [ ] Instagram: token do painel + renovação automática + publicação de Reels por upload resumável
 - [x] TikTok: PKCE (hex) e validação do callback local no Rust, com testes (2026-10-13)
 - [x] TikTok: Login Kit **Desktop** no Rust (listener loopback, troca via backend, perfil) + `TikTokProvider` real (2026-10-13)
-- [ ] TikTok: teste real no sandbox + UI da conta conectada (botão, avatar, `external_id`) — **prioridade**
+- [x] TikTok: teste real no sandbox — login, PKCE, troca, perfil, cofre, sincronizar, desconectar/revogar (2026-10-13)
+- [ ] TikTok: UI da conta conectada (botão, avatar, `external_id`) — **prioridade**
 - [ ] TikTok: Content Posting API (Direct Post `SELF_ONLY` no sandbox; público após auditoria; rascunho como alternativa)
 - [ ] TikTok: fluxo demonstrável para o vídeo do App Review
 - [ ] TikTok: App Review/auditoria (necessária para posts públicos) — usuário decidiu solicitar

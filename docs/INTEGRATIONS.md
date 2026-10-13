@@ -49,7 +49,7 @@ O mesmo status aparece na UI (Configurações → Integrações), definido em `s
          [ ] Deploy na Vercel em `api.yeaax.xyz` (usuário).
   3. [x] Rust OAuth: PKCE, listener `127.0.0.1` de uso único, navegador do sistema (`tauri-plugin-opener`), troca
          via backend, tokens no cofre por canal, refresh com trava, perfil (`/v2/user/info/`), comandos `tiktok_*`;
-         `TikTokProvider` real no desktop; conexão transacional. [ ] Teste real no sandbox (usuário).
+         `TikTokProvider` real no desktop; conexão transacional. [x] Teste real no sandbox validado em 2026-10-13.
   4. [ ] Conta conectada na UI: botão "Conectar TikTok" sem pedir @, `channels.external_id` (open_id), avatar
          (liberar o CDN do TikTok na CSP), status `expired` quando o refresh falhar.
   5. [ ] Compositor TikTok (UX obrigatória — DEC-019): `creator_info`, nickname, privacidade sem padrão, toggles

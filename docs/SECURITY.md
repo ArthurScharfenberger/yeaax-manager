@@ -47,7 +47,11 @@ Estas políticas valem desde já; a arquitetura foi desenhada para cumpri-las qu
   conexão descartada. O id pendente não é credencial do TikTok e só existe dentro do processo do app.
 - No Rust, valores sensíveis ficam no tipo `Secret` (sem `Display`/`Serialize`; `Debug` mostra `[redacted]`), e
   as structs de tokens têm `Debug` manual sem os valores (testado). Os logs registram só porta local, códigos de
-  erro normalizados e eventos.
+  erro normalizados e eventos. Bibliotecas de rede, TLS e cofre (`reqwest`, `hyper*`, `h2`, `rustls`,
+  `keyring_core`) ficam em WARN no log. Verificado no teste real: nenhum token, code ou verifier no arquivo de log.
+- Itens do cofre são gravados com persistência **Local** (`CRED_PERSIST_LOCAL_MACHINE`): ficam só neste
+  computador. O padrão da biblioteca (`Enterprise`) acompanharia perfis móveis de domínio para outras máquinas.
+  Itens antigos mudam na próxima gravação (reconectar a conta ou salvar a chave da OpenAI de novo).
 - O backend **não guarda** tokens, codes nem logs com eles; devolve os tokens na resposta HTTPS ao Rust e esquece.
 - O frontend **nunca recebe tokens nem o `code`**: `SocialProvider.connect()` devolve só o perfil.
 - Refresh token rotativo: o novo substitui o anterior antes de qualquer outra ação. Refresh falhou → canal
