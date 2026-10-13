@@ -1,6 +1,6 @@
 import type { IntegrationStatus } from '@/lib/integrations';
 import type { PlatformLimits } from '@/lib/platforms';
-import type { Id, IsoDateString, Platform, TikTokPrivacyLevel } from '@/types';
+import type { Id, IsoDateString, Platform, PlatformOptions, TikTokPrivacyLevel } from '@/types';
 
 /**
  * Contrato comum para integrações com redes sociais.
@@ -40,6 +40,7 @@ export interface SocialProvider {
 }
 
 export interface ProviderCapabilities {
+  /** Publica de verdade na plataforma (providers simulados: `false` — nunca marcam posts como publicados). */
   publishVideo: boolean;
   /** A plataforma aceita agendamento nativo (senão o app agenda localmente). */
   nativeScheduling: boolean;
@@ -104,6 +105,9 @@ export interface PublishRequest {
   account: SocialAccountRef;
   postId: Id;
   caption: string;
+  /** Escolhas da plataforma já validadas e consentidas (TikTok: privacidade, interações, divulgação). */
+  options: PlatformOptions | null;
+  onProgress?: (progress: PublishProgress) => void;
   media: {
     filePath: string;
     mimeType: string;
@@ -113,6 +117,12 @@ export interface PublishRequest {
 
 export type PublicationState = 'processing' | 'published' | 'failed';
 
+/** Andamento do envio do vídeo (mostrado na interface). */
+export type PublishProgress =
+  | { stage: 'preparing' }
+  | { stage: 'uploading'; sent: number; total: number }
+  | { stage: 'processing' };
+
 export interface PublishResult {
   externalPostId: string;
   state: PublicationState;
@@ -120,6 +130,8 @@ export interface PublishResult {
 
 export interface PublicationStatusResult {
   externalPostId: string;
+  /** Id público do post na plataforma, quando ela informa (TikTok: só posts públicos aprovados). */
+  publicPostId?: string | null;
   state: PublicationState;
   publishedAt: IsoDateString | null;
   errorMessage: string | null;

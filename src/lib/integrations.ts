@@ -27,7 +27,7 @@ export const INTEGRATIONS: readonly IntegrationInfo[] = [
     name: 'TikTok',
     status: 'IN_PROGRESS',
     description:
-      'Login Kit Desktop + PKCE: conexão e perfil reais no app desktop (simulado no preview). Publicação em breve.',
+      'Login Kit Desktop + PKCE, compositor conforme as diretrizes e publicação real (Direct Post) no app desktop. Simulado no preview.',
   },
   {
     id: 'instagram',

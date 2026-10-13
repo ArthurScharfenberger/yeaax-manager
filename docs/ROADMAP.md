@@ -46,7 +46,8 @@ Marque `[x]` ao concluir (com a versão entre parênteses quando fizer sentido).
 - [ ] Detecção de vídeo duplicado na importação (hash do arquivo)
 - [ ] Motor do Auto Schedule: **sugere** posts em revisão com horários; o usuário confirma cada um (DEC-019)
 - [ ] Filas de postagem por canal
-- [ ] Agendador local: dispara publicações enquanto o app está aberto (bandeja do sistema)
+- [x] Agendador local: publica os agendados enquanto o app está aberto (DEC-030, 2026-10-13)
+- [ ] Ícone na bandeja do sistema para o agendador seguir com a janela fechada
 - [ ] Notificações do sistema (falhas, publicações concluídas)
 
 ## Fase 3 — integrações oficiais
@@ -65,7 +66,8 @@ Marque `[x]` ao concluir (com a versão entre parênteses quando fizer sentido).
 - [x] TikTok: teste real no sandbox — login, PKCE, troca, perfil, cofre, sincronizar, desconectar/revogar (2026-10-13)
 - [x] TikTok: UI da conta conectada — botão direto, open_id, avatar, verificação ao abrir, sessão expirada, cancelar login (DEC-028, 2026-10-13)
 - [x] TikTok: compositor com a UX obrigatória das diretrizes + `creator_info` + `posts.platform_options` (DEC-029, 2026-10-13)
-- [ ] TikTok: publicação real (Content Posting API) + status — **prioridade**
+- [x] TikTok: publicação real (Direct Post, upload em partes) + status + agendador local (DEC-030, 2026-10-13)
+- [ ] TikTok: teste real de publicação no sandbox + vídeo do App Review — **prioridade**
 - [ ] TikTok: Content Posting API (Direct Post `SELF_ONLY` no sandbox; público após auditoria; rascunho como alternativa)
 - [ ] TikTok: fluxo demonstrável para o vídeo do App Review
 - [ ] TikTok: App Review/auditoria (necessária para posts públicos) — usuário decidiu solicitar

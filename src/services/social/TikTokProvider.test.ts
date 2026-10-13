@@ -1,10 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import type { DesktopBridge, TikTokAccount } from '@/services/desktop/DesktopBridge';
+import type {
+  DesktopBridge,
+  TikTokAccount,
+  TikTokPublishStatus,
+} from '@/services/desktop/DesktopBridge';
+import { emptyTikTokOptions } from '@/features/posts/tiktokOptionsRules';
 import { createPreviewDesktopBridge } from '@/services/desktop/previewDesktopBridge';
 
 import { createSocialProviders } from './index';
-import { safeAvatarUrl, TikTokProvider } from './TikTokProvider';
+import { failReasonMessage, safeAvatarUrl, TikTokProvider } from './TikTokProvider';
 
 const ACCOUNT: TikTokAccount = {
   openId: 'open-1',
@@ -14,7 +19,10 @@ const ACCOUNT: TikTokAccount = {
   scopes: ['user.info.basic', 'user.info.profile'],
 };
 
-function fakeDesktop(account: TikTokAccount = ACCOUNT) {
+function fakeDesktop(
+  account: TikTokAccount = ACCOUNT,
+  status: TikTokPublishStatus = { status: 'PUBLISH_COMPLETE', failReason: null, postIds: [] },
+) {
   const calls: string[] = [];
   const desktop: DesktopBridge = {
     ...createPreviewDesktopBridge(),
@@ -38,6 +46,15 @@ function fakeDesktop(account: TikTokAccount = ACCOUNT) {
     tiktokDisconnect: (channelId) => {
       calls.push(`disconnect:${channelId}`);
       return Promise.resolve();
+    },
+    tiktokPublish: (channelId, request, onProgress) => {
+      calls.push(`publish:${channelId}:${request.privacyLevel}:${String(request.brandedContent)}`);
+      onProgress({ stage: 'uploading', sent: 10, total: 10 });
+      return Promise.resolve({ publishId: 'v_pub_1' });
+    },
+    tiktokPublishStatus: (channelId, publishId) => {
+      calls.push(`status:${channelId}:${publishId}`);
+      return Promise.resolve(status);
     },
     tiktokCreatorInfo: (channelId) => {
       calls.push(`creator:${channelId}`);
@@ -88,7 +105,74 @@ describe('TikTokProvider', () => {
     await expect(provider.getProfile(REF)).resolves.toMatchObject({ username: 'yeaxx' });
     await provider.disconnect(REF);
     expect(calls).toEqual(['profile:channel-1', 'disconnect:channel-1']);
-    await expect(provider.publish()).rejects.toMatchObject({ code: 'NOT_AVAILABLE' });
+  });
+});
+
+describe('TikTokProvider — publicação', () => {
+  const request = (options: ReturnType<typeof emptyTikTokOptions> | null) => ({
+    account: REF,
+    postId: 'post-1',
+    caption: 'Olá',
+    media: { filePath: 'C:\v.mp4', mimeType: 'video/mp4', durationSeconds: 10 },
+    options,
+  });
+
+  it('envia com as escolhas do post e devolve o publish_id', async () => {
+    const { desktop, calls } = fakeDesktop();
+    const progress: unknown[] = [];
+    const result = await new TikTokProvider(desktop).publish({
+      ...request({
+        ...emptyTikTokOptions(),
+        privacyLevel: 'SELF_ONLY',
+        brandedContent: true, // ignorado sem divulgação comercial ligada
+      }),
+      onProgress: (item) => progress.push(item),
+    });
+    expect(result).toEqual({ externalPostId: 'v_pub_1', state: 'processing' });
+    expect(calls).toEqual(['publish:channel-1:SELF_ONLY:false']);
+    expect(progress).toEqual([{ stage: 'uploading', sent: 10, total: 10 }]);
+  });
+
+  it('recusa publicar sem privacidade escolhida', async () => {
+    const { desktop } = fakeDesktop();
+    await expect(
+      new TikTokProvider(desktop).publish(request(emptyTikTokOptions())),
+    ).rejects.toMatchObject({ code: 'VALIDATION' });
+    await expect(new TikTokProvider(desktop).publish(request(null))).rejects.toMatchObject({
+      code: 'VALIDATION',
+    });
+  });
+
+  it('traduz o status e o motivo da falha', async () => {
+    const done = fakeDesktop(ACCOUNT, {
+      status: 'PUBLISH_COMPLETE',
+      failReason: null,
+      postIds: ['7123'],
+    });
+    expect(
+      await new TikTokProvider(done.desktop).getPublicationStatus(REF, 'v_pub_1'),
+    ).toMatchObject({
+      externalPostId: 'v_pub_1',
+      publicPostId: '7123',
+      state: 'published',
+    });
+    const failed = fakeDesktop(ACCOUNT, {
+      status: 'FAILED',
+      failReason: 'duration_check_failed',
+      postIds: [],
+    });
+    expect(
+      await new TikTokProvider(failed.desktop).getPublicationStatus(REF, 'v_pub_1'),
+    ).toMatchObject({ state: 'failed', errorMessage: failReasonMessage('duration_check_failed') });
+    const processing = fakeDesktop(ACCOUNT, {
+      status: 'PROCESSING_UPLOAD',
+      failReason: null,
+      postIds: [],
+    });
+    expect(
+      (await new TikTokProvider(processing.desktop).getPublicationStatus(REF, 'v_pub_1')).state,
+    ).toBe('processing');
+    expect(failReasonMessage('desconhecido')).toBe('O TikTok não publicou o vídeo.');
   });
 });
 

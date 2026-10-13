@@ -5,18 +5,24 @@ import type { Platform, Post, PostStatus } from '@/types';
  * Regras puras do ciclo de vida de um post.
  *
  *   draft ⇄ review → scheduled → publishing → published
- *                         ↓            ↓
- *                     cancelled      failed → (draft | scheduled)
+ *     └──────┴── "Publicar agora" ──┘   ↓
+ *                         ↓          failed → (draft | scheduled | publishing de novo)
+ *                     cancelled
  */
 export const POST_STATUS_TRANSITIONS: Readonly<Record<PostStatus, readonly PostStatus[]>> = {
-  draft: ['review', 'scheduled', 'cancelled'],
-  review: ['draft', 'scheduled', 'cancelled'],
+  draft: ['review', 'scheduled', 'publishing', 'cancelled'],
+  review: ['draft', 'scheduled', 'publishing', 'cancelled'],
   scheduled: ['draft', 'review', 'publishing', 'cancelled'],
   publishing: ['published', 'failed'],
   published: [],
-  failed: ['draft', 'scheduled', 'cancelled'],
+  failed: ['draft', 'scheduled', 'publishing', 'cancelled'],
   cancelled: ['draft'],
 };
+
+/** Pode iniciar uma publicação agora (manual ou do agendador)? `publishing` já está em andamento. */
+export function canStartPublishing(status: PostStatus): boolean {
+  return status !== 'publishing' && POST_STATUS_TRANSITIONS[status].includes('publishing');
+}
 
 /** Status que o usuário escolhe no compositor (os demais são definidos pelo sistema). */
 export const COMPOSER_STATUSES = ['draft', 'review', 'scheduled'] as const;

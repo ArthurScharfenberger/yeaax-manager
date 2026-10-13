@@ -9,6 +9,9 @@ import { useToast } from '@/components/ui/toastContext';
 import { useChannels } from '@/features/channels/hooks';
 import { MediaVideoPreview } from '@/features/media/components/MediaVideoPreview';
 import { useMediaList } from '@/features/media/hooks';
+import { PublishProgressNotice } from '@/features/publishing/components/PublishProgressNotice';
+import { useCanPublish, usePublishNow } from '@/features/publishing/hooks';
+import { PROCESSING_NOTICE } from '@/features/publishing/publishService';
 import { getErrorMessage } from '@/lib/errors';
 import { CHANNEL_STATUS_LABELS, POST_STATUS_LABELS } from '@/lib/labels';
 import { PLATFORM_INFO } from '@/lib/platforms';
@@ -18,6 +21,7 @@ import { parseDateTimeInput } from '@/utils/date';
 import { formatDuration, formatHandle } from '@/utils/format';
 
 import { useCreatorInfo, useSavePost } from '../hooks';
+import type { PostInput } from '../postService';
 import { checkCaption, COMPOSER_STATUSES, type ComposerStatus } from '../postRules';
 import { tiktokOptionIssues } from '../tiktokOptionsRules';
 import { type FormState, SUBMIT_LABELS, successMessage } from './composerState';
@@ -42,9 +46,12 @@ export function ComposerForm({ title, editingId, initialState, onClose }: Compos
   const formId = useId();
   const [form, setForm] = useState(initialState);
   const [error, setError] = useState<string | null>(null);
+  /** Id do post já salvo (o "Publicar agora" salva antes de enviar; tentativas seguintes editam o mesmo post). */
+  const [savedId, setSavedId] = useState<Id | null>(editingId);
   const channels = useChannels();
   const media = useMediaList();
   const save = useSavePost();
+  const publishNow = usePublishNow();
   const toast = useToast();
 
   const channelList = channels.data ?? [];
@@ -63,35 +70,44 @@ export function ComposerForm({ title, editingId, initialState, onClose }: Compos
     : [];
   const schedulingTikTok = isTikTok && form.status === 'scheduled';
   const blockedByTikTok = schedulingTikTok && (tiktokIssues.length > 0 || !creator.isSuccess);
+  const canPublish = useCanPublish(channel?.platform);
+  const readyToPublish =
+    canPublish &&
+    channel?.status === 'connected' &&
+    Boolean(selectedMedia) &&
+    (!isTikTok || (creator.isSuccess && tiktokIssues.length === 0));
+  const busy = save.isPending || publishNow.isPending;
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
     setError(null);
   }
 
-  function submit(status: ComposerStatus) {
+  function buildInput(status: ComposerStatus): PostInput | null {
     let scheduledAt: string | null = null;
     if (form.date || form.time) {
       const parsed = parseDateTimeInput(form.date, form.time);
       if (!parsed) {
         setError('Preencha data e horário completos, ou deixe ambos vazios.');
-        return;
+        return null;
       }
       scheduledAt = parsed.toISOString();
     }
+    return {
+      channelId,
+      mediaId: form.mediaId || null,
+      caption: form.caption,
+      status,
+      scheduledAt,
+      platformOptions: isTikTok ? form.tiktok : null,
+    };
+  }
 
+  function submit(status: ComposerStatus) {
+    const input = buildInput(status);
+    if (!input) return;
     save.mutate(
-      {
-        id: editingId,
-        input: {
-          channelId,
-          mediaId: form.mediaId || null,
-          caption: form.caption,
-          status,
-          scheduledAt,
-          platformOptions: isTikTok ? form.tiktok : null,
-        },
-      },
+      { id: savedId, input },
       {
         onSuccess: (post) => {
           toast.success(successMessage(post));
@@ -102,6 +118,36 @@ export function ComposerForm({ title, editingId, initialState, onClose }: Compos
     );
   }
 
+  /**
+   * "Publicar agora": salva o post (rascunho, com as escolhas) e envia. O clique, com a declaração visível, é o
+   * consentimento expresso exigido pelo TikTok (registrado no post).
+   */
+  function publish() {
+    const input = buildInput('draft');
+    if (!input) return;
+    save.mutate(
+      { id: savedId, input },
+      {
+        onSuccess: (post) => {
+          setSavedId(post.id);
+          publishNow.mutate(post.id, {
+            onSuccess: () => {
+              toast.success('Vídeo enviado ao TikTok', PROCESSING_NOTICE);
+              onClose();
+            },
+            onError: (caught) => setError(getErrorMessage(caught)),
+          });
+        },
+        onError: (caught) => setError(getErrorMessage(caught)),
+      },
+    );
+  }
+
+  // Durante o envio a janela não fecha (o upload continua no app, mas o progresso some).
+  const close = () => {
+    if (!busy) onClose();
+  };
+
   function handleSubmit(event: SubmitEvent) {
     event.preventDefault();
     submit(form.status);
@@ -110,25 +156,34 @@ export function ComposerForm({ title, editingId, initialState, onClose }: Compos
   return (
     <Modal
       title={title}
-      description="Os posts ficam salvos localmente. A publicação automática no horário chega na próxima etapa."
+      description="Os posts ficam salvos localmente. Agendados são publicados no horário, com o app aberto."
       size="lg"
-      onClose={onClose}
+      onClose={close}
       footer={
         <>
-          <Button onClick={onClose} disabled={save.isPending}>
+          <Button onClick={close} disabled={busy}>
             Cancelar
           </Button>
           {form.status !== 'draft' && (
-            <Button onClick={() => submit('draft')} disabled={save.isPending}>
+            <Button onClick={() => submit('draft')} disabled={busy}>
               Salvar como rascunho
+            </Button>
+          )}
+          {canPublish && (
+            <Button
+              onClick={publish}
+              loading={publishNow.isPending}
+              disabled={busy || !readyToPublish}
+            >
+              Publicar agora
             </Button>
           )}
           <Button
             type="submit"
             form={formId}
             variant="primary"
-            loading={save.isPending}
-            disabled={blockedByTikTok}
+            loading={save.isPending && !publishNow.isPending}
+            disabled={blockedByTikTok || busy}
           >
             {SUBMIT_LABELS[form.status]}
           </Button>
@@ -276,6 +331,7 @@ export function ComposerForm({ title, editingId, initialState, onClose }: Compos
             />
           )}
 
+          {publishNow.progress && <PublishProgressNotice progress={publishNow.progress} />}
           {error && <Notice tone="danger">{error}</Notice>}
           {isTikTok && <TikTokDeclaration options={form.tiktok} />}
         </div>

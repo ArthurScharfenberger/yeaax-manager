@@ -24,14 +24,14 @@ const KNOWN_PRIVACY_LEVELS: [&str; 4] = [
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CreatorInfo {
-    nickname: String,
-    username: Option<String>,
-    avatar_url: Option<String>,
-    privacy_level_options: Vec<String>,
-    comment_disabled: bool,
-    duet_disabled: bool,
-    stitch_disabled: bool,
-    max_video_post_duration_sec: Option<u32>,
+    pub(crate) nickname: String,
+    pub(crate) username: Option<String>,
+    pub(crate) avatar_url: Option<String>,
+    pub(crate) privacy_level_options: Vec<String>,
+    pub(crate) comment_disabled: bool,
+    pub(crate) duet_disabled: bool,
+    pub(crate) stitch_disabled: bool,
+    pub(crate) max_video_post_duration_sec: Option<u32>,
 }
 
 #[derive(Deserialize)]

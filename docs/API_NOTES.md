@@ -138,6 +138,29 @@ application/json; charset=UTF-8`, escopo `video.publish`, 20 req/min por token).
 - Erros de cota: `spam_risk_too_many_posts`, `spam_risk_user_banned_from_posting`, `reached_active_user_cap`.
 - Cota: ~15 posts por criador em 24 h (varia por criador).
 
+### Publicação (Direct Post + FILE_UPLOAD) — verificação de 2026-10-13 (etapa 6)
+
+- Fontes: [Direct Post](https://developers.tiktok.com/doc/content-posting-api-reference-direct-post),
+  [Media Transfer Guide](https://developers.tiktok.com/doc/content-posting-api-media-transfer-guide),
+  [Get Post Status](https://developers.tiktok.com/doc/content-posting-api-reference-get-video-status)
+- `init`: `POST /v2/post/publish/video/init/` (6 req/min por token) com `post_info` (`title` ≤ 2200 runas UTF-16,
+  `privacy_level` obrigatório e entre as opções do `creator_info`, `disable_comment/duet/stitch`,
+  `brand_content_toggle` = conteúdo de marca, `brand_organic_toggle` = sua marca, `is_aigc`,
+  `video_cover_timestamp_ms`) e `source_info` (`FILE_UPLOAD`, `video_size`, `chunk_size`, `total_chunk_count`).
+  Resposta: `publish_id` (≤ 64) e `upload_url` (≤ 256, **válida por 1 h**). Erros: `invalid_param`,
+  `access_token_invalid`, `scope_not_authorized`, `spam_risk_*`, `reached_active_user_cap`,
+  `unaudited_client_can_only_post_to_private_accounts`, `privacy_level_option_mismatch`, `rate_limit_exceeded`.
+- Upload: `PUT {upload_url}` com `Content-Type` (`video/mp4`; MOV/WebM aceitos), `Content-Length` e
+  `Content-Range: bytes {primeiro}-{último}/{total}`; partes **sequenciais**; 206 por parte, 201 no fim; 403 = URL
+  expirada; 416 = range fora de ordem; 5xx = reenviar a parte. `total_chunk_count = floor(tamanho/parte)`, a
+  última absorve o resto (até 128 MB); partes de 5–64 MB; arquivo < 5 MB vai inteiro; > 64 MB em várias partes;
+  1–1000 partes. Exemplo oficial: 50.000.123 bytes com parte de 10.000.000 → 5 partes, a última com 10.000.123.
+- Status: `POST /v2/post/publish/status/fetch/` com `{ publish_id }` (30 req/min por token). `status`:
+  `PROCESSING_UPLOAD`, `PROCESSING_DOWNLOAD`, `SEND_TO_USER_INBOX`, `PUBLISH_COMPLETE`, `FAILED`; `fail_reason`
+  (`file_format_check_failed`, `duration_check_failed`, `frame_rate_check_failed`, `picture_size_check_failed`,
+  `internal`, `publish_cancelled`, `auth_removed`, `spam_risk*`…); `publicaly_available_post_id` (int64, sic; só
+  posts públicos aprovados). Moderação costuma levar até 1 min, mas pode levar horas.
+
 ### Upload (rascunho na caixa de entrada)
 
 - Data: 2026-10-07 · Fonte: [Upload reference](https://developers.tiktok.com/doc/content-posting-api-reference-upload-video)

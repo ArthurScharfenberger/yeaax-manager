@@ -35,6 +35,7 @@ marque como _Substituída por DEC-XXX_.
 | DEC-027 | OAuth TikTok com Login Kit Desktop + PKCE (loopback direto)                     | Ativa                                    |
 | DEC-028 | Conta identificada pelo open_id; verificação ao abrir; avatar do CDN do TikTok  | Ativa                                    |
 | DEC-029 | Compositor do TikTok com as diretrizes de publicação; escolhas por post em JSON | Ativa                                    |
+| DEC-030 | Publicação real no TikTok (Direct Post, FILE_UPLOAD) e agendador local          | Ativa                                    |
 
 ---
 
@@ -535,3 +536,32 @@ referrerPolicy="no-referrer">` com fallback para as iniciais se a URL (assinada,
 - **Impactos/riscos:** a UI está em pt-BR — o vídeo do App Review pode precisar de legendas/narração em inglês
   explicando cada tela (reavaliar antes de gravar); a publicação real (etapa 6) deve consultar o `creator_info` de
   novo e revalidar as escolhas antes de enviar o vídeo.
+
+## DEC-030 — Publicação real no TikTok (Direct Post, FILE_UPLOAD) e agendador local
+
+- **Data:** 2026-10-13 (etapa 6)
+- **Decisão:**
+  1. **Envio no Rust** (`tiktok/publish.rs`, comando `tiktok_publish`): revalida o arquivo (mesma checagem da
+     importação), a legenda (≤ 2200 UTF-16) e as escolhas; consulta o `creator_info` de novo e confere privacidade
+     e interações; `init` Direct Post com `FILE_UPLOAD`; upload **sequencial** em partes lidas do disco (até 64 MB vai
+     inteiro; acima, partes de 32 MB com `total = floor(tamanho/parte)` e a última absorvendo o resto — Media
+     Transfer Guide); até 3 tentativas por parte em erro 5xx; progresso por `tauri::ipc::Channel`. O vídeo nunca
+     passa pelo backend nem fica inteiro na memória.
+  2. **Status** (`tiktok_publish_status` → `status/fetch`): `PUBLISH_COMPLETE` → publicado (guarda o id público
+     quando o TikTok informa — só para posts públicos; senão mantém o `publish_id`); `FAILED` → falhou com o motivo
+     traduzido; demais → processando.
+  3. **Publicador** (`features/publishing/publishService.ts`): "Publicar agora" (o clique no compositor, com a
+     declaração visível, registra o consentimento) e **agendador local** (`usePublishingScheduler`, a cada 30 s com
+     o app aberto) que publica os agendados vencidos há no máximo 15 min (`PUBLISH_GRACE_MINUTES`) usando o
+     consentimento registrado ao agendar e acompanha os posts em processamento. Agendados mais antigos (app fechado
+     no horário) não saem sozinhos: ficam "atrasados" para o usuário decidir. Falha antes do envio vira "Falhou"
+     com motivo (sem tentar de novo a cada rodada).
+  4. Transições: `draft`, `review` e `failed` também podem ir para `publishing` ("Publicar agora"/nova tentativa).
+  5. Providers simulados têm `publishVideo: false` e **nunca** marcam posts como publicados (o publicador os ignora).
+- **Motivo:** fluxo exigido para o App Review e objetivo do produto; respeita as diretrizes (consentimento, creator
+  info antes de postar, aviso de processamento) e os limites (6 init/min, 30 status/min, URL de upload de 1 h).
+- **Alternativas:** `PULL_FROM_URL` (exigiria hospedar o vídeo e verificar domínio); modo rascunho/inbox
+  (`video.upload`) — fica como alternativa se o Direct Post for negado; webhooks de status (não alcançam o desktop).
+- **Impactos/riscos:** sem auditoria, só `SELF_ONLY` em conta privada (o TikTok recusa no `init` com
+  `unaudited_client_can_only_post_to_private_accounts`, já traduzido); o app precisa estar aberto no horário;
+  `publicaly_available_post_id` só vem para posts públicos.

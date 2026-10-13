@@ -13,6 +13,7 @@ import { useToast } from '@/components/ui/toastContext';
 import { useNow } from '@/hooks/useNow';
 import { getErrorMessage } from '@/lib/errors';
 import { POST_HISTORY_EVENT_LABELS } from '@/lib/labels';
+import { PublicationStatusNotice } from '@/features/publishing/components/PublicationStatusNotice';
 import type { Id, PostWithRelations } from '@/types';
 import { formatDateTime, formatHandle, formatScheduleLabel } from '@/utils/format';
 
@@ -81,6 +82,7 @@ function DetailsBody({ post }: { post: PostWithRelations }) {
       )}
 
       <div className="flex min-w-0 flex-col gap-4">
+        <PublicationStatusNotice post={post} />
         <dl className="divide-y divide-line">
           <DetailRow label="Canal">
             {post.channel.displayName}{' '}

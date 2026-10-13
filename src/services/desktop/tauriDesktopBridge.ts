@@ -1,4 +1,10 @@
-import { convertFileSrc, invoke, type InvokeArgs, type InvokeOptions } from '@tauri-apps/api/core';
+import {
+  Channel,
+  convertFileSrc,
+  invoke,
+  type InvokeArgs,
+  type InvokeOptions,
+} from '@tauri-apps/api/core';
 import { appConfigDir, appLogDir } from '@tauri-apps/api/path';
 import { open } from '@tauri-apps/plugin-dialog';
 import { z } from 'zod';
@@ -6,13 +12,16 @@ import { z } from 'zod';
 import { toAppError } from '@/lib/errors';
 import { tiktokPrivacyLevelSchema } from '@/types';
 
-import type {
-  DesktopBridge,
-  FfmpegStatus,
-  MediaFileInfo,
-  TikTokAccount,
-  TikTokCreatorInfo,
-  TikTokPendingConnection,
+import {
+  type DesktopBridge,
+  type FfmpegStatus,
+  type MediaFileInfo,
+  type TikTokAccount,
+  type TikTokCreatorInfo,
+  TIKTOK_PUBLISH_STATUSES,
+  type TikTokPublishProgress,
+  type TikTokPublishStatus,
+  type TikTokPendingConnection,
 } from './DesktopBridge';
 
 /** Mantido em sincronia com src-tauri/src/commands/media.rs. */
@@ -60,6 +69,25 @@ const tiktokCreatorInfoSchema = z.object({
   duetDisabled: z.boolean(),
   stitchDisabled: z.boolean(),
   maxVideoPostDurationSec: z.number().int().positive().nullable(),
+});
+
+const tiktokPublishProgressSchema = z.discriminatedUnion('stage', [
+  z.object({ stage: z.literal('preparing') }),
+  z.object({
+    stage: z.literal('uploading'),
+    sent: z.number().nonnegative(),
+    total: z.number().positive(),
+  }),
+  z.object({ stage: z.literal('processing') }),
+]);
+
+const tiktokPublishStatusSchema = z.object({
+  status: z.enum(TIKTOK_PUBLISH_STATUSES),
+  failReason: z
+    .string()
+    .regex(/^[a-z_]{1,64}$/)
+    .nullable(),
+  postIds: z.array(z.string().regex(/^\d{1,25}$/)),
 });
 
 const tiktokPendingSchema = z.object({
@@ -146,6 +174,22 @@ export function createTauriDesktopBridge(): DesktopBridge {
 
     tiktokCreatorInfo: (channelId): Promise<TikTokCreatorInfo> =>
       invokeCommand('tiktok_creator_info', tiktokCreatorInfoSchema, { channelId }),
+
+    async tiktokPublish(channelId, request, onProgress) {
+      // Progresso chega por um canal do Tauri; mensagens fora do formato são ignoradas.
+      const channel = new Channel<unknown>((message) => {
+        const parsed = tiktokPublishProgressSchema.safeParse(message);
+        if (parsed.success) onProgress(parsed.data satisfies TikTokPublishProgress);
+      });
+      return invokeCommand('tiktok_publish', z.object({ publishId: z.string().min(1).max(64) }), {
+        channelId,
+        request,
+        onProgress: channel,
+      });
+    },
+
+    tiktokPublishStatus: (channelId, publishId): Promise<TikTokPublishStatus> =>
+      invokeCommand('tiktok_publish_status', tiktokPublishStatusSchema, { channelId, publishId }),
 
     async openTikTokPolicy(policy) {
       await invokeCommand('open_tiktok_policy', z.null(), { policy });

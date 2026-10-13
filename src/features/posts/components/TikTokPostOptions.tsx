@@ -210,7 +210,7 @@ export function TikTokDeclaration({ options }: { options: TikTokPostOptions }) {
   const linkClass = 'text-accent underline underline-offset-2 hover:text-accent-hover';
   return (
     <p className="text-xs text-ink-2">
-      Ao agendar, você concorda com{' '}
+      Ao publicar ou agendar, você concorda com{' '}
       {requiredDeclaration(options) === 'branded_and_music' ? (
         <>
           a{' '}
@@ -225,7 +225,7 @@ export function TikTokDeclaration({ options }: { options: TikTokPostOptions }) {
       <button type="button" className={linkClass} onClick={open('music_usage')}>
         Confirmação de Uso de Música
       </button>{' '}
-      do TikTok. O vídeo só é enviado ao TikTok no horário agendado, com o app aberto.
+      do TikTok. Agendado: o vídeo é enviado no horário, com o app aberto.
     </p>
   );
 }

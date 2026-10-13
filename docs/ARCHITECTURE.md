@@ -122,6 +122,7 @@ src/
 │   ├── channels/           Página, diálogo de novo canal, channelService (+ channelConnector, channelRules,
 │   │                       verificação das contas ao abrir — useConnectionCheck)
 │   ├── media/              Biblioteca, detalhes, tags, mediaService, mediaRules
+│   ├── publishing/         publishService ("Publicar agora", agendador local, status) + progresso (DEC-030)
 │   ├── posts/              Compositor (PostComposerForm + TikTokPostOptions), detalhes, fila, postService,
 │   │                       postRules, tiktokOptionsRules (diretrizes do TikTok — DEC-029), PostDialogsProvider
 │   ├── scheduling/         Calendário semanal, agenda do dashboard, calendarLayout
@@ -150,7 +151,8 @@ src-tauri/
 │                           thumbnails.rs (save_thumbnail, delete_thumbnail), secrets.rs, ai.rs,
 │                           tiktok.rs (tiktok_connect/cancel/commit/discard/get_profile/disconnect)
 ├── src/tiktok/             pkce, loopback (validação pura), listener (127.0.0.1, uso único), backend
-│                           (api.yeaax.xyz), tokens (cofre por canal), pending, api (/v2/user/info/), secret
+│                           (api.yeaax.xyz), tokens (cofre por canal), pending, api (/v2/user/info/), secret,
+│                           creator (creator_info), publish (Direct Post: init, upload em partes, status)
 ├── src/error.rs            CommandError { code, message }
 ├── migrations/*.sql        Schema (fonte única para Rust, preview e testes)
 ├── capabilities/default.json  Permissões mínimas da janela

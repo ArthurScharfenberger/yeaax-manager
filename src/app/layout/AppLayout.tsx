@@ -2,6 +2,7 @@ import { Outlet } from 'react-router';
 
 import { useConnectionCheck } from '@/features/channels/hooks';
 import { useThumbnailBackfill } from '@/features/media/useThumbnailBackfill';
+import { usePublishingScheduler } from '@/features/publishing/hooks';
 import { PostDialogsProvider } from '@/features/posts/PostDialogsProvider';
 
 import { Sidebar } from './Sidebar';
@@ -9,6 +10,7 @@ import { Sidebar } from './Sidebar';
 export function AppLayout() {
   useThumbnailBackfill();
   useConnectionCheck();
+  usePublishingScheduler();
 
   return (
     <PostDialogsProvider>

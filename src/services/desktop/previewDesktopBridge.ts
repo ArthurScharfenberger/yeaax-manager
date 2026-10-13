@@ -33,6 +33,8 @@ export function createPreviewDesktopBridge(): DesktopBridge {
     tiktokGetProfile: () => Promise.reject(new AppError('NOT_AVAILABLE', DESKTOP_ONLY_MESSAGE)),
     tiktokDisconnect: () => Promise.resolve(),
     tiktokCreatorInfo: () => Promise.reject(new AppError('NOT_AVAILABLE', DESKTOP_ONLY_MESSAGE)),
+    tiktokPublish: () => Promise.reject(new AppError('NOT_AVAILABLE', DESKTOP_ONLY_MESSAGE)),
+    tiktokPublishStatus: () => Promise.reject(new AppError('NOT_AVAILABLE', DESKTOP_ONLY_MESSAGE)),
     // No navegador os links das políticas abrem numa aba nova (no app, o Rust abre o navegador do sistema).
     openTikTokPolicy: (policy) => {
       window.open(TIKTOK_POLICY_URLS[policy], '_blank', 'noopener,noreferrer');

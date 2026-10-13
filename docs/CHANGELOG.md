@@ -22,6 +22,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); 
 
 ### Adicionado
 
+- **Publicação real no TikTok** (Direct Post): botão **Publicar agora** no compositor, com progresso do envio, e
+  publicação automática dos agendados no horário enquanto o app está aberto (até 15 min de atraso; depois, fica
+  "atrasado" para você decidir). O vídeo vai direto do seu computador para o TikTok, em partes. O resultado é
+  acompanhado sozinho; nos detalhes do post há "Atualizar status" e o histórico mostra cada tentativa e o motivo
+  de falhas.
 - **Compositor do TikTok** conforme as diretrizes de publicação: mostra a conta que vai publicar, privacidade sem
   padrão (só as opções da conta), interações desmarcadas, divulgação de conteúdo comercial com os rótulos do
   TikTok, checagem de duração, prévia do vídeo e declaração com links para as políticas oficiais. Agendar no

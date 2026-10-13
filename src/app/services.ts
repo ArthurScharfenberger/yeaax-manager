@@ -7,6 +7,7 @@ import { createChannelService } from '@/features/channels/channelService';
 import { createDashboardService } from '@/features/dashboard/dashboardService';
 import { createMediaService } from '@/features/media/mediaService';
 import { createPostService } from '@/features/posts/postService';
+import { createPublishService } from '@/features/publishing/publishService';
 import { createSearchService } from '@/features/search/searchService';
 import { createSettingsService } from '@/features/settings/settingsService';
 import { type Clock, systemClock } from '@/lib/clock';
@@ -68,6 +69,7 @@ export function createAppServices(options: {
     channels: createChannelService({ repositories, social, clock }),
     media: createMediaService({ repositories, desktop, analyzeVideo: analyzeLocalVideo, clock }),
     posts,
+    publishing: createPublishService({ repositories, social, clock }),
     settings,
     dashboard: createDashboardService({ repositories }),
     search: createSearchService({ repositories }),

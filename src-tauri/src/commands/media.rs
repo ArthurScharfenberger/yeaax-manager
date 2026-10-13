@@ -38,7 +38,8 @@ pub async fn inspect_media_file(app: AppHandle, path: String) -> CommandResult<M
     Ok(info)
 }
 
-fn inspect(path: &Path) -> CommandResult<MediaFileInfo> {
+/// Validação compartilhada (importação e publicação): absoluto, extensão aceita, arquivo regular, não vazio.
+pub(crate) fn inspect(path: &Path) -> CommandResult<MediaFileInfo> {
     if !path.is_absolute() {
         return Err(CommandError::new(
             "INVALID_PATH",

@@ -57,6 +57,10 @@ Estas políticas valem desde já; a arquitetura foi desenhada para cumpri-las qu
 - Refresh token rotativo: o novo substitui o anterior antes de qualquer outra ação. Refresh falhou → canal
   `expired`; nunca re-tentar autenticação de forma automática e silenciosa em loop.
 - Remover um canal de login oficial revoga e apaga a credencial do cofre antes de apagar o canal (nada órfão).
+- **Publicação (DEC-030):** o caminho do vídeo vindo do webview é revalidado no Rust (absoluto, extensão aceita,
+  arquivo regular, não vazio) antes do envio; o arquivo vai direto do disco para o `upload_url` HTTPS do TikTok
+  (nunca pelo backend), em partes; legenda e escolhas revalidadas no Rust e contra o `creator_info`. Só há envio
+  com consentimento registrado no post; providers simulados nunca marcam posts como publicados.
 - Proibido: scraping, automação de navegador, captura de cookies, endpoints não oficiais, burla de autenticação.
 
 ### Divergência da recomendação do TikTok (refresh token no desktop)

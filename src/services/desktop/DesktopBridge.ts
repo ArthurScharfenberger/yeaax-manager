@@ -45,6 +45,16 @@ export interface DesktopBridge {
   tiktokDisconnect(channelId: string): Promise<void>;
   /** `creator_info` da conta do canal: o que ela pode publicar agora (privacidade, interações, duração). */
   tiktokCreatorInfo(channelId: string): Promise<TikTokCreatorInfo>;
+  /**
+   * Publica o vídeo no TikTok (Direct Post, upload do arquivo em partes direto do disco). Só depois do
+   * consentimento do usuário. Devolve o `publishId`; o resultado vem de `tiktokPublishStatus`.
+   */
+  tiktokPublish(
+    channelId: string,
+    request: TikTokPublishRequest,
+    onProgress: (progress: TikTokPublishProgress) => void,
+  ): Promise<{ publishId: string }>;
+  tiktokPublishStatus(channelId: string, publishId: string): Promise<TikTokPublishStatus>;
   /** Abre no navegador do sistema uma política oficial do TikTok (lista fixa no Rust). */
   openTikTokPolicy(policy: TikTokPolicy): Promise<void>;
   /** Pasta onde o banco local é salvo (`null` no modo preview). */
@@ -87,6 +97,36 @@ export interface TikTokCreatorInfo {
   duetDisabled: boolean;
   stitchDisabled: boolean;
   maxVideoPostDurationSec: number | null;
+}
+
+export interface TikTokPublishRequest {
+  filePath: string;
+  caption: string;
+  privacyLevel: TikTokPrivacyLevel;
+  allowComment: boolean;
+  allowDuet: boolean;
+  allowStitch: boolean;
+  yourBrand: boolean;
+  brandedContent: boolean;
+}
+
+export type TikTokPublishProgress =
+  | { stage: 'preparing' }
+  | { stage: 'uploading'; sent: number; total: number }
+  | { stage: 'processing' };
+
+export const TIKTOK_PUBLISH_STATUSES = [
+  'PROCESSING_UPLOAD',
+  'PROCESSING_DOWNLOAD',
+  'SEND_TO_USER_INBOX',
+  'PUBLISH_COMPLETE',
+  'FAILED',
+] as const;
+
+export interface TikTokPublishStatus {
+  status: (typeof TIKTOK_PUBLISH_STATUSES)[number];
+  failReason: string | null;
+  postIds: string[];
 }
 
 /** Políticas linkadas na declaração antes de publicar (Content Sharing Guidelines). */

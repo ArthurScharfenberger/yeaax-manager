@@ -7,6 +7,7 @@ import {
   checkCaption,
   countHashtags,
   countMentions,
+  canStartPublishing,
   isEditable,
   isOverdue,
 } from './postRules';
@@ -23,6 +24,15 @@ describe('transições de status', () => {
     expect(canTransition('published', 'draft')).toBe(false);
     expect(canTransition('draft', 'published')).toBe(false);
     expect(canTransition('cancelled', 'scheduled')).toBe(false);
+  });
+
+  it('"Publicar agora" a partir de rascunho, revisão, agendado ou falha — nunca em envio ou publicado', () => {
+    for (const status of ['draft', 'review', 'scheduled', 'failed'] as const) {
+      expect(canStartPublishing(status)).toBe(true);
+    }
+    for (const status of ['publishing', 'published', 'cancelled'] as const) {
+      expect(canStartPublishing(status)).toBe(false);
+    }
   });
 
   it('considera manter o mesmo status como válido', () => {

@@ -18,6 +18,49 @@ Formato:
 
 ---
 
+## Sessão 2026-10-13 (9) — Etapa 6: publicação real no TikTok (DEC-030)
+
+### Objetivo
+
+Publicar de verdade pela Content Posting API (Direct Post, `FILE_UPLOAD`): "Publicar agora", agendados no horário
+com o app aberto e acompanhamento do resultado.
+
+### Alterações realizadas
+
+- Documentação oficial reconferida (init, Media Transfer Guide, status) → API_NOTES.
+- Rust: `tiktok/publish.rs` (plano de partes, `init`, upload sequencial com retentativa em 5xx, `status/fetch`,
+  erros traduzidos) e comandos `tiktok_publish` (progresso por `Channel`, revalida arquivo/legenda/escolhas e
+  `creator_info`) e `tiktok_publish_status`. 66 testes, clippy limpo.
+- TS: `SocialProvider.publish` com escolhas e progresso; `TikTokProvider` publica e traduz status/motivos;
+  `MockSocialProvider.publishVideo = false`; `features/publishing/` (`publishService`: publishNow,
+  refreshStatus, runScheduler; hooks `usePublishNow`, `useRefreshPublication`, `usePublishingScheduler`,
+  `useCanPublish`; `PublishProgressNotice`, `PublicationStatusNotice`); transições para `publishing` a partir
+  de rascunho/revisão/falha; botão "Publicar agora" no compositor; status nos detalhes do post.
+- Testes: 148 TS (publicador: consentimento, envio, status, falhas, revalidação, agendador com tolerância).
+
+### Arquivos importantes
+
+`src-tauri/src/tiktok/publish.rs`, `src-tauri/src/commands/tiktok.rs`, `src/features/publishing/*`,
+`src/services/social/TikTokProvider.ts`, `src/features/posts/components/PostComposerForm.tsx`.
+
+### Decisões
+
+DEC-030.
+
+### Problemas encontrados
+
+Nenhum bloqueante. Publicação real ainda não testada (precisa do app do usuário e da conta privada no sandbox).
+
+### Pendências
+
+- Teste real (ver TODO). Etapa 7: roteiro/gravação do vídeo do App Review (legendas em inglês).
+
+### Próximo passo
+
+Usuário testa "Publicar agora" e um agendamento curto no sandbox; corrigir o que aparecer; depois etapa 7.
+
+---
+
 ## Sessão 2026-10-13 (8) — Etapa 5: compositor do TikTok (DEC-029)
 
 ### Objetivo

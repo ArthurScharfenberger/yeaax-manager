@@ -5,15 +5,18 @@
 //! (`tiktok_connect` → banco no frontend → `tiktok_commit_connection`) para nunca deixar credenciais gravadas
 //! sem o canal correspondente.
 
+use std::path::Path;
 use std::sync::{LazyLock, Mutex, PoisonError};
 use std::time::Instant;
 
 use serde::Serialize;
+use tauri::ipc::Channel;
 use tauri::AppHandle;
 use tauri_plugin_log::log;
 use tauri_plugin_opener::OpenerExt;
 use tokio::sync::oneshot;
 
+use crate::commands::media;
 use crate::error::{CommandError, CommandResult};
 use crate::tiktok::api::{self, TikTokProfile};
 use crate::tiktok::backend::{self, PublicConfig};
@@ -22,6 +25,7 @@ use crate::tiktok::listener::{CallbackListener, LOGIN_TIMEOUT};
 use crate::tiktok::loopback::CallbackOutcome;
 use crate::tiktok::pending::{PendingConnection, PendingRegistry};
 use crate::tiktok::pkce;
+use crate::tiktok::publish::{self, PostRequest, PublishStatus};
 use crate::tiktok::secret::Secret;
 use crate::tiktok::tokens::{self, now_seconds, StoredTokens};
 
@@ -291,6 +295,109 @@ pub async fn open_tiktok_policy(app: AppHandle, policy: String) -> CommandResult
         .map_err(|_| CommandError::new("TIKTOK_ERROR", "Não foi possível abrir o navegador."))
 }
 
+/// Progresso enviado ao frontend durante a publicação.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase", tag = "stage")]
+pub enum PublishProgress {
+    /// Conferindo a conta (`creator_info`) e iniciando o envio.
+    Preparing,
+    Uploading {
+        sent: u64,
+        total: u64,
+    },
+    /// Enviado; o TikTok está processando.
+    Processing,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PublishStarted {
+    publish_id: String,
+}
+
+/// Confere as escolhas contra o `creator_info` atual (as diretrizes exigem consultá-lo antes de postar).
+fn check_against_creator(request: &PostRequest, creator: &CreatorInfo) -> CommandResult<()> {
+    let refuse = |message: &str| CommandError::new("TIKTOK_CANNOT_POST", message.to_owned());
+    if !creator
+        .privacy_level_options
+        .contains(&request.privacy_level)
+    {
+        return Err(refuse(
+            "A privacidade escolhida não está disponível para esta conta agora. Abra o post e escolha de novo.",
+        ));
+    }
+    if (request.allow_comment && creator.comment_disabled)
+        || (request.allow_duet && creator.duet_disabled)
+        || (request.allow_stitch && creator.stitch_disabled)
+    {
+        return Err(refuse(
+            "Uma interação permitida no post foi desativada na conta do TikTok. Abra o post e revise.",
+        ));
+    }
+    Ok(())
+}
+
+/// Publica o vídeo no TikTok (Direct Post, `FILE_UPLOAD`). Só é chamado depois do consentimento do usuário
+/// (DEC-019/029). Devolve o `publish_id`; o resultado final vem de `tiktok_publish_status`.
+#[tauri::command]
+pub async fn tiktok_publish(
+    channel_id: String,
+    request: PostRequest,
+    on_progress: Channel<PublishProgress>,
+) -> CommandResult<PublishStarted> {
+    publish::validate_request(&request)?;
+    let file = media::inspect(Path::new(&request.file_path))?;
+    let plan = publish::plan_chunks(file.size)?;
+    let _ = on_progress.send(PublishProgress::Preparing);
+
+    let stored = tokens::valid_access_token(&channel_id).await?;
+    let creator = creator::fetch(&stored.access_token).await?;
+    check_against_creator(&request, &creator)?;
+
+    let started = publish::init(&stored.access_token, &request, file.size, &plan).await?;
+    log::info!(
+        "tiktok: publicação iniciada ({} parte(s), {} bytes)",
+        plan.chunks.len(),
+        file.size
+    );
+    let total = file.size;
+    let _ = on_progress.send(PublishProgress::Uploading { sent: 0, total });
+    publish::upload(
+        &started.upload_url,
+        Path::new(&file.path),
+        &file.extension,
+        file.size,
+        &plan,
+        |sent| {
+            let _ = on_progress.send(PublishProgress::Uploading { sent, total });
+        },
+    )
+    .await?;
+    let _ = on_progress.send(PublishProgress::Processing);
+    log::info!("tiktok: vídeo enviado; aguardando processamento");
+    Ok(PublishStarted {
+        publish_id: started.publish_id,
+    })
+}
+
+/// Situação de uma publicação (`publish_id`) no TikTok.
+#[tauri::command]
+pub async fn tiktok_publish_status(
+    channel_id: String,
+    publish_id: String,
+) -> CommandResult<PublishStatus> {
+    let valid = !publish_id.is_empty()
+        && publish_id.len() <= 64
+        && publish_id
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-' | b'.'));
+    if !valid {
+        return Err(CommandError::new("INVALID_INPUT", "Publicação inválida."));
+    }
+    let stored = tokens::valid_access_token(&channel_id).await?;
+    publish::fetch_status(&stored.access_token, &publish_id).await
+}
+
 /// Revoga (melhor esforço) e apaga as credenciais do canal.
 #[tauri::command]
 pub async fn tiktok_disconnect(channel_id: String) -> CommandResult<()> {
@@ -386,6 +493,38 @@ mod tests {
             .unwrap()
             .starts_with("https://www.tiktok.com/legal/"));
         assert_eq!(policy_url("https://evil.example"), None);
+    }
+
+    #[test]
+    fn publicacao_revalida_contra_o_creator_info() {
+        let creator = CreatorInfo {
+            nickname: "yeaax".into(),
+            username: None,
+            avatar_url: None,
+            privacy_level_options: vec!["FOLLOWER_OF_CREATOR".into(), "SELF_ONLY".into()],
+            comment_disabled: false,
+            duet_disabled: true,
+            stitch_disabled: true,
+            max_video_post_duration_sec: Some(600),
+        };
+        let request = |privacy: &str, duet: bool| PostRequest {
+            file_path: String::new(),
+            caption: String::new(),
+            privacy_level: privacy.into(),
+            allow_comment: true,
+            allow_duet: duet,
+            allow_stitch: false,
+            your_brand: false,
+            branded_content: false,
+        };
+        assert!(check_against_creator(&request("SELF_ONLY", false), &creator).is_ok());
+        assert_eq!(
+            check_against_creator(&request("PUBLIC_TO_EVERYONE", false), &creator)
+                .unwrap_err()
+                .code,
+            "TIKTOK_CANNOT_POST"
+        );
+        assert!(check_against_creator(&request("SELF_ONLY", true), &creator).is_err());
     }
 
     #[test]

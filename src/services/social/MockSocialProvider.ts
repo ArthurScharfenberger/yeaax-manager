@@ -31,7 +31,8 @@ export class MockSocialProvider implements SocialProvider {
   readonly integrationStatus: IntegrationStatus = 'MOCK';
   readonly limits: PlatformLimits;
   readonly capabilities: ProviderCapabilities = {
-    publishVideo: true,
+    // Simulado: nunca publica nem marca posts como publicados (o publicador ignora este provider).
+    publishVideo: false,
     nativeScheduling: false,
     analytics: false,
     officialLogin: false,

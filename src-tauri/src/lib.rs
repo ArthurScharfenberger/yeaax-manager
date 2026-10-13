@@ -73,6 +73,8 @@ pub fn run() {
             commands::tiktok::tiktok_disconnect,
             commands::tiktok::tiktok_creator_info,
             commands::tiktok::open_tiktok_policy,
+            commands::tiktok::tiktok_publish,
+            commands::tiktok::tiktok_publish_status,
         ])
         .run(tauri::generate_context!())
         .expect("falha ao iniciar o Yeaax Manager");

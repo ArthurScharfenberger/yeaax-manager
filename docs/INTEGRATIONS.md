@@ -56,8 +56,9 @@ O mesmo status aparece na UI (Configurações → Integrações), definido em `s
   5. [x] Compositor TikTok (DEC-029): `creator_info` a cada abertura, nickname, privacidade sem padrão, interações
          desmarcadas/bloqueadas, divulgação comercial com rótulos, duração máxima, prévia do vídeo, declaração com
          links oficiais, consentimento registrado ao agendar; `posts.platform_options` (migration 0003).
-  6. [ ] Publicação: init `FILE_UPLOAD` + chunks sequenciais com progresso, polling de status,
-         `publication_attempts`, "Publicar agora".
+  6. [x] Publicação (DEC-030): "Publicar agora" no compositor e agendador local (app aberto); `creator_info` e
+         escolhas revalidados; init `FILE_UPLOAD` + partes sequenciais com progresso; status (`status/fetch`) com
+         motivos traduzidos; histórico do post registra cada tentativa. [ ] Teste real no sandbox (usuário).
   7. [ ] Tela de status/resultado e roteiro do vídeo do App Review.
   8. [ ] App Review (usuário). Depois: agendador local e Instagram.
 
