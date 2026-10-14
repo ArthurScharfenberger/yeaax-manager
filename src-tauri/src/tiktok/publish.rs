@@ -223,7 +223,9 @@ fn parse_init(data: &Value) -> CommandResult<InitResult> {
     let publish_id = data
         .get("publish_id")
         .and_then(Value::as_str)
-        .filter(|id| !id.is_empty() && id.len() <= 64)
+        .filter(|id| {
+            (1..=64).contains(&id.len()) && id.bytes().all(|byte| (0x21..=0x7e).contains(&byte))
+        })
         .ok_or_else(unexpected)?;
     let upload_url = data
         .get("upload_url")

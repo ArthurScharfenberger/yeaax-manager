@@ -22,9 +22,9 @@ Fase atual: **TikTok real** (ordem em `docs/INTEGRATIONS.md` → TikTok).
       reconecta o mesmo canal se a conta já existir; "Cancelar login" fecha a espera; reabrir o app mantém conectado.
 - [ ] Validar a etapa 5 no app (usuário): Novo post → canal `@yeeax` → aparece "Publicar no TikTok como …" com o
       nickname real; privacidade só com as opções da conta; agendar fica bloqueado até escolher a privacidade.
-- [ ] **Teste real da etapa 6** (usuário): conta `@yeeax` **privada** no TikTok; Novo post → vídeo curto (MP4) →
-      privacidade "Somente eu" → **Publicar agora** → progresso → "Vídeo enviado…" → detalhes do post mostram
-      "Processando" → "Atualizar status" até "Publicado". Testar também um agendamento para daqui a 2–3 minutos.
+- [ ] Confirmar no app que o post de teste passou de "Publicando" para "Publicado" (após a correção do `publish_id`)
+      e testar um agendamento curto (2–3 min) com o app aberto.
+- [ ] Etapa 7 — vídeo do App Review com a conta de teste privada (`@ayeee7931`); legendas em inglês.
 - [ ] Etapa 7 — roteiro e gravação do vídeo do App Review (avaliar legendas em inglês: a UI é pt-BR).
 - [ ] Usuário: criar a chave em platform.openai.com, colar em Configurações → IA, "Testar conexão" e usar
       "Postar com IA" num vídeo real (validar qualidade das legendas e leitura da miniatura).

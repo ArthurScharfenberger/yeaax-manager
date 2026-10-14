@@ -113,7 +113,7 @@ describe('TikTokProvider — publicação', () => {
     account: REF,
     postId: 'post-1',
     caption: 'Olá',
-    media: { filePath: 'C:\v.mp4', mimeType: 'video/mp4', durationSeconds: 10 },
+    media: { filePath: 'C:/videos/v.mp4', mimeType: 'video/mp4', durationSeconds: 10 },
     options,
   });
 

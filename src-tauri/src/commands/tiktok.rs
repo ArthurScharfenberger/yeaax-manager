@@ -380,18 +380,19 @@ pub async fn tiktok_publish(
     })
 }
 
+/// `publish_id` opaco do TikTok (até 64 caracteres; ex.: `v_pub_file~v2-1.7…` — tem `~`). Só vai no corpo JSON.
+fn is_valid_publish_id(publish_id: &str) -> bool {
+    (1..=64).contains(&publish_id.len())
+        && publish_id.bytes().all(|byte| (0x21..=0x7e).contains(&byte))
+}
+
 /// Situação de uma publicação (`publish_id`) no TikTok.
 #[tauri::command]
 pub async fn tiktok_publish_status(
     channel_id: String,
     publish_id: String,
 ) -> CommandResult<PublishStatus> {
-    let valid = !publish_id.is_empty()
-        && publish_id.len() <= 64
-        && publish_id
-            .bytes()
-            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-' | b'.'));
-    if !valid {
+    if !is_valid_publish_id(&publish_id) {
         return Err(CommandError::new("INVALID_INPUT", "Publicação inválida."));
     }
     let stored = tokens::valid_access_token(&channel_id).await?;
@@ -525,6 +526,14 @@ mod tests {
             "TIKTOK_CANNOT_POST"
         );
         assert!(check_against_creator(&request("SELF_ONLY", true), &creator).is_err());
+    }
+
+    #[test]
+    fn aceita_o_formato_real_do_publish_id() {
+        assert!(is_valid_publish_id("v_pub_file~v2-1.7560123456789012345"));
+        assert!(!is_valid_publish_id(""));
+        assert!(!is_valid_publish_id("com espaço"));
+        assert!(!is_valid_publish_id(&"a".repeat(65)));
     }
 
     #[test]

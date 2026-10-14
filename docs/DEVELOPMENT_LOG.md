@@ -49,7 +49,12 @@ DEC-030.
 
 ### Problemas encontrados
 
-Nenhum bloqueante. Publicação real ainda não testada (precisa do app do usuário e da conta privada no sandbox).
+- **Teste real (2026-10-14):** `@yeeax` é conta comercial e não pode ficar privada (exige desligar a autorização de
+  anúncio e, em conta comercial, nem assim) → teste feito com uma conta pessoal privada de teste (`@ayeee7931`) como
+  target user. O app recusou corretamente a conta pública (`unaudited_client_can_only_post_to_private_accounts`,
+  mensagem traduzida). Com a conta privada: envio de 4,1 MB em 1 parte → vídeo apareceu no perfil, privado.
+- **Bug corrigido:** a consulta de status recusava o `publish_id` real do TikTok (tem `~`, ex.: `v_pub_file~v2-1.…`)
+  → post ficava em "Publicando". Validação trocada para "ASCII imprimível sem espaço, até 64" (teste novo).
 
 ### Pendências
 
